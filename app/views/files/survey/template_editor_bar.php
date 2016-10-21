@@ -1,11 +1,4 @@
 <div flex layout="row" layout-align="start center">
-    <md-input-container ng-if="question.changeType">
-        <label>選擇題型</label>
-        <md-select ng-model="question.type" ng-change="changeType(question)">
-            <md-option ng-repeat="type in quesTypes | filter:{disabled:'!'}" value="{{ type.name }}">{{ type.title }}</md-option>
-        </md-select>
-    </md-input-container>
-
     <div>
         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="{{(quesTypes | filter:{name: question.type})[0].icon}}"></md-icon>
     </div>

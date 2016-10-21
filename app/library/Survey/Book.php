@@ -7,6 +7,8 @@ use Plat\Eloquent\Survey as SurveyORM;
 
 class Book {
 
+    use Children;
+
     protected $book;
 
     protected $page;
@@ -30,9 +32,11 @@ class Book {
 
     public function getChildrenModels()
     {
-        return $this->book->questions()->page(Input::get('page', 1))->get();
+        $questions = $this->book->questions()->page(Input::get('page', 1))->get()->keyBy('id');
 
-        return $this->removeChildrenModels($questions);
+        $this->insertChildrens($questions);
+
+        return $questions;
     }
 
     public function removeChildrenModels($questions)
@@ -44,7 +48,7 @@ class Book {
 
     public function setChildren()
     {
-        
+
     }
 
 }

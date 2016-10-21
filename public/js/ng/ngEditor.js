@@ -38,7 +38,15 @@ angular.module('ngEditor.directives', [])
         },
         template:  `
             <div>
-                <md-button class="md-secondary" aria-label="加入題目" ng-click="addQuestion(0)">加入題目</md-button>
+                <md-menu>
+                    <md-button aria-label="加入題目" ng-click="$mdOpenMenu($event)">加入題目</md-button>
+                    <md-menu-content width="2">
+                    <md-menu-item ng-repeat="type in quesTypes | filter:{disabled:'!'}">
+                        <md-button ng-click="addQuestion(0, type)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
+                    </md-menu-item>
+                    </md-menu-content>
+                </md-menu>
+                <md-button class="md-secondary" aria-label="返回" ng-click="toRoot()">返回</md-button>
                 <md-card ng-repeat="question in questions">
                     <md-card-header md-colors="{background: 'indigo'}">
                         <question-bar></question-bar>
@@ -47,15 +55,23 @@ angular.module('ngEditor.directives', [])
                         <div question="question"></div>
                     </md-card-content>
                     <md-card-actions>
-                        <md-button class="md-secondary" aria-label="加入題目" ng-click="addQuestion($index+1)">加入題目</md-button>
+                        <md-menu>
+                            <md-button aria-label="加入題目" ng-click="$mdOpenMenu($event)">加入題目</md-button>
+                            <md-menu-content width="2">
+                            <md-menu-item ng-repeat="type in quesTypes | filter:{disabled:'!'}">
+                                <md-button ng-click="addQuestion($index+1, type)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
+                            </md-menu-item>
+                            </md-menu-content>
+                        </md-menu>
                     </md-card-actions>
-                    <md-progress-linear md-mode="buffer" ng-disabled="!question.saving"></md-progress-linear>
+                    <md-card-content layout="row" layout-align="space-around" ng-if="question.saving">
+                        <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+                    </md-card-content>
                 </md-card>
             </div>
         `,
         controller: function($scope, $http, $filter) {
 
-            $scope.root = $scope.book;
             $scope.questions = [];
 
             $scope.quesTypes = [
@@ -80,35 +96,26 @@ angular.module('ngEditor.directives', [])
                 });
             };
 
-            this.getChildrens($scope.root);
+            this.getChildrens($scope.book);
 
-            this.addQuestion = function(sorter, parent = null) {
+            this.addQuestion = function(sorter, type, parent = $scope.root) {
                 console.log($scope.questions);
                 var question = {
-                    type: '?',
+                    type: type.name,
                     page: $scope.page,
-                    sorter: sorter,
-                    changeType : true
+                    sorter: sorter
                 };
 
-                if (sorter >= 0) {
-                    $scope.questions.splice(sorter, 0, question);
-                } else {
-                    $scope.questions.push(question);
-                }
+                $scope.questions.splice(sorter, 0, question);
 
-                // if (parent) {
-                //     $scope.createQuestion(question, {type: 'question', target: parent});
-                // }
+                editorFactory.ajax('createQuestion', {question: question, parent: parent}, question).then(function(response) {
+                    console.log(response);
+                    angular.extend(question, response.question);
+                });
             };
 
             this.removeQuestion = function(question) {
                 console.log($scope.questions);
-                if (!question.id) {
-                    $scope.questions.splice($scope.questions.indexOf(question), 1);
-                    return;
-                }
-
                 editorFactory.ajax('removeQuestion', {question: question}, question).then(function(response) {
                     if (response.deleted) {
                         $scope.questions.splice($scope.questions.indexOf(question), 1);
@@ -116,23 +123,12 @@ angular.module('ngEditor.directives', [])
                 });
             };
 
+            $scope.toRoot = function() {
+                $scope.getChildrens($scope.book);
+            }
+
             $scope.addQuestion = this.addQuestion;
-
-            $scope.changeType = function(question) {
-                question.changeType = false;
-                if (!question.id) {
-                    $scope.createQuestion(question, $scope.root);
-                };
-            };
-
-            $scope.createQuestion = function(question, parent) {
-                editorFactory.ajax('createQuestion', {question: question, parent: parent}, question).then(function(response) {
-                    console.log(response);
-                    angular.extend(question, response.question);
-                    //question.saving = false;
-                });
-            };
-
+            $scope.getChildrens = this.getChildrens;
         }
     };
 })
@@ -206,7 +202,7 @@ angular.module('ngEditor.directives', [])
 
             $scope.saveTitleNgOptions = {updateOn: 'default blur', debounce:{default: 2000, blur: 0}};
             $scope.searchLoaded = '';
-            $scope.searchText = {};
+            $scope.searchText = {};            
 
             $scope.icons = {
                 radio: {icon: 'selected radio', title: '單選題'},
@@ -375,7 +371,6 @@ angular.module('ngEditor.directives', [])
                         $scope.questions.push(csQuestion);
                     });
                     $scope.question.saving = false;
-                    $scope.question.changeType = false;
                     $scope.question.open = {questions: true, answers: true};
                 }).error(function(e) {
                     console.log(e);
@@ -394,7 +389,6 @@ angular.module('ngEditor.directives', [])
                         $scope.questions.push(csQuestion);
                     });
                     $scope.question.saving = false;
-                    $scope.question.changeType = false;
                     $scope.question.open = {questions: true, answers: true};
                 }).error(function(e) {
                     console.log(e);
@@ -410,7 +404,6 @@ angular.module('ngEditor.directives', [])
                         $scope.questions.push(question);
                     });
                     $scope.question.saving = false;
-                    $scope.question.changeType = false;
                     $scope.question.open = {questions: true, answers: true};
                 }).error(function(e) {
                     console.log(e);
@@ -426,7 +419,6 @@ angular.module('ngEditor.directives', [])
                         $scope.questions.push(question);
                     });
                     $scope.question.saving = false;
-                    $scope.question.changeType = false;
                     $scope.question.open = {questions: true, answers: true};
                 }).error(function(e) {
                     console.log(e);

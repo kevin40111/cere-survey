@@ -63,13 +63,11 @@ class SurveyFile extends CommFile {
             'byRules',
         ])->sortBy('sorter')->keyBy('id');
 
-        $this->insertChildrens($childrens);
-
         return ['childrens' => $childrens->values()];
     }
 
     public function createQuestion()
-    {
+    {sleep(1);
         $question = Survey\Question::create($this->file->book, Input::get('question'), Input::get('parent'))->sort(Input::get('question.sorter')*1);
 
         return ['question' => $question->getModel()];
@@ -144,41 +142,6 @@ class SurveyFile extends CommFile {
         $columns = \ShareFile::find(Input::get('file_id'))->isFile->sheets->first()->tables->first()->columns;
 
         return ['columns' => $columns];
-    }
-
-    public function insertChildrens(&$questions)
-    {
-        return $questions->map(function($question) use (&$questions) {
-
-            if ($question->byRules->isEmpty()) {
-                return true;
-            }
-
-            $children = $question->byRules->first(function($index, $rule) {
-                return $rule->is->expression == 'children';
-            });
-
-            $parameter = $children->is->parameters->first();
-
-            switch ($parameter->type) {
-                case 'answer':
-                    $questions->forget($question->id);
-
-                    //$questions[$parameter->question]->answers->keyBy('id')->get($parameter->answer)->childrens->push($question);
-                    break;
-
-                case 'question':
-                    $questions->forget($question->id);
-
-                    if (isset($questions[$parameter->question])) {
-                        $questions[$parameter->question]->childrens->push($question);
-                    }
-                    
-                    break;
-            }
-
-            return  $children;
-        });
     }
 
 }

@@ -35,7 +35,6 @@
         <md-divider></md-divider>
         <div layout="column" layout-align="start center" style="height:100%;overflow-y:scroll">
             <div style="width:960px">
-                <md-button class="md-secondary" aria-label="返回" ng-click="">返回</md-button>
                 <question-page ng-if="book" book="book" page="page"></question-page>
             </div>
         </div>
@@ -89,7 +88,7 @@ app.controller('editorController', function($http, $scope, $sce, $interval, $fil
     $scope.select =[];
     $scope.sbooks = [];
 
-    $scope.getQuestions = function() {
+    $scope.getBook = function() {
         $scope.$parent.main.loading = true;
         $http({method: 'POST', url: 'getBook', data:{}})
         .success(function(data, status, headers, config) {
@@ -104,7 +103,7 @@ app.controller('editorController', function($http, $scope, $sce, $interval, $fil
         });
     };
 
-    $scope.getQuestions();
+    $scope.getBook();
 
     $scope.nextPage = function() {
         $scope.book.pages[++$scope.page] = $scope.book.pages[$scope.page] || [];

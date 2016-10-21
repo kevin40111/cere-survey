@@ -16,22 +16,22 @@ class Rule extends Eloquent {
 
     public function questions()
     {
-        return $this->morphedByMany('Plat\Eloquent\Survey\Question', 'survey_set_skips');
+        return $this->morphedByMany('Plat\Eloquent\Survey\Question', 'survey_rule_effect');
     }
 
     public function skipAnswers()
     {
-        return $this->morphedByMany('Plat\Eloquent\Survey\Answer', 'survey_set_skips');
+        return $this->morphedByMany('Plat\Eloquent\Survey\Answer', 'survey_rule_effect');
     }
 
     public function jumpBook()
     {
-        return $this->morphedByMany('Plat\Eloquent\Survey\Book', 'survey_set_skips');
+        return $this->morphedByMany('Plat\Eloquent\Survey\Book', 'survey_rule_effect');
     }
 
     public function openWave()
     {
-        return $this->morphedByMany('Plat\Eloquent\Survey\Wave', 'survey_set_skips');
+        return $this->morphedByMany('Plat\Eloquent\Survey\Wave', 'survey_rule_effect');
     }
 
     public function answers()

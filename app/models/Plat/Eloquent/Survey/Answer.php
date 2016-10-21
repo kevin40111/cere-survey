@@ -28,7 +28,7 @@ class Answer extends Eloquent {
 
     public function rules()
     {
-        return $this->morphToMany('Plat\Eloquent\Survey\Rule', 'survey_set_skip');
+        return $this->morphToMany('Plat\Eloquent\Survey\Rule', 'survey_rule_effect');
     }
 
     public function rule()
