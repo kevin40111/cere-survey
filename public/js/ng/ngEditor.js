@@ -3,10 +3,10 @@ angular.module('ngEditor', ['ngEditor.directives', 'ngEditor.factories']);
 angular.module('ngEditor.factories', []).factory('editorFactory', function($http, $q) {
 
     return {
-        ajax: function(url, data, question = {}) {
+        ajax: function(url, data, node = {}) {
             var deferred = $q.defer();
 
-            question.saving = true;
+            node.saving = true;
             $http({method: 'POST', url: url, data: data, timeout: deferred.promise})
             .success(function(data, status, headers, config) {
                 deferred.resolve(data);
@@ -16,7 +16,7 @@ angular.module('ngEditor.factories', []).factory('editorFactory', function($http
             });
 
             deferred.promise.finally(function() {
-                question.saving = false
+                node.saving = false
             });
 
             return deferred.promise;
@@ -47,12 +47,17 @@ angular.module('ngEditor.directives', [])
                     </md-menu-content>
                 </md-menu>
                 <md-button class="md-secondary" aria-label="返回" ng-click="toRoot()">返回</md-button>
-                <md-card ng-repeat="question in questions">
+                <md-card ng-repeat="node in nodes">
                     <md-card-header md-colors="{background: 'indigo'}">
                         <question-bar></question-bar>
                     </md-card-header>
                     <md-card-content>
-                        <div question="question"></div>
+                        <md-input-container class="md-block">
+                            <label>標題</label>
+                            <textarea ng-model="node.title" md-maxlength="150" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveQuestionTitle(node)"></textarea>
+                        </md-input-container>
+                        <div questions="node.questions"></div>
+                        <div answers="node.answers" node="node"></div>
                     </md-card-content>
                     <md-card-actions>
                         <md-menu>
@@ -72,7 +77,7 @@ angular.module('ngEditor.directives', [])
         `,
         controller: function($scope, $http, $filter) {
 
-            $scope.questions = [];
+            $scope.nodes = [];
 
             $scope.quesTypes = [
                 {name: 'explain', title: '文字標題'},
@@ -88,29 +93,28 @@ angular.module('ngEditor.directives', [])
                 {name: 'jump', title: '開啟題本', type: 'rule'}
             ];
 
-            this.getChildrens = function(parent) {
-                editorFactory.ajax('getChildrens', {parent: parent}).then(function(response) {
+            this.getNodes = function(parent) {
+                editorFactory.ajax('getNodes', {parent: parent}).then(function(response) {
                     console.log(response);
                     $scope.root = parent;
-                    $scope.questions = response.childrens;
+                    $scope.nodes = response.nodes;
                 });
             };
 
-            this.getChildrens($scope.book);
+            this.getNodes($scope.book);
 
             this.addQuestion = function(sorter, type, parent = $scope.root) {
-                console.log($scope.questions);
-                var question = {
+                console.log($scope.nodes);
+                var node = {
                     type: type.name,
-                    page: $scope.page,
                     sorter: sorter
                 };
 
-                $scope.questions.splice(sorter, 0, question);
+                $scope.nodes.splice(sorter, 0, node);
 
-                editorFactory.ajax('createQuestion', {question: question, parent: parent}, question).then(function(response) {
+                editorFactory.ajax('createNode', {node: node, parent: parent}, node).then(function(response) {
                     console.log(response);
-                    angular.extend(question, response.question);
+                    angular.extend(node, response.question);
                 });
             };
 
@@ -165,44 +169,118 @@ angular.module('ngEditor.directives', [])
     };
 })
 
-.directive('question', function($compile, FileUploader, $templateCache) {
+.directive('answers', function() {
     return {
         restrict: 'A',
         replace: true,
         transclude: false,
         scope: {
-            question: '=',
-            sbooks:'=',
-            page: '='
+            answers: '=',
+            node: '='
         },
-        require: ['^questionPage'],
-        compile: function(tElement, tAttr) {
-            var contents = tElement.contents().remove();
-            var compiledContents = {};
+        template:  `
+            <md-list>
+                <md-subheader class="md-no-sticky">選項 ({{ answers.length || 0 }})</md-subheader>
+                <md-list-item ng-repeat="answer in answers">
+                    <md-icon ng-style="{fill: !answer.title ? 'red' : ''}" md-svg-icon="radio-button-checked"></md-icon>
+                    <div flex>
+                        <div class="ui transparent fluid input" ng-class="{loading: answer.saving}">
+                            <input type="text" placeholder="輸入選項名稱..." ng-model="answer.title" ng-model-options="saveTitleNgOptions" ng-change="saveAnswerTitle(answer)" />
+                        </div>
+                    </div>
+                    <md-button class="md-secondary" aria-label="設定子題" ng-click="getChildrens(answer)">設定子題</md-button>
+                    <md-icon class="md-secondary" aria-label="刪除選項" md-svg-icon="delete" ng-click="removeAnswer(answer)"></md-icon>
+                </md-list-item>
+                <md-list-item ng-click="createAnswer()">
+                    <md-icon md-svg-icon="radio-button-checked"></md-icon>
+                    <p>新增選項</p>
+                </md-list-item>
+            </md-list>
+        `,
+        controller: function($scope, $filter, $http) {
 
-            return function(scope, iElement, iAttrs, ctrls) {
-                scope.$watch('question.type', function(newType, oldType) {
-                    var contents = iElement.contents().remove();
-                    var type = newType == '?' ? 'search' : newType;
-                    compiledContents[type] = $compile($templateCache.get(type));
-                    compiledContents[type](scope, function(clone, scope) {
-                        iElement.append(clone);
-                    });
+            $scope.saveTitleNgOptions = {updateOn: 'default blur', debounce:{default: 2000, blur: 0}};
+
+            $scope.createAnswer = function() {
+                $http({method: 'POST', url: 'createAnswer', data:{node: $scope.node}})
+                .success(function(data, status, headers, config) {
+                    console.log(data);
+                    $scope.node.answers.push(data.answer);
+                }).error(function(e) {
+                    console.log(e);
                 });
-
-                var pageCtrl = ctrls[0];
-                //var barCtrl = ctrls[1];
-                scope.getChildrens = pageCtrl.getChildrens;
-                scope.addQuestion = pageCtrl.addQuestion;
-                scope.removeQuestion = pageCtrl.removeQuestion;
-                //scope.moveSort = barCtrl.moveSort;
             };
+
+            $scope.saveAnswerTitle = function(answer) {
+                answer.saving = true;
+                $http({method: 'POST', url: 'saveAnswerTitle', data:{answer: answer}})
+                .success(function(data, status, headers, config) {
+                    console.log(data);
+                    answer.title = data.title;
+                    answer.saving = false;
+                }).error(function(e) {
+                    console.log(e);
+                });
+            };
+
+        }
+    };
+})
+
+.directive('questions', function($compile, FileUploader, $templateCache) {
+    return {
+        restrict: 'A',
+        replace: true,
+        transclude: false,
+        scope: {
+            questions: '='
         },
+        template:  `
+            <md-list>
+                <md-subheader class="md-no-sticky">問題 ({{ questions.length || 0 }})</md-subheader>
+                <md-list-item ng-repeat="question in questions">
+                    <md-icon md-svg-icon="list"><md-tooltip md-direction="left">{{$index+1}}</md-tooltip></md-icon>
+                    <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
+                        <input type="text" placeholder="輸入問題..." ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)" />
+                    </p>
+                    <md-button class="md-secondary md-icon-button" ng-click="moveSort(question, -1)" aria-label="上移"><md-icon md-svg-icon="arrow-drop-up"></md-icon></md-button>
+                    <md-button class="md-secondary md-icon-button" ng-click="moveSort(question, 1)" aria-label="下移"><md-icon md-svg-icon="arrow-drop-down"></md-icon></md-button>
+                    <md-icon class="md-secondary" aria-label="刪除子題" md-svg-icon="delete" ng-click="removeQuestion(question)"></md-icon>
+                </md-list-item>
+                <md-list-item ng-click="addQuestion(questions.length, question)">
+                    <md-icon md-svg-icon="list"></md-icon>
+                    <p>新增問題</p>
+                </md-list-item>
+            </md-list>
+        `,
+        require: ['^questionPage'],
+        // compile: function(tElement, tAttr) {
+        //     var contents = tElement.contents().remove();
+        //     var compiledContents = {};
+
+        //     return function(scope, iElement, iAttrs, ctrls) {
+        //         scope.$watch('question.type', function(newType, oldType) {
+        //             var contents = iElement.contents().remove();
+        //             var type = newType == '?' ? 'search' : newType;
+        //             compiledContents[type] = $compile($templateCache.get(type));
+        //             compiledContents[type](scope, function(clone, scope) {
+        //                 iElement.append(clone);
+        //             });
+        //         });
+
+        //         var pageCtrl = ctrls[0];
+        //         var barCtrl = ctrls[1];
+        //         scope.getChildrens = pageCtrl.getChildrens;
+        //         scope.addQuestion = pageCtrl.addQuestion;
+        //         scope.removeQuestion = pageCtrl.removeQuestion;
+        //         scope.moveSort = barCtrl.moveSort;
+        //     };
+        // },
         controller: function($scope, $http, $interval, $timeout, $filter) {
 
             $scope.saveTitleNgOptions = {updateOn: 'default blur', debounce:{default: 2000, blur: 0}};
             $scope.searchLoaded = '';
-            $scope.searchText = {};            
+            $scope.searchText = {};
 
             $scope.icons = {
                 radio: {icon: 'selected radio', title: '單選題'},
@@ -212,16 +290,6 @@ angular.module('ngEditor.directives', [])
                 texts: {icon: 'write', title: '文字填答'},
                 list: {icon: 'sitemap', title: '題組'}
                 // textarea: {icon: 'write square', title: '文字填答(多行)'}
-            };
-
-            $scope.createAnswer = function(question) {
-                $http({method: 'POST', url: 'createAnswer', data:{question: question}})
-                .success(function(data, status, headers, config) {
-                    console.log(data);
-                    question.answers.push(data.answer);
-                }).error(function(e) {
-                    console.log(e);
-                });
             };
 
             $scope.addScaleAnswer = function(question) {
@@ -254,18 +322,6 @@ angular.module('ngEditor.directives', [])
                     console.log(data);
                     question.title = data.title;
                     question.saving = false;
-                }).error(function(e) {
-                    console.log(e);
-                });
-            };
-
-            $scope.saveAnswerTitle = function(answer) {
-                answer.saving = true;
-                $http({method: 'POST', url: 'saveAnswerTitle', data:{answer: answer}})
-                .success(function(data, status, headers, config) {
-                    console.log(data);
-                    answer.title = data.title;
-                    answer.saving = false;
                 }).error(function(e) {
                     console.log(e);
                 });

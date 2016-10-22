@@ -30,13 +30,9 @@ class Book {
         return new static($book);
     }
 
-    public function getChildrenModels()
+    public function getNodeModels()
     {
-        $questions = $this->book->questions()->page(Input::get('page', 1))->get()->keyBy('id');
-
-        $this->insertChildrens($questions);
-
-        return $questions;
+        return $this->book->nodes;
     }
 
     public function removeChildrenModels($questions)

@@ -10,15 +10,15 @@ class Answer extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = array('question_id', 'title', 'value', 'improve');
+    protected $fillable = array('title', 'value');
 
     protected $attributes = ['value' => '', 'title' => ''];
 
     protected $appends = ['class'];
 
-    public function question()
+    public function node()
     {
-        return $this->hasOne('Plat\Eloquent\Survey\Question', 'id', 'question_id');
+        return $this->hasOne('Plat\Eloquent\Survey\Node', 'id', 'node_id');
     }
 
     public function childrenRule()

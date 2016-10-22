@@ -10,11 +10,11 @@ class Question extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = ['book_id', 'type', 'title', 'page', 'sorter'];
+    protected $fillable = ['title', 'sorter'];
 
-    protected $attributes = ['title' => '', 'required' => true];
+    protected $attributes = ['title' => ''];
 
-    protected $appends = ['class', 'childrens'];
+    protected $appends = ['class'];
 
     public function book()
     {
@@ -24,6 +24,11 @@ class Question extends Eloquent {
     public function answers()
     {
         return $this->hasMany('Plat\Eloquent\Survey\Answer', 'question_id', 'id');
+    }
+
+    public function branchs()
+    {
+        return $this->hasMany('Plat\Eloquent\Survey\Branch', 'question_id', 'id');
     }
 
     public function byRules()

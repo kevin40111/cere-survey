@@ -44,38 +44,37 @@ class SurveyFile extends CommFile {
 
     public function getBook()
     {
-        return ['book' => $this->file->book, 'edit' => true];
+        return ['book' => $this->file->book, 'edit' => true, 'log' => DB::getQueryLog()];
     }
 
-    public function getQuestions()
-    {
-        $questions = Survey\Book::make($this->file->book)->getQuestionModels();
-
-        return ['page' => $questions->values(), 'lastPage' => $questions->max('page')];
-    }
-
-    public function getChildrens()
+    public function getNodes()
     {
         $class = Input::get('parent.class');
 
-        $childrens = $class::find(Input::get('parent.id'))->getChildrenModels()->load([
+        $nodes = $class::find(Input::get('parent.id'))->getNodeModels()->load([
+            'questions',
             'answers',
-            'byRules',
-        ])->sortBy('sorter')->keyBy('id');
+            //'byRules',
+        ])->sortBy('sorter')->values();
 
-        return ['childrens' => $childrens->values()];
+        return ['nodes' => $nodes];
+    }
+
+    public function createNode()
+    {
+        $node = Survey\Node::create($this->file->book, Input::get('node'), Input::get('parent'));//->sort(Input::get('question.sorter')*1);
+
+        return ['node' => $node->getModel()];
     }
 
     public function createQuestion()
-    {sleep(1);
-        $question = Survey\Question::create($this->file->book, Input::get('question'), Input::get('parent'))->sort(Input::get('question.sorter')*1);
+    {
 
-        return ['question' => $question->getModel()];
     }
 
     public function createAnswer()
     {
-        $answer = Survey\Answer::create(SurveyORM\Question::find(Input::get('question.id')), []);
+        $answer = Survey\Answer::create(SurveyORM\Node::find(Input::get('node.id')), []);
 
         return ['answer' => $answer->getModel()];
     }

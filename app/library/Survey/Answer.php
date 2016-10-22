@@ -6,26 +6,26 @@ use Plat\Eloquent\Survey as SurveyORM;
 
 class Answer {
 
-    function __construct(SurveyORM\Question $question, SurveyORM\Answer $answer)
+    function __construct(SurveyORM\Node $node, SurveyORM\Answer $answer)
     {
-        $this->question = $question;
+        $this->node = $node;
         $this->answer = $answer;
     }
 
-    public static function create(SurveyORM\Question $question, array $attributes)
+    public static function create(SurveyORM\Node $node, array $attributes)
     {
-        $answer = $question->answers()->save(new SurveyORM\Answer([]));
+        $answer = $node->answers()->save(new SurveyORM\Answer([]));
 
-        return new static($question, $answer);
+        return new static($node, $answer);
     }
 
     public static function find($id)
     {
         $answer = SurveyORM\Answer::find($id);
 
-        $question = $answer->question;
+        $node = $answer->node;
 
-        return new static($question, $answer);
+        return new static($node, $answer);
     }
 
     public function update(array $attributes)

@@ -12,18 +12,11 @@ class Book extends Eloquent {
 
     protected $fillable = array('file_id', 'title');
 
-    protected $guarded = array('id');
-
     protected $appends = ['class'];
 
-    public function wave()
+    public function nodes()
     {
-        return $this->hasOne('Plat\Eloquent\Survey\Wave', 'id', 'wave_id');
-    }
-
-    public function questions()
-    {
-        return $this->hasMany('Plat\Eloquent\Survey\Question', 'book_id', 'id');
+        return $this->hasMany('Plat\Eloquent\Survey\Node', 'book_id', 'id');
     }
 
     public function getClassAttribute()
