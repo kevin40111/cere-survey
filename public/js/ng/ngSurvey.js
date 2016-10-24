@@ -68,7 +68,7 @@ angular.module('ngSurvey.directives', [])
     };
 })
 
-.directive('questionNodes', function(surveyFactory) {
+.directive('questionNode', function(surveyFactory) {
     return {
         restrict: 'E',
         replace: true,
@@ -79,33 +79,38 @@ angular.module('ngSurvey.directives', [])
         },
         template:  `
             <div>
-                <md-card ng-repeat="node in nodes">
+                <md-card>
                     <md-card-title>
                         <md-card-title-text>
                         <span class="md-headline" ng-bind-html="node.title"></span>
                         </md-card-title-text>
                     </md-card-title>
                     <md-card-content>
-                        <question node="node"></question>
+                        <question ng-if="node" node="node"></question>
                     </md-card-content>
-                    <md-card-content layout="row" layout-align="space-around" ng-if="node.saving">
-                        <md-progress-circular md-mode="indeterminate"></md-progress-circular>
-                    </md-card-content>
+                    <md-card-actions layout="row" layout-align="end center">
+                        <md-button class="md-raised md-primary" ng-click="getNextNode()" ng-disabled="node.saving">繼續</md-button>
+                    </md-card-actions>
+                    <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
                 </md-card>
+                <div layout="row" layout-align="space-around" ng-if="node.saving">
+                    
+                </div>
             </div>
         `,
         controller: function($scope, $http, $filter) {
 
-            $scope.getNodes = function(parent) {
-                console.log(parent);
-                surveyFactory.get('getNodes', {parent: parent}).then(function(response) {
+            $scope.node = {saving: true};
+
+            $scope.getNextNode = function() {
+                console.log($scope.node);
+                surveyFactory.get('getNextNode', {node: $scope.node}, $scope.node).then(function(response) {
                     console.log(response);
-                    $scope.root = parent;
-                    $scope.nodes = response.nodes;
+                    $scope.node = response.node;
                 });
             };
 
-            $scope.getNodes($scope.book);
+            $scope.getNextNode();
 
         }
     };
@@ -124,7 +129,7 @@ angular.module('ngSurvey.directives', [])
             var compiledContents = {};
 
             return function(scope, iElement, iAttr) {
-                scope.$watch('question.type', function(newType, oldType) {
+                scope.$watch('node.type', function(newType, oldType) {
                     var contents = iElement.contents().remove();
                     var type = scope.node.type;
                     compiledContents[type] = $compile($templateCache.get(type));

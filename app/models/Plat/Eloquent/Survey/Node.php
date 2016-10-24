@@ -10,7 +10,7 @@ class Node extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = ['type', 'title'];
+    protected $fillable = ['type', 'title', 'previous_id'];
 
     protected $attributes = ['title' => ''];
 
@@ -27,6 +27,16 @@ class Node extends Eloquent {
     public function answers()
     {
         return $this->hasMany('Plat\Eloquent\Survey\Answer', 'node_id', 'id');
+    }
+
+    public function next()
+    {
+        return $this->hasOne('Plat\Eloquent\Survey\Node', 'previous_id', 'id');
+    }
+
+    public function previous()
+    {
+        return $this->hasOne('Plat\Eloquent\Survey\Node', 'id', 'previous_id');
     }
 
 }

@@ -35,6 +35,11 @@ class Book {
         return $this->book->nodes;
     }
 
+    public function getFirstNode()
+    {        
+        return Node::make($this->book->nodes()->whereNull('previous_id')->first());
+    }
+
     public function removeChildrenModels($questions)
     {
         return $questions->filter(function($question) {

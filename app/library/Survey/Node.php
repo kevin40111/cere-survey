@@ -18,22 +18,38 @@ class Node {
 
     public static function create(SurveyORM\Book $book, array $attributes, $parent)
     {
+        //$ff = new SurveyORM\Node($attributes);
+        //dd($ff->previous);
+
+        $first = $book->nodes()->whereNull('previous_id')->first();
+
+        $previous = Node::find($attributes['previous_id']);
+
+        $next = $previous ? $previous->next() : $first;
+
         $node = $book->nodes()->save(new SurveyORM\Node($attributes));
 
         $node->questions()->save(new SurveyORM\Question([]));
+
+        $node->next()->save($next);
+
+        //$next && $next->update(['previous_id' => $node->id]);
 
         //$parent['class']::find($parent['id'])->setChildren($question);
 
         return new static($book, $node);
     }
 
+    public static function make(SurveyORM\Node $node)
+    {
+        return $node ? new static($node->book, $node) : NULL;
+    }
+
     public static function find($id)
     {
         $node = SurveyORM\Node::find($id);
 
-        $book = $node->book;
-
-        return new static($book, $node);
+        return $node ? self::make($node) : NULL;
     }
 
     public function update(array $attributes)
@@ -50,6 +66,8 @@ class Node {
 
     public function delete()
     {
+        $this->next() && $this->next()->update(['previous_id' => $this->node->previous_id]);
+
         $this->node->answers()->delete();
 
         $this->node->questions()->delete();
@@ -62,6 +80,11 @@ class Node {
     public function getModel()
     {
         return $this->node->load(['questions', 'answers']);
+    }
+
+    public function next()
+    {
+        return $this->node->next ? Node::make($this->node->next) : NULL;
     }
 
     public function getParent()

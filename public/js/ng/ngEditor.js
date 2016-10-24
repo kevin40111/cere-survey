@@ -42,7 +42,7 @@ angular.module('ngEditor.directives', [])
                     <md-button aria-label="加入題目" ng-click="$mdOpenMenu($event)">加入題目</md-button>
                     <md-menu-content width="2">
                     <md-menu-item ng-repeat="type in quesTypes | filter:{disabled:'!'}">
-                        <md-button ng-click="addNode(0, type)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
+                        <md-button ng-click="addNode(type)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
                     </md-menu-item>
                     </md-menu-content>
                 </md-menu>
@@ -64,7 +64,7 @@ angular.module('ngEditor.directives', [])
                             <md-button aria-label="加入題目" ng-click="$mdOpenMenu($event)">加入題目</md-button>
                             <md-menu-content width="2">
                             <md-menu-item ng-repeat="type in quesTypes | filter:{disabled:'!'}">
-                                <md-button ng-click="addNode($index+1, type)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
+                                <md-button ng-click="addNode(type, node)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
                             </md-menu-item>
                             </md-menu-content>
                         </md-menu>
@@ -103,11 +103,11 @@ angular.module('ngEditor.directives', [])
 
             $scope.getNodes($scope.book);
 
-            $scope.addNode = function(sorter, type, parent = $scope.root) {
+            $scope.addNode = function(type, previous = {id: null}, parent = $scope.root) {
                 console.log($scope.nodes);
-                var node = {type: type.name};
+                var node = {type: type.name, previous_id: previous.id};
 
-                $scope.nodes.splice(sorter, 0, node);
+                $scope.nodes.splice($scope.nodes.indexOf(previous)+1, 0, node);
 
                 editorFactory.ajax('createNode', {node: node, parent: parent}, node).then(function(response) {
                     console.log(response);

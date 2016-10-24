@@ -1,18 +1,13 @@
 
 <md-content ng-cloak layout="column" ng-controller="quesController">
-
     <div layout="row" layout-sm="column" layout-align="space-around" ng-if="opening">
         <md-progress-circular md-mode="indeterminate"></md-progress-circular>
     </div>
-
-
-        <md-content layout="column" layout-padding layout-align="start center">
-            <div style="width:960px">
-                <question-nodes ng-if="book" book="book"></question-nodes>
-            </div>
-            <md-button class="md-raised md-primary" ng-click="next()">繼續</md-button>
-        </md-content>
-
+    <md-content layout="column" layout-padding layout-align="start center">
+        <div style="width:960px">
+            <question-node ng-if="book" book="book"></question-node>
+        </div>        
+    </md-content>
 </md-content>
 
 <script type="text/ng-template" id="list">
@@ -41,7 +36,6 @@ app.requires.push('ngSurvey');
 app.controller('quesController', function quesController($scope, $http, $filter, surveyFactory){
 
     $scope.question;
-    $scope.questions = [];
 
     var index = 0;
 
