@@ -1,15 +1,31 @@
 angular.module('ngSurvey', [
-    'ngSurvey.services',
+    'ngSurvey.factories',
     'ngSurvey.directives'
 ]);
 
-angular.module('ngSurvey.services', [])
-
-.factory('questionService', ['$http', function($http) {
+angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http, $q) {
     var answers = {};
     var book = {};
     var record = {};
     return {
+        get: function(url, data, node = {}) {
+            var deferred = $q.defer();
+
+            node.saving = true;
+            $http({method: 'POST', url: url, data: data, timeout: deferred.promise})
+            .success(function(data, status, headers, config) {
+                deferred.resolve(data);
+            }).error(function(e) {
+                deferred.reject();
+                console.log(e);
+            });
+
+            deferred.promise.finally(function() {
+                node.saving = false
+            });
+
+            return deferred.promise;
+        },
         answers: answers,
         setBook: function(v) { book = v; },
         setRecord: function(v) { record = v; },
@@ -42,7 +58,7 @@ angular.module('ngSurvey.services', [])
             });
         }
     };
-}]);
+});
 
 angular.module('ngSurvey.directives', [])
 
@@ -52,15 +68,56 @@ angular.module('ngSurvey.directives', [])
     };
 })
 
-.directive('question', function($compile, questionService, $templateCache, templates) {
+.directive('questionNodes', function(surveyFactory) {
     return {
-        restrict: 'A',
+        restrict: 'E',
         replace: true,
         transclude: false,
         scope: {
-            question: '=',
-            branchs: '=',
-            childrens: '='
+            book: '=',
+            page: '='
+        },
+        template:  `
+            <div>
+                <md-card ng-repeat="node in nodes">
+                    <md-card-title>
+                        <md-card-title-text>
+                        <span class="md-headline" ng-bind-html="node.title"></span>
+                        </md-card-title-text>
+                    </md-card-title>
+                    <md-card-content>
+                        <question node="node"></question>
+                    </md-card-content>
+                    <md-card-content layout="row" layout-align="space-around" ng-if="node.saving">
+                        <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+                    </md-card-content>
+                </md-card>
+            </div>
+        `,
+        controller: function($scope, $http, $filter) {
+
+            $scope.getNodes = function(parent) {
+                console.log(parent);
+                surveyFactory.get('getNodes', {parent: parent}).then(function(response) {
+                    console.log(response);
+                    $scope.root = parent;
+                    $scope.nodes = response.nodes;
+                });
+            };
+
+            $scope.getNodes($scope.book);
+
+        }
+    };
+})
+
+.directive('question', function($compile, surveyFactory, $templateCache, templates) {
+    return {
+        restrict: 'E',
+        replace: true,
+        transclude: false,
+        scope: {
+            node: '='
         },
         compile: function(tElement, tAttr) {
             var contents = tElement.contents().remove();
@@ -69,7 +126,7 @@ angular.module('ngSurvey.directives', [])
             return function(scope, iElement, iAttr) {
                 scope.$watch('question.type', function(newType, oldType) {
                     var contents = iElement.contents().remove();
-                    var type = scope.question.type;
+                    var type = scope.node.type;
                     compiledContents[type] = $compile($templateCache.get(type));
                     compiledContents[type](scope, function(clone, scope) {
                         iElement.append(clone);
@@ -79,12 +136,12 @@ angular.module('ngSurvey.directives', [])
         },
         controller: function($scope, $http, $window, $filter, $rootScope) {
             $scope.saveTextNgOptions = {updateOn: 'default blur', debounce:{default: 10000, blur: 0}};
-            $scope.answers = questionService.answers;
+            $scope.answers = surveyFactory.answers;
             $scope.answers = {};console.log();
 
             $scope.save_answers = function(question) {
                 question.error = true;
-                questionService.save(question);
+                surveyFactory.save(question);
             }
 
             $scope.$on('$destroy', function() {

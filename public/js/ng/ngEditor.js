@@ -27,7 +27,7 @@ angular.module('ngEditor.factories', []).factory('editorFactory', function($http
 
 angular.module('ngEditor.directives', [])
 
-.directive('questionPage', function(editorFactory) {
+.directive('questionNodes', function(editorFactory) {
     return {
         restrict: 'E',
         replace: true,
@@ -42,7 +42,7 @@ angular.module('ngEditor.directives', [])
                     <md-button aria-label="加入題目" ng-click="$mdOpenMenu($event)">加入題目</md-button>
                     <md-menu-content width="2">
                     <md-menu-item ng-repeat="type in quesTypes | filter:{disabled:'!'}">
-                        <md-button ng-click="addQuestion(0, type)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
+                        <md-button ng-click="addNode(0, type)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
                     </md-menu-item>
                     </md-menu-content>
                 </md-menu>
@@ -54,9 +54,9 @@ angular.module('ngEditor.directives', [])
                     <md-card-content>
                         <md-input-container class="md-block">
                             <label>標題</label>
-                            <textarea ng-model="node.title" md-maxlength="150" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveQuestionTitle(node)"></textarea>
+                            <textarea ng-model="node.title" md-maxlength="150" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
                         </md-input-container>
-                        <div questions="node.questions"></div>
+                        <div questions="node.questions" node="node"></div>
                         <div answers="node.answers" node="node"></div>
                     </md-card-content>
                     <md-card-actions>
@@ -64,18 +64,18 @@ angular.module('ngEditor.directives', [])
                             <md-button aria-label="加入題目" ng-click="$mdOpenMenu($event)">加入題目</md-button>
                             <md-menu-content width="2">
                             <md-menu-item ng-repeat="type in quesTypes | filter:{disabled:'!'}">
-                                <md-button ng-click="addQuestion($index+1, type)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
+                                <md-button ng-click="addNode($index+1, type)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
                             </md-menu-item>
                             </md-menu-content>
                         </md-menu>
                     </md-card-actions>
-                    <md-card-content layout="row" layout-align="space-around" ng-if="question.saving">
+                    <md-card-content layout="row" layout-align="space-around" ng-if="node.saving">
                         <md-progress-circular md-mode="indeterminate"></md-progress-circular>
                     </md-card-content>
                 </md-card>
             </div>
         `,
-        controller: function($scope, $http, $filter) {
+        controller: function($scope, $filter) {
 
             $scope.nodes = [];
 
@@ -83,9 +83,9 @@ angular.module('ngEditor.directives', [])
                 {name: 'explain', title: '文字標題'},
                 {name: 'select', title: '單選題(下拉式)', icon: 'arrow-drop-down-circle'},
                 {name: 'radio', title: '單選題(點選)', icon: 'radio-button-checked'},
-                {name: 'checkboxs', title: '複選題', icon: 'check-box'},
-                {name: 'scales', title: '量表題', icon: 'list'},
-                {name: 'texts', title: '文字填答', icon: 'mode-edit'},
+                {name: 'checkbox', title: '複選題', icon: 'check-box'},
+                {name: 'scale', title: '量表題', icon: 'list'},
+                {name: 'text', title: '文字填答', icon: 'mode-edit'},
                 {name: 'list', title: '題組', icon: 'sitemap icon'},
                 {name: 'textarea', title: '文字欄位(大型欄位)', disabled: true},
                 {name: 'textscale', title: '文字欄位(表格)', disabled: true},
@@ -93,7 +93,7 @@ angular.module('ngEditor.directives', [])
                 {name: 'jump', title: '開啟題本', type: 'rule'}
             ];
 
-            this.getNodes = function(parent) {
+            $scope.getNodes = function(parent) {
                 editorFactory.ajax('getNodes', {parent: parent}).then(function(response) {
                     console.log(response);
                     $scope.root = parent;
@@ -101,54 +101,54 @@ angular.module('ngEditor.directives', [])
                 });
             };
 
-            this.getNodes($scope.book);
+            $scope.getNodes($scope.book);
 
-            this.addQuestion = function(sorter, type, parent = $scope.root) {
+            $scope.addNode = function(sorter, type, parent = $scope.root) {
                 console.log($scope.nodes);
-                var node = {
-                    type: type.name,
-                    sorter: sorter
-                };
+                var node = {type: type.name};
 
                 $scope.nodes.splice(sorter, 0, node);
 
                 editorFactory.ajax('createNode', {node: node, parent: parent}, node).then(function(response) {
                     console.log(response);
-                    angular.extend(node, response.question);
+                    angular.extend(node, response.node);
                 });
             };
 
-            this.removeQuestion = function(question) {
-                console.log($scope.questions);
-                editorFactory.ajax('removeQuestion', {question: question}, question).then(function(response) {
-                    if (response.deleted) {
-                        $scope.questions.splice($scope.questions.indexOf(question), 1);
-                    };
+            $scope.saveNodeTitle = function(node) {
+                editorFactory.ajax('saveNodeTitle', {node: node}, node).then(function(response) {
+                    node.title = response.title;
                 });
             };
 
             $scope.toRoot = function() {
-                $scope.getChildrens($scope.book);
-            }
+                $scope.getNodes($scope.book);
+            };
 
-            $scope.addQuestion = this.addQuestion;
-            $scope.getChildrens = this.getChildrens;
         }
     };
 })
 
-.directive('questionBar', function() {
+.directive('questionBar', function(editorFactory) {
     return {
         restrict: 'E',
         replace: true,
         transclude: false,
         templateUrl: 'bar',
-        require: ['^questionPage'],
+        require: ['^questionNodes'],
         link: function(scope, iElement, iAttrs, ctrls) {
             var pageCtrl = ctrls[0];
-            scope.removeQuestion = pageCtrl.removeQuestion;
         },
         controller: function($scope, $http) {
+
+            $scope.removeNode = function(node) {
+                console.log($scope.nodes);
+                editorFactory.ajax('removeNode', {node: node}, node).then(function(response) {
+                    if (response.deleted) {
+                        $scope.nodes.splice($scope.nodes.indexOf(node), 1);
+                    };
+                });
+            };
 
             this.moveSort = function(question, offset) {
                 question.sorter = question.sorter+offset;
@@ -169,7 +169,7 @@ angular.module('ngEditor.directives', [])
     };
 })
 
-.directive('answers', function() {
+.directive('answers', function(editorFactory) {
     return {
         restrict: 'A',
         replace: true,
@@ -197,42 +197,30 @@ angular.module('ngEditor.directives', [])
                 </md-list-item>
             </md-list>
         `,
-        controller: function($scope, $filter, $http) {
+        controller: function($scope, $filter) {
 
             $scope.saveTitleNgOptions = {updateOn: 'default blur', debounce:{default: 2000, blur: 0}};
 
             $scope.createAnswer = function() {
-                $http({method: 'POST', url: 'createAnswer', data:{node: $scope.node}})
-                .success(function(data, status, headers, config) {
-                    console.log(data);
-                    $scope.node.answers.push(data.answer);
-                }).error(function(e) {
-                    console.log(e);
+                editorFactory.ajax('createAnswer', {node: $scope.node}, $scope.node).then(function(response) {
+                    console.log(response);
+                    $scope.node.answers.push(response.answer);
                 });
             };
 
             $scope.saveAnswerTitle = function(answer) {
-                answer.saving = true;
-                $http({method: 'POST', url: 'saveAnswerTitle', data:{answer: answer}})
-                .success(function(data, status, headers, config) {
-                    console.log(data);
-                    answer.title = data.title;
-                    answer.saving = false;
-                }).error(function(e) {
-                    console.log(e);
+                editorFactory.ajax('saveAnswerTitle', {answer: answer}, answer).then(function(response) {
+                    console.log(response);
+                    answer.title = response.title;
                 });
             };
 
             $scope.removeAnswer = function(answer) {
-                answer.saving = true;
-                $http({method: 'POST', url: 'removeAnswer', data:{answer: answer}})
-                .success(function(data, status, headers, config) {
-                    console.log(data);
-                    if (data.deleted) {
-                        $scope.node.answers = data.answers;
+                editorFactory.ajax('removeAnswer', {answer: answer}, answer).then(function(response) {
+                    console.log(response);
+                    if (response.deleted) {
+                        $scope.node.answers = response.answers;
                     };
-                }).error(function(e) {
-                    console.log(e);
                 });
             };
 
@@ -240,7 +228,7 @@ angular.module('ngEditor.directives', [])
     };
 })
 
-.directive('questions', function($compile, FileUploader, $templateCache) {
+.directive('questions', function(editorFactory) {
     return {
         restrict: 'A',
         replace: true,
@@ -261,38 +249,38 @@ angular.module('ngEditor.directives', [])
                     <md-button class="md-secondary md-icon-button" ng-click="moveSort(question, 1)" aria-label="下移"><md-icon md-svg-icon="arrow-drop-down"></md-icon></md-button>
                     <md-icon class="md-secondary" aria-label="刪除子題" md-svg-icon="delete" ng-click="removeQuestion(question)"></md-icon>
                 </md-list-item>
-                <md-list-item ng-click="addQuestion(questions.length, question)">
+                <md-list-item ng-click="createQuestion(questions.length)">
                     <md-icon md-svg-icon="list"></md-icon>
                     <p>新增問題</p>
                 </md-list-item>
             </md-list>
         `,
-        require: ['^questionPage'],
-        controller: function($scope, $http, $interval, $timeout, $filter) {
+        controller: function($scope, $http, $filter) {
 
             $scope.saveTitleNgOptions = {updateOn: 'default blur', debounce:{default: 2000, blur: 0}};
             $scope.searchLoaded = '';
             $scope.searchText = {};
 
             $scope.createQuestion = function() {
-                $http({method: 'POST', url: 'createQuestion', data:{node: $scope.node}})
-                .success(function(data, status, headers, config) {
-                    console.log(data);
-                    $scope.node.questions.push(data.question);
-                }).error(function(e) {
-                    console.log(e);
+                editorFactory.ajax('createQuestion', {node: $scope.node}, $scope.node).then(function(response) {
+                    console.log(response);
+                    $scope.questions.push(response.question);
                 });
             };
 
             $scope.saveQuestionTitle = function(question) {
-                question.saving = true;
-                $http({method: 'POST', url: 'saveQuestionTitle', data:{question: question}})
-                .success(function(data, status, headers, config) {
-                    console.log(data);
-                    question.title = data.title;
-                    question.saving = false;
-                }).error(function(e) {
-                    console.log(e);
+                editorFactory.ajax('saveQuestionTitle', {question: question}, question).then(function(response) {
+                    console.log(response);
+                    question.title = response.title;
+                });
+            };
+
+            $scope.removeQuestion = function(question) {
+                editorFactory.ajax('removeQuestion', {question: question}, question).then(function(response) {
+                    console.log(response);
+                    if (response.deleted) {
+                        $scope.node.questions = response.questions;
+                    };
                 });
             };
 

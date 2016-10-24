@@ -14,6 +14,11 @@ class Node extends Eloquent {
 
     protected $attributes = ['title' => ''];
 
+    public function book()
+    {
+        return $this->hasOne('Plat\Eloquent\Survey\Book', 'id', 'book_id');
+    }
+
     public function questions()
     {
         return $this->hasMany('Plat\Eloquent\Survey\Question', 'node_id', 'id');

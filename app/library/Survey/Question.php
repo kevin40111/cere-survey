@@ -20,7 +20,7 @@ class Question {
     {
         $question = $node->questions()->save(new SurveyORM\Question($attributes));
 
-        return new static($book, $node);
+        return new static($node, $question);
     }
 
     public static function find($id)
@@ -46,7 +46,7 @@ class Question {
 
     public function delete()
     {
-        $deleted = $this->questions->delete();
+        $deleted = $this->question->delete();
 
         return $deleted;
     }
@@ -54,6 +54,11 @@ class Question {
     public function getModel()
     {
         return $this->question;
+    }
+
+    public function getNodeModel()
+    {
+        return $this->node;
     }
 
 }

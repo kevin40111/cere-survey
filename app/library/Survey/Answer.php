@@ -49,6 +49,16 @@ class Answer {
         return $deleted;
     }
 
+    public function getModel()
+    {
+        return $this->answer;
+    }
+
+    public function getNodeModel()
+    {
+        return $this->node;
+    }
+
     public function getChildrenModels()
     {
         $rule = $this->answer->childrenRule;
@@ -63,16 +73,6 @@ class Answer {
         $rule = $childrenRule->getResults() ?: $childrenRule->create([]);
 
         $rule->questions()->attach([$question->id]);
-    }
-
-    public function getModel()
-    {
-        return $this->answer;
-    }
-
-    public function getNodeModel()
-    {
-        return $this->node;
     }
 
 }

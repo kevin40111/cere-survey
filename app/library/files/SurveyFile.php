@@ -70,6 +70,8 @@ class SurveyFile extends CommFile {
     public function createQuestion()
     {
         $question = Survey\Question::create(SurveyORM\Node::find(Input::get('node.id')), []);
+
+        return ['question' => $question->getModel()];
     }
 
     public function createAnswer()
@@ -77,6 +79,13 @@ class SurveyFile extends CommFile {
         $answer = Survey\Answer::create(SurveyORM\Node::find(Input::get('node.id')), []);
 
         return ['answer' => $answer->getModel()];
+    }
+
+    public function saveNodeTitle()
+    {
+        $node = Survey\Node::find(Input::get('node.id'))->update(['title' => Input::get('node.title')]);
+
+        return ['title' => $node->getModel()->title];
     }
 
     public function saveQuestionTitle()
@@ -93,11 +102,18 @@ class SurveyFile extends CommFile {
         return ['title' => $answer->getModel()->title];
     }
 
+    public function removeNode()
+    {
+        $node = Survey\Node::find(Input::get('node.id'));
+
+        return ['deleted' => $node->delete()];
+    }
+
     public function removeQuestion()
     {
         $question = Survey\Question::find(Input::get('question.id'));
 
-        return ['deleted' => $question->delete()];
+        return ['deleted' => $question->delete(), 'questions' => $question->getNodeModel()->questions];
     }
 
     public function removeAnswer()

@@ -35,7 +35,7 @@
         <md-divider></md-divider>
         <div layout="column" layout-align="start center" style="height:100%;overflow-y:scroll">
             <div style="width:960px">
-                <question-page ng-if="book" book="book" page="page"></question-page>
+                <question-nodes ng-if="book" book="book" page="page"></question-nodes>
             </div>
         </div>
 
@@ -48,12 +48,6 @@
 </script>
 <script type="text/ng-template" id="search">
     @include('files.survey.template_editor_search')
-</script>
-<script type="text/ng-template" id="checkboxs">
-    @include('files.survey.template_editor_checkboxs')
-</script>
-<script type="text/ng-template" id="texts">
-    @include('files.survey.template_editor_texts')
 </script>
 <script type="text/ng-template" id="list">
     @include('files.survey.template_editor_list')

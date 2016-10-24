@@ -10,25 +10,15 @@ class Question extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = ['title', 'sorter'];
+    protected $fillable = ['title'];
 
     protected $attributes = ['title' => ''];
 
     protected $appends = ['class'];
 
-    public function book()
+    public function node()
     {
-        return $this->hasOne('Plat\Eloquent\Survey\Book', 'id', 'book_id');
-    }
-
-    public function answers()
-    {
-        return $this->hasMany('Plat\Eloquent\Survey\Answer', 'question_id', 'id');
-    }
-
-    public function branchs()
-    {
-        return $this->hasMany('Plat\Eloquent\Survey\Branch', 'question_id', 'id');
+        return $this->hasOne('Plat\Eloquent\Survey\Node', 'id', 'node_id');
     }
 
     public function byRules()

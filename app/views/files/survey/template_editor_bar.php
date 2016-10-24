@@ -22,7 +22,7 @@
     <md-button class="md-icon-button" aria-label="下移" ng-disabled="node.saving" ng-if="!$last" ng-click="moveSort(node, 1)">
         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="arrow-drop-down"></md-icon>
     </md-button>
-    <md-button class="md-icon-button" aria-label="刪除" ng-disabled="node.saving" ng-click="removeQuestion(node)">
+    <md-button class="md-icon-button" aria-label="刪除" ng-disabled="node.saving" ng-click="removeNode(node)">
         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
     </md-button>    
 </div>

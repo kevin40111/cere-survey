@@ -20,7 +20,7 @@ class Node {
     {
         $node = $book->nodes()->save(new SurveyORM\Node($attributes));
 
-        $node->questions()->save(new SurveyORM\Question(['sorter' => 0]));
+        $node->questions()->save(new SurveyORM\Question([]));
 
         //$parent['class']::find($parent['id'])->setChildren($question);
 
@@ -31,7 +31,7 @@ class Node {
     {
         $node = SurveyORM\Node::find($id);
 
-        $book = $question->book;
+        $book = $node->book;
 
         return new static($book, $node);
     }
@@ -57,6 +57,11 @@ class Node {
         $deleted = $this->node->delete();
 
         return $deleted;
+    }
+
+    public function getModel()
+    {
+        return $this->node->load(['questions', 'answers']);
     }
 
     public function getParent()
@@ -121,11 +126,6 @@ class Node {
         $rule = $childrenRule->getResults() ?: $childrenRule->create([]);
 
         $rule->node()->attach([$node->id]);
-    }
-
-    public function getModel()
-    {
-        return $this->node->load(['questions', 'answers']);
     }
 
 }
