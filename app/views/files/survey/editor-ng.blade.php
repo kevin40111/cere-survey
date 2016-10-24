@@ -49,20 +49,8 @@
 <script type="text/ng-template" id="search">
     @include('files.survey.template_editor_search')
 </script>
-<script type="text/ng-template" id="explain">
-    @include('files.survey.template_editor_explain')
-</script>
-<script type="text/ng-template" id="radio">
-    @include('files.survey.template_editor_radio')
-</script>
-<script type="text/ng-template" id="select">
-    @include('files.survey.template_editor_select')
-</script>
 <script type="text/ng-template" id="checkboxs">
     @include('files.survey.template_editor_checkboxs')
-</script>
-<script type="text/ng-template" id="scales">
-    @include('files.survey.template_editor_scales')
 </script>
 <script type="text/ng-template" id="texts">
     @include('files.survey.template_editor_texts')

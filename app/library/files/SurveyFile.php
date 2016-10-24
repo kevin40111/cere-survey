@@ -69,7 +69,7 @@ class SurveyFile extends CommFile {
 
     public function createQuestion()
     {
-
+        $question = Survey\Question::create(SurveyORM\Node::find(Input::get('node.id')), []);
     }
 
     public function createAnswer()
@@ -104,7 +104,7 @@ class SurveyFile extends CommFile {
     {
         $answer = Survey\Answer::find(Input::get('answer.id'));
 
-        return ['deleted' => $answer->delete(), 'answers' => $answer->getQuestionModel()->answers];
+        return ['deleted' => $answer->delete(), 'answers' => $answer->getNodeModel()->answers];
     }
 
     public function moveSort()

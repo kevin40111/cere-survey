@@ -70,9 +70,9 @@ class Answer {
         return $this->answer;
     }
 
-    public function getQuestionModel()
+    public function getNodeModel()
     {
-        return $this->question;
+        return $this->node;
     }
 
 }

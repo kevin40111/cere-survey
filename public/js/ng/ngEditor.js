@@ -223,6 +223,19 @@ angular.module('ngEditor.directives', [])
                 });
             };
 
+            $scope.removeAnswer = function(answer) {
+                answer.saving = true;
+                $http({method: 'POST', url: 'removeAnswer', data:{answer: answer}})
+                .success(function(data, status, headers, config) {
+                    console.log(data);
+                    if (data.deleted) {
+                        $scope.node.answers = data.answers;
+                    };
+                }).error(function(e) {
+                    console.log(e);
+                });
+            };
+
         }
     };
 })
@@ -233,7 +246,8 @@ angular.module('ngEditor.directives', [])
         replace: true,
         transclude: false,
         scope: {
-            questions: '='
+            questions: '=',
+            node: '='
         },
         template:  `
             <md-list>
@@ -254,62 +268,17 @@ angular.module('ngEditor.directives', [])
             </md-list>
         `,
         require: ['^questionPage'],
-        // compile: function(tElement, tAttr) {
-        //     var contents = tElement.contents().remove();
-        //     var compiledContents = {};
-
-        //     return function(scope, iElement, iAttrs, ctrls) {
-        //         scope.$watch('question.type', function(newType, oldType) {
-        //             var contents = iElement.contents().remove();
-        //             var type = newType == '?' ? 'search' : newType;
-        //             compiledContents[type] = $compile($templateCache.get(type));
-        //             compiledContents[type](scope, function(clone, scope) {
-        //                 iElement.append(clone);
-        //             });
-        //         });
-
-        //         var pageCtrl = ctrls[0];
-        //         var barCtrl = ctrls[1];
-        //         scope.getChildrens = pageCtrl.getChildrens;
-        //         scope.addQuestion = pageCtrl.addQuestion;
-        //         scope.removeQuestion = pageCtrl.removeQuestion;
-        //         scope.moveSort = barCtrl.moveSort;
-        //     };
-        // },
         controller: function($scope, $http, $interval, $timeout, $filter) {
 
             $scope.saveTitleNgOptions = {updateOn: 'default blur', debounce:{default: 2000, blur: 0}};
             $scope.searchLoaded = '';
             $scope.searchText = {};
 
-            $scope.icons = {
-                radio: {icon: 'selected radio', title: '單選題'},
-                select: {icon: 'arrow circle down', title: '下拉選單'},
-                checkboxs: {icon: 'checkmark box', title: '複選題'},
-                scales: {icon: 'ordered list', title: '量表題'},
-                texts: {icon: 'write', title: '文字填答'},
-                list: {icon: 'sitemap', title: '題組'}
-                // textarea: {icon: 'write square', title: '文字填答(多行)'}
-            };
-
-            $scope.addScaleAnswer = function(question) {
-                $http({method: 'POST', url: 'addScaleAnswer', data:{question: question}})
+            $scope.createQuestion = function() {
+                $http({method: 'POST', url: 'createQuestion', data:{node: $scope.node}})
                 .success(function(data, status, headers, config) {
                     console.log(data);
-                    question.answers.push(data.answer);
-                }).error(function(e) {
-                    console.log(e);
-                });
-            };
-
-            $scope.removeAnswer = function(answer) {
-                answer.saving = true;
-                $http({method: 'POST', url: 'removeAnswer', data:{answer: answer}})
-                .success(function(data, status, headers, config) {
-                    console.log(data);
-                    if (data.deleted) {
-                        $scope.question.answers = data.answers;
-                    };
+                    $scope.node.questions.push(data.question);
                 }).error(function(e) {
                     console.log(e);
                 });
