@@ -82,6 +82,34 @@ class Node {
         return $this->node->next ? Node::make($this->node->next) : NULL;
     }
 
+    public function childrenModels()
+    {
+        return $this->node->answers()->has('childrenNodes')->get();
+    }
+
+    public function sort($anchor)
+    {
+        $index = 0;
+        $this->getParent()->getChildrenModels()->except($this->node->id)->sortBy('sorter')->each(function($node) use (&$index, $anchor) {
+            $node->sorter = $index >= $anchor ? $index+1 : $index;
+            $node->save();
+            $index++;
+        });
+
+        $this->node->sorter = $anchor;
+
+        $this->node->save();
+
+        return $this;
+    }
+
+    public function rules()
+    {
+        $rule = $this->node->childrenRule;
+
+        return $rule ? $rule->node : \Illuminate\Database\Eloquent\Collection::make([]);
+    }
+
     public function getParent()
     {
         if ($this->node->byRules->isEmpty()) {
@@ -105,36 +133,6 @@ class Node {
         }
 
         return $parent;
-    }
-
-    public function getChildrenModels()
-    {
-        $rule = $this->node->childrenRule;
-
-        return $rule ? $rule->node : \Illuminate\Database\Eloquent\Collection::make([]);
-    }
-
-    public function getQuestionModels()
-    {
-        $questions = $this->getChildrenModels();
-
-        return $questions;//$this->removeChildrenModels($questions);
-    }
-
-    public function sort($anchor)
-    {
-        $index = 0;
-        $this->getParent()->getChildrenModels()->except($this->node->id)->sortBy('sorter')->each(function($node) use (&$index, $anchor) {
-            $node->sorter = $index >= $anchor ? $index+1 : $index;
-            $node->save();
-            $index++;
-        });
-
-        $this->node->sorter = $anchor;
-
-        $this->node->save();
-
-        return $this;
     }
 
     public function setChildren($node)

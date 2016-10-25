@@ -2,7 +2,7 @@
     <div>
         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="{{(quesTypes | filter:{name: node.type})[0].icon}}"></md-icon>
     </div>
-    <div style="margin: 0 0 0 16px">{{(quesTypes | filter:{name: node.type})[0].title}}</div>           
+    <div style="margin: 0 0 0 16px">{{(quesTypes | filter:{name: node.type})[0].title}}</div>
 
     <span flex></span>
 
@@ -24,5 +24,5 @@
     </md-button>
     <md-button class="md-icon-button" aria-label="刪除" ng-disabled="node.saving" ng-click="removeNode(node)">
         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
-    </md-button>    
+    </md-button>
 </div>

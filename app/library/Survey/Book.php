@@ -40,9 +40,9 @@ class Book {
         return $this->book->childrenNodes;
     }
 
-    public function getPath()
+    public function getPaths()
     {
-        return $this->book;
+        return [$this->book];
     }
 
     public function getFirstNode()

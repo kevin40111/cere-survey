@@ -38,15 +38,17 @@ angular.module('ngEditor.directives', [])
         },
         template:  `
             <div>
+                <div layout="row">
+                    <md-button ng-repeat="path in paths" ng-click="getNodes(path)">{{path.title}}/</md-button>
+                </div>
                 <md-menu>
-                    <md-button aria-label="加入題目" ng-click="$mdOpenMenu($event)">加入題目</md-button>
+                    <md-button aria-label="新增題目" ng-click="$mdOpenMenu($event)">新增題目</md-button>
                     <md-menu-content width="2">
                     <md-menu-item ng-repeat="type in quesTypes | filter:{disabled:'!'}">
                         <md-button ng-click="addNode(type)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
                     </md-menu-item>
                     </md-menu-content>
                 </md-menu>
-                <md-button class="md-secondary" aria-label="返回" ng-click="toRoot()">返回</md-button>
                 <md-card ng-repeat="node in nodes">
                     <md-card-header md-colors="{background: 'indigo'}">
                         <question-bar></question-bar>
@@ -57,11 +59,11 @@ angular.module('ngEditor.directives', [])
                             <textarea ng-model="node.title" md-maxlength="150" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
                         </md-input-container>
                         <div questions="node.questions" node="node"></div>
-                        <div answers="node.answers" node="node"></div>
+                        <div ng-if="node.type!='checkbox'" answers="node.answers" node="node"></div>
                     </md-card-content>
                     <md-card-actions>
                         <md-menu>
-                            <md-button aria-label="加入題目" ng-click="$mdOpenMenu($event)">加入題目</md-button>
+                            <md-button aria-label="新增題目" ng-click="$mdOpenMenu($event)">新增題目</md-button>
                             <md-menu-content width="2">
                             <md-menu-item ng-repeat="type in quesTypes | filter:{disabled:'!'}">
                                 <md-button ng-click="addNode(type, node)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
@@ -80,13 +82,13 @@ angular.module('ngEditor.directives', [])
             $scope.nodes = [];
 
             $scope.quesTypes = [
-                {name: 'explain', title: '文字標題'},
+                {name: 'explain', title: '說明文字', icon: 'info-outline'},
                 {name: 'select', title: '單選題(下拉式)', icon: 'arrow-drop-down-circle'},
                 {name: 'radio', title: '單選題(點選)', icon: 'radio-button-checked'},
                 {name: 'checkbox', title: '複選題', icon: 'check-box'},
                 {name: 'scale', title: '量表題', icon: 'list'},
                 {name: 'text', title: '文字填答', icon: 'mode-edit'},
-                {name: 'list', title: '題組', icon: 'sitemap icon'},
+                {name: 'list', title: '題組', icon: 'sitemap icon', disabled: true},
                 {name: 'textarea', title: '文字欄位(大型欄位)', disabled: true},
                 {name: 'textscale', title: '文字欄位(表格)', disabled: true},
                 {name: 'table', title: '表格', disabled: true},
@@ -99,6 +101,7 @@ angular.module('ngEditor.directives', [])
                     console.log(response);
                     $scope.root = parent;
                     $scope.nodes = response.nodes;
+                    $scope.paths = response.paths;
                 });
             };
 
@@ -122,9 +125,7 @@ angular.module('ngEditor.directives', [])
                 });
             };
 
-            $scope.toRoot = function() {
-                $scope.getNodes($scope.book);
-            };
+            $scope.getNodes = this.getNodes;
 
         }
     };

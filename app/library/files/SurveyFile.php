@@ -51,7 +51,7 @@ class SurveyFile extends CommFile {
     {
         $class = Input::get('parent.class');
 
-        $path = $class::find(Input::get('parent.id'))->getPath();
+        $paths = $class::find(Input::get('parent.id'))->getPaths();
 
         $nextNodes = $class::find(Input::get('parent.id'))->getChildrenNodeModels()->load([
             'questions',
@@ -67,21 +67,27 @@ class SurveyFile extends CommFile {
                 array_push($nodes, $nextNodes[$previous_id]); 
         });
 
-        return ['nodes' => $nodes, 'path' => $path];
+        return ['nodes' => $nodes, 'paths' => $paths];
     }
 
     public function getNextNode()
     {
-        $node = Input::has('node.id') ? Survey\Node::find(Input::get('node.id'))->next() : Survey\Book::make($this->file->book)->getFirstNode();
+        if (Input::has('node.id')) {
+            $childrens = Survey\Node::find(Input::get('node.id'))->childrenModels();
 
-        return ['node' => $node->getModel()];
+            $node = $childrens->isEmpty() ? Survey\Node::find(Input::get('node.id'))->next()->getModel() : $childrens->first();
+        } else {
+            $node = Survey\Book::make($this->file->book)->getFirstNode()->getModel();
+        }
+
+        return ['node' => $node];
     }
 
     public function createNode()
     {
-        $parent_class = Input::get('parent.class');
+        $class = Input::get('parent.class');
 
-        $parent = $parent_class::find(Input::get('parent.id'))->getModel();
+        $parent = $class::find(Input::get('parent.id'))->getModel();
 
         $node = Survey\Node::create($parent, Input::get('node'));
 

@@ -19,6 +19,11 @@ class Answer {
         return new static($node, $answer);
     }
 
+    public static function make(SurveyORM\Answer $answer)
+    {
+        return new static($answer->node, $answer);
+    }
+
     public static function find($id)
     {
         $answer = SurveyORM\Answer::find($id);
@@ -61,15 +66,18 @@ class Answer {
 
     public function getChildrenNodeModels()
     {
-        $rule = $this->answer->childrenRule;
-
-        return $rule ? $rule->questions : \Illuminate\Database\Eloquent\Collection::make([]);
+        return $this->answer->childrenNodes;
     }
 
-    public function getPath()
+    public function getPaths()
     {
-         
-        return $this->answer->node->byRules->isEmpty() ? $this->answer : $this->answer->node->byRules;
+        $class = $this->answer->node->parent->class;
+
+        $paths = $class::make($this->answer->node->parent)->getPaths();
+
+        array_push($paths, $this->answer);
+
+        return $paths;
     }
 
     public function setChildren($question)
