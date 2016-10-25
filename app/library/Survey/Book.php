@@ -30,14 +30,24 @@ class Book {
         return new static($book);
     }
 
-    public function getNodeModels()
+    public function getModel()
     {
-        return $this->book->nodes;
+        return $this->book;
+    }
+
+    public function getChildrenNodeModels()
+    {
+        return $this->book->childrenNodes;
+    }
+
+    public function getPath()
+    {
+        return $this->book;
     }
 
     public function getFirstNode()
     {        
-        return Node::make($this->book->nodes()->whereNull('previous_id')->first());
+        return Node::make($this->book->childrenNodes()->whereNull('previous_id')->first());
     }
 
     public function removeChildrenModels($questions)
@@ -45,11 +55,6 @@ class Book {
         return $questions->filter(function($question) {
             return $question->byRules->isEmpty();
         });
-    }
-
-    public function setChildren()
-    {
-
     }
 
 }

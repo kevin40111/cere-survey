@@ -14,10 +14,15 @@ class Book extends Eloquent {
 
     protected $appends = ['class'];
 
-    public function nodes()
+    public function childrenNodes()
     {
-        return $this->hasMany('Plat\Eloquent\Survey\Node', 'book_id', 'id');
+        return $this->morphMany('Plat\Eloquent\Survey\Node', 'parent');
     }
+
+    // public function nodes()
+    // {
+    //     return $this->hasMany('Plat\Eloquent\Survey\Node', 'book_id', 'id');
+    // }
 
     public function getClassAttribute()
     {

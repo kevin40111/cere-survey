@@ -93,7 +93,8 @@ angular.module('ngEditor.directives', [])
                 {name: 'jump', title: '開啟題本', type: 'rule'}
             ];
 
-            $scope.getNodes = function(parent) {
+            this.getNodes = function(parent) {
+                console.log(parent);
                 editorFactory.ajax('getNodes', {parent: parent}).then(function(response) {
                     console.log(response);
                     $scope.root = parent;
@@ -101,7 +102,7 @@ angular.module('ngEditor.directives', [])
                 });
             };
 
-            $scope.getNodes($scope.book);
+            this.getNodes($scope.book);
 
             $scope.addNode = function(type, previous = {id: null}, parent = $scope.root) {
                 console.log($scope.nodes);
@@ -141,9 +142,9 @@ angular.module('ngEditor.directives', [])
         },
         controller: function($scope, $http) {
 
-            $scope.removeNode = function(node) {
-                console.log($scope.nodes);
+            $scope.removeNode = function(node) {                
                 editorFactory.ajax('removeNode', {node: node}, node).then(function(response) {
+                    console.log(response);
                     if (response.deleted) {
                         $scope.nodes.splice($scope.nodes.indexOf(node), 1);
                     };
@@ -188,7 +189,7 @@ angular.module('ngEditor.directives', [])
                             <input type="text" placeholder="輸入選項名稱..." ng-model="answer.title" ng-model-options="saveTitleNgOptions" ng-change="saveAnswerTitle(answer)" />
                         </div>
                     </div>
-                    <md-button class="md-secondary" aria-label="設定子題" ng-click="getChildrens(answer)">設定子題</md-button>
+                    <md-button class="md-secondary" aria-label="設定子題" ng-click="getNodes(answer)">設定子題</md-button>
                     <md-icon class="md-secondary" aria-label="刪除選項" md-svg-icon="delete" ng-click="removeAnswer(answer)"></md-icon>
                 </md-list-item>
                 <md-list-item ng-click="createAnswer()">
@@ -197,6 +198,11 @@ angular.module('ngEditor.directives', [])
                 </md-list-item>
             </md-list>
         `,
+        require: ['^questionNodes'],
+        link: function(scope, iElement, iAttrs, ctrls) {
+            var nodeCtrl = ctrls[0];
+            scope.getNodes = nodeCtrl.getNodes;
+        },
         controller: function($scope, $filter) {
 
             $scope.saveTitleNgOptions = {updateOn: 'default blur', debounce:{default: 2000, blur: 0}};
@@ -222,7 +228,7 @@ angular.module('ngEditor.directives', [])
                         $scope.node.answers = response.answers;
                     };
                 });
-            };
+            };            
 
         }
     };

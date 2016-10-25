@@ -59,11 +59,17 @@ class Answer {
         return $this->node;
     }
 
-    public function getChildrenModels()
+    public function getChildrenNodeModels()
     {
         $rule = $this->answer->childrenRule;
 
         return $rule ? $rule->questions : \Illuminate\Database\Eloquent\Collection::make([]);
+    }
+
+    public function getPath()
+    {
+         
+        return $this->answer->node->byRules->isEmpty() ? $this->answer : $this->answer->node->byRules;
     }
 
     public function setChildren($question)

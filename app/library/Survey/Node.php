@@ -6,43 +6,38 @@ use Plat\Eloquent\Survey as SurveyORM;
 
 class Node {
 
-    protected $book;
+    protected $parent;
 
     protected $node;
 
-    function __construct(SurveyORM\Book $book, SurveyORM\Node $node)
+    function __construct($parent, SurveyORM\Node $node)
     {
-        $this->book = $book;
+        $this->parent = $parent;
         $this->node = $node;
     }
 
-    public static function create(SurveyORM\Book $book, array $attributes, $parent)
+    public static function create($parent, array $attributes)
     {
-        //$ff = new SurveyORM\Node($attributes);
-        //dd($ff->previous);
-
-        $first = $book->nodes()->whereNull('previous_id')->first();
+        $first = $parent->childrenNodes()->whereNull('previous_id')->first();
 
         $previous = Node::find($attributes['previous_id']);
 
         $next = $previous ? $previous->next() : $first;
 
-        $node = $book->nodes()->save(new SurveyORM\Node($attributes));
+        $node = $parent->childrenNodes()->save(new SurveyORM\Node($attributes));
 
         $node->questions()->save(new SurveyORM\Question([]));
 
-        $node->next()->save($next);
-
-        //$next && $next->update(['previous_id' => $node->id]);
+        $next && $next->update(['previous_id' => $node->id]);
 
         //$parent['class']::find($parent['id'])->setChildren($question);
 
-        return new static($book, $node);
+        return new static($parent, $node);
     }
 
     public static function make(SurveyORM\Node $node)
     {
-        return $node ? new static($node->book, $node) : NULL;
+        return $node ? new static($node->parent, $node) : NULL;
     }
 
     public static function find($id)

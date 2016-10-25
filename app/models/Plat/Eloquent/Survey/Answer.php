@@ -21,6 +21,11 @@ class Answer extends Eloquent {
         return $this->hasOne('Plat\Eloquent\Survey\Node', 'id', 'node_id');
     }
 
+    public function childrenNodes()
+    {
+        return $this->morphMany('Plat\Eloquent\Survey\Node', 'parent');
+    }
+
     public function childrenRule()
     {
         return $this->hasOne('Plat\Eloquent\Survey\Rule', 'expression', 'children_expression');
