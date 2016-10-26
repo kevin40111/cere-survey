@@ -131,9 +131,8 @@ angular.module('ngSurvey.directives', [])
             return function(scope, iElement, iAttr) {
                 scope.$watch('node.type', function(newType, oldType) {
                     var contents = iElement.contents().remove();
-                    var type = scope.node.type;
-                    compiledContents[type] = $compile($templateCache.get(type));
-                    compiledContents[type](scope, function(clone, scope) {
+                    compiledContents[newType.name] = $compile($templateCache.get(newType.name));
+                    compiledContents[newType.name](scope, function(clone, scope) {
                         iElement.append(clone);
                     });
                 });

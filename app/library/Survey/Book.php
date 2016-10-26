@@ -11,8 +11,6 @@ class Book {
 
     protected $book;
 
-    protected $page;
-
     function __construct(SurveyORM\Book $book)
     {
         $this->book = $book;
@@ -36,8 +34,19 @@ class Book {
     }
 
     public function getChildrenNodeModels()
-    {
+    {       
         return $this->book->childrenNodes;
+    }
+
+    public function initNode()
+    {
+        if ($this->book->childrenNodes->isEmpty()) {
+            Node::create($this->book, ['type' => 'explain', 'previous_id' => NULL]);
+
+            $this->book->load('childrenNodes');
+        }
+
+        return $this;
     }
 
     public function getPaths()
@@ -46,7 +55,7 @@ class Book {
     }
 
     public function getFirstNode()
-    {        
+    {
         return Node::make($this->book->childrenNodes()->whereNull('previous_id')->first());
     }
 

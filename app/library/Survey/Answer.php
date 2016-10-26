@@ -69,6 +69,11 @@ class Answer {
         return $this->answer->childrenNodes;
     }
 
+    public function initNode()
+    {
+
+    }
+
     public function getPaths()
     {
         $class = $this->answer->node->parent->class;

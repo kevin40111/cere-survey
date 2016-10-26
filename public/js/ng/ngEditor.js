@@ -41,14 +41,6 @@ angular.module('ngEditor.directives', [])
                 <div layout="row">
                     <md-button ng-repeat="path in paths" ng-click="getNodes(path)">{{path.title}}/</md-button>
                 </div>
-                <md-menu>
-                    <md-button aria-label="新增題目" ng-click="$mdOpenMenu($event)">新增題目</md-button>
-                    <md-menu-content width="2">
-                    <md-menu-item ng-repeat="type in quesTypes | filter:{disabled:'!'}">
-                        <md-button ng-click="addNode(type)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
-                    </md-menu-item>
-                    </md-menu-content>
-                </md-menu>
                 <md-card ng-repeat="node in nodes">
                     <md-card-header md-colors="{background: 'indigo'}">
                         <question-bar></question-bar>
@@ -58,8 +50,8 @@ angular.module('ngEditor.directives', [])
                             <label>標題</label>
                             <textarea ng-model="node.title" md-maxlength="150" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
                         </md-input-container>
-                        <div questions="node.questions" node="node"></div>
-                        <div ng-if="node.type!='checkbox'" answers="node.answers" node="node"></div>
+                        <div ng-if="node.type.questions" questions="node.questions" node="node"></div>
+                        <div ng-if="node.type.answers" answers="node.answers" node="node"></div>
                     </md-card-content>
                     <md-card-actions>
                         <md-menu>
@@ -248,7 +240,7 @@ angular.module('ngEditor.directives', [])
             <md-list>
                 <md-subheader class="md-no-sticky">問題 ({{ questions.length || 0 }})</md-subheader>
                 <md-list-item ng-repeat="question in questions">
-                    <md-icon md-svg-icon="list"><md-tooltip md-direction="left">{{$index+1}}</md-tooltip></md-icon>
+                    <md-icon md-svg-icon="help"><md-tooltip md-direction="left">{{$index+1}}</md-tooltip></md-icon>
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
                         <input type="text" placeholder="輸入問題..." ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)" />
                     </p>
@@ -257,7 +249,7 @@ angular.module('ngEditor.directives', [])
                     <md-icon class="md-secondary" aria-label="刪除子題" md-svg-icon="delete" ng-click="removeQuestion(question)"></md-icon>
                 </md-list-item>
                 <md-list-item ng-click="createQuestion(questions.length)">
-                    <md-icon md-svg-icon="list"></md-icon>
+                    <md-icon md-svg-icon="help"></md-icon>
                     <p>新增問題</p>
                 </md-list-item>
             </md-list>

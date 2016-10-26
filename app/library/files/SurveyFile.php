@@ -29,7 +29,7 @@ class SurveyFile extends CommFile {
     {
         $commFile = parent::create();
 
-        $book = $this->file->book()->create(['title' => $this->file->title,]);
+        $book = $this->file->book()->create(['title' => $this->file->title]);
     }
 
     public function open()
@@ -51,27 +51,28 @@ class SurveyFile extends CommFile {
     {
         $class = Input::get('parent.class');
 
-        $paths = $class::find(Input::get('parent.id'))->getPaths();
+        $parent = $class::find(Input::get('parent.id'));
 
-        $nextNodes = $class::find(Input::get('parent.id'))->getChildrenNodeModels()->load([
+        $nextNodes = $parent->initNode()->getChildrenNodeModels()->load([
             'questions',
             'answers',
             //'byRules',
         ])->keyBy('previous_id');
 
         $nodes = $nextNodes->isEmpty() ? [] : [$nextNodes['']];
-        
+
         $nextNodes->each(function($node) use ($nextNodes, &$nodes) {
             $previous_id = $nodes[count($nodes)-1]->id;
             if (isset($nextNodes[$previous_id]))
-                array_push($nodes, $nextNodes[$previous_id]); 
+                array_push($nodes, $nextNodes[$previous_id]);
         });
 
-        return ['nodes' => $nodes, 'paths' => $paths];
+        return ['nodes' => $nodes, 'paths' => $parent->getPaths()];
     }
 
     public function getNextNode()
     {
+
         if (Input::has('node.id')) {
             $childrens = Survey\Node::find(Input::get('node.id'))->childrenModels();
 

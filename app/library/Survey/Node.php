@@ -18,17 +18,17 @@ class Node {
 
     public static function create($parent, array $attributes)
     {
-        $first = $parent->childrenNodes()->whereNull('previous_id')->first();
+        //$first = $parent->childrenNodes()->whereNull('previous_id')->first();
 
-        $previous = Node::find($attributes['previous_id']);
+        $next = $attributes['previous_id'] && Node::find($attributes['previous_id'])->next();
 
-        $next = $previous ? $previous->next() : $first;
+        //$next = $previous ? $previous->next() : $first;
 
         $node = $parent->childrenNodes()->save(new SurveyORM\Node($attributes));
 
         $node->questions()->save(new SurveyORM\Question([]));
 
-        $next && $next->update(['previous_id' => $node->id]);
+        $next && $next->update(['previous_id' => $node->id]);        
 
         //$parent['class']::find($parent['id'])->setChildren($question);
 

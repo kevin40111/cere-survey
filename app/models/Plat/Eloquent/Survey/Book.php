@@ -6,6 +6,8 @@ use Eloquent;
 
 class Book extends Eloquent {
 
+    use \Plat\Survey\Tree;
+
     protected $table = 'file_book';
 
     public $timestamps = false;

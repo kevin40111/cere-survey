@@ -73,4 +73,22 @@ class Node extends Eloquent {
         return $this->attributes['childrens'];
     }
 
+    public function getTypeAttribute($value)
+    {
+        $types = [
+            'explain'  => ['name' => 'explain',  'question' => false, 'answers' => false, 'title' =>'說明文字',   'icon' =>'info-outline'],
+            'select'   => ['name' => 'select',   'question' => true, 'answers' => true, 'title' =>'下拉式選單', 'icon' =>'arrow-drop-down-circle'],
+            'radio'    => ['name' => 'radio',    'question' => true, 'answers' => true, 'title' =>'單選題',     'icon' =>'radio-button-checked'],
+            'checkbox' => ['name' => 'checkbox', 'question' => true, 'answers' => false, 'title' =>'複選題',     'icon' =>'check-box'],
+            'scale'    => ['name' => 'scale',    'question' => true, 'answers' => true, 'title' =>'量表題',     'icon' =>'list'],
+            'text'     => ['name' => 'text',     'question' => true, 'answers' => false, 'title' =>'文字填答',   'icon' =>'mode-edit'],
+            'list'     => ['name' => 'list',     'question' => false, 'answers' => false, 'title' =>'題組',       'icon' =>'sitemap', 'disabled' => true],
+            'textarea' => ['name' => 'textarea', 'question' => false, 'answers' => false, 'title' =>'文字欄位',   'disabled' => true],
+            'table'    => ['name' => 'table',    'question' => false, 'answers' => false, 'title' =>'表格',       'disabled' => true],
+            'jump'     => ['name' => 'jump',     'question' => false, 'answers' => false, 'title' =>'開啟題本',   'type' =>'rule'],
+        ];
+
+        return $types[$value];
+    }
+
 }
