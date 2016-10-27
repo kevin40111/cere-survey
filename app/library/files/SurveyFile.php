@@ -79,9 +79,9 @@ class SurveyFile extends CommFile {
 
         $parent = $class::find(Input::get('parent.id'));
 
-        $node = Survey\Node::create($parent, Input::get('node'));
+        $node = Survey\Node::create($parent, Input::get('node'))->getModel()->after(Input::get('previous.id'));
 
-        return ['node' => $node->getModel()];
+        return ['node' => $node];
     }
 
     public function createQuestion()
@@ -93,7 +93,7 @@ class SurveyFile extends CommFile {
 
     public function createAnswer()
     {
-        $answer = SurveyORM\Node::find(Input::get('node.id'))->answers()->save(new SurveyORM\Answer([]));
+        $answer = SurveyORM\Node::find(Input::get('node.id'))->answers()->save(new SurveyORM\Answer([]))->after(Input::get('previous.id'));
 
         return ['answer' => $answer];
     }
@@ -101,7 +101,7 @@ class SurveyFile extends CommFile {
     public function saveNodeTitle()
     {
         $node = Survey\Node::find(Input::get('node.id'))->getModel();
-        
+
         $node->update(['title' => Input::get('node.title')]);
 
         return ['title' => $node->title];
@@ -119,7 +119,7 @@ class SurveyFile extends CommFile {
     public function saveAnswerTitle()
     {
         $answer = SurveyORM\Answer::find(Input::get('answer.id'));
-        
+
         $answer->update(['title' => Input::get('answer.title')]);
 
         return ['answer' => $answer];
@@ -128,6 +128,8 @@ class SurveyFile extends CommFile {
     public function removeNode()
     {
         $node = Survey\Node::find(Input::get('node.id'));
+
+        $node->getModel()->next->after($node->getModel()->previous->id);
 
         return ['deleted' => $node->delete()];
     }
@@ -145,14 +147,18 @@ class SurveyFile extends CommFile {
     {
         $answer = SurveyORM\Answer::find(Input::get('answer.id'));
 
+        $answer->next->after($answer->previous->id);
+
         return ['deleted' => $answer->delete(), 'answers' => $answer->node->answers];
     }
 
-    public function moveSort()
+    public function moveUp()
     {
-        $questions = Survey\Question::find(Input::get('question.id'))->sort(Input::get('question.sorter')*1)->getParent()->getChildrenModels()->sortBy('sorter');
+        $class = '\\' . Input::get('item.class');
 
-        return ['questions' => $questions->load(['answers'])->values()];
+        $item = $class::find(Input::get('item.id'))->moveUp();
+
+        return ['items' => $item->node->sortByPrevious(['questions'])->questions];
     }
 
     public function moveChildrenSort()

@@ -16,6 +16,8 @@ class Question extends Eloquent {
 
     protected $attributes = ['title' => ''];
 
+    protected $appends = ['class'];
+
     public function node()
     {
         return $this->hasOne('Plat\Eloquent\Survey\Node', 'id', 'node_id');
@@ -29,6 +31,11 @@ class Question extends Eloquent {
     public function previous()
     {
         return $this->hasOne('Plat\Eloquent\Survey\Question', 'id', 'previous_id');
+    }
+
+    public function getClassAttribute()
+    {
+        return self::class;
     }
 
     public function getRequiredAttribute($value)

@@ -23,7 +23,7 @@ trait Tree {
     }
 
     public function sortByPrevious(array $relations)
-    {
+    {       
         foreach ($relations as $relation) {
 
             $nextNodes = $this->$relation->keyBy('previous_id');
@@ -47,7 +47,7 @@ trait Tree {
         $next = isset($previous_id) ? self::find($previous_id)->next : false;
 
         if ($next) {
-            $next->update(['previous_id' => $this->id]);              
+            $next->update(['previous_id' => $this->id]);
         }
 
         $this->update(['previous_id' => $previous_id]);
@@ -55,8 +55,15 @@ trait Tree {
         return $this;
     }
 
-    public function sortRelationsByPrevious(array $relations)
-    {
+    public function moveUp()
+    {       
+        $top_id = $this->previous->previous ? $this->previous->previous->id : NULL;
+
+        $this->next && $this->next->after($this->previous->id);
+
+        $this->previous->after($this->id);
+
+        $this->after($top_id);
 
         return $this;
     }

@@ -18,17 +18,7 @@ class Node {
 
     public static function create($parent, array $attributes)
     {
-        //$first = $parent->childrenNodes()->whereNull('previous_id')->first();
-
-        $next = isset($attributes['previous_id']) ? Node::find($attributes['previous_id'])->getModel()->next : false;
-
-        //$next = $previous ? $previous->next() : $first;
-
         $node = $parent->childrenNodes()->save(new SurveyORM\Node($attributes));         
-
-        $next && $next->update(['previous_id' => $node->id]);       
-
-        //$parent['class']::find($parent['id'])->setChildren($question);
 
         $node->questions()->save(new SurveyORM\Question([]));
 
@@ -49,8 +39,6 @@ class Node {
 
     public function delete()
     {
-        $this->node->next && $this->node->next->update(['previous_id' => $this->node->previous_id]);
-
         $this->node->answers()->delete();
 
         $this->node->questions()->delete();
@@ -68,22 +56,6 @@ class Node {
     public function childrenModels()
     {
         return $this->node->answers()->has('childrenNodes')->get();
-    }
-
-    public function sort($anchor)
-    {
-        $index = 0;
-        $this->getParent()->getChildrenModels()->except($this->node->id)->sortBy('sorter')->each(function($node) use (&$index, $anchor) {
-            $node->sorter = $index >= $anchor ? $index+1 : $index;
-            $node->save();
-            $index++;
-        });
-
-        $this->node->sorter = $anchor;
-
-        $this->node->save();
-
-        return $this;
     }
 
     public function rules()

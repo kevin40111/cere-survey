@@ -99,13 +99,13 @@ angular.module('ngEditor.directives', [])
 
             this.getNodes($scope.book);
 
-            $scope.addNode = function(type, previous = {id: null}, parent = $scope.root) {
+            $scope.addNode = function(type, previous, parent = $scope.root) {
                 console.log($scope.nodes);
-                var node = {type: type.name, previous_id: previous.id};
+                var node = {type: type.name};
 
                 $scope.nodes.splice($scope.nodes.indexOf(previous)+1, 0, node);
 
-                editorFactory.ajax('createNode', {node: node, parent: parent}, node).then(function(response) {
+                editorFactory.ajax('createNode', {node: node, parent: parent, previous: previous}, node).then(function(response) {
                     console.log(response);
                     angular.extend(node, response.node);
                 });
@@ -216,7 +216,7 @@ angular.module('ngEditor.directives', [])
                     <md-button class="md-secondary" aria-label="設定子題" ng-click="getNodes(answer)">設定子題</md-button>
                     <md-icon class="md-secondary" aria-label="刪除選項" md-svg-icon="delete" ng-click="removeAnswer(answer)"></md-icon>
                 </md-list-item>
-                <md-list-item ng-click="createAnswer()">
+                <md-list-item ng-click="createAnswer(answers[answers.length-1])">
                     <md-icon md-svg-icon="radio-button-checked"></md-icon>
                     <p>新增選項</p>
                 </md-list-item>
@@ -231,8 +231,8 @@ angular.module('ngEditor.directives', [])
 
             $scope.saveTitleNgOptions = {updateOn: 'default blur', debounce:{default: 2000, blur: 0}};
 
-            $scope.createAnswer = function() {
-                editorFactory.ajax('createAnswer', {node: $scope.node}, $scope.node).then(function(response) {
+            $scope.createAnswer = function(previous) {
+                editorFactory.ajax('createAnswer', {node: $scope.node, previous: previous}, $scope.node).then(function(response) {
                     console.log(response);
                     $scope.node.answers.push(response.answer);
                 });
@@ -275,7 +275,7 @@ angular.module('ngEditor.directives', [])
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
                         <input type="text" placeholder="輸入問題..." ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)" />
                     </p>
-                    <md-button class="md-secondary md-icon-button" ng-click="moveSort(question, -1)" aria-label="上移"><md-icon md-svg-icon="arrow-drop-up"></md-icon></md-button>
+                    <md-button class="md-secondary md-icon-button" ng-click="moveUp(question)" aria-label="上移"><md-icon md-svg-icon="arrow-drop-up"></md-icon></md-button>
                     <md-button class="md-secondary md-icon-button" ng-click="moveSort(question, 1)" aria-label="下移"><md-icon md-svg-icon="arrow-drop-down"></md-icon></md-button>
                     <md-icon class="md-secondary" aria-label="刪除子題" md-svg-icon="delete" ng-click="removeQuestion(question)"></md-icon>
                 </md-list-item>
@@ -312,6 +312,13 @@ angular.module('ngEditor.directives', [])
                     if (response.deleted) {
                         $scope.node.questions = response.questions;
                     };
+                });
+            };
+
+            $scope.moveUp = function(question) {
+                editorFactory.ajax('moveUp', {item: question}, question).then(function(response) {
+                    console.log(response);
+                    $scope.node.questions = response.items;
                 });
             };
 

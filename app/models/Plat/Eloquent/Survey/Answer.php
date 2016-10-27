@@ -12,7 +12,7 @@ class Answer extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = array('title', 'value');
+    protected $fillable = array('title', 'value', 'previous_id');
 
     protected $attributes = ['value' => '', 'title' => ''];
 
@@ -21,6 +21,16 @@ class Answer extends Eloquent {
     public function node()
     {
         return $this->hasOne('Plat\Eloquent\Survey\Node', 'id', 'node_id');
+    }
+
+    public function next()
+    {
+        return $this->hasOne('Plat\Eloquent\Survey\Answer', 'previous_id', 'id');
+    }
+
+    public function previous()
+    {
+        return $this->hasOne('Plat\Eloquent\Survey\Answer', 'id', 'previous_id');
     }
 
     public function childrenNodes()
