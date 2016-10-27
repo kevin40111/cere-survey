@@ -86,7 +86,7 @@ angular.module('ngSurvey.directives', [])
                         </md-card-title-text>
                     </md-card-title>
                     <md-card-content>
-                        <question ng-if="node" node="node"></question>
+                        <question ng-if="node.ready" node="node"></question>
                     </md-card-content>
                     <md-card-actions layout="row" layout-align="end center">
                         <md-button class="md-raised md-primary" ng-click="getNextNode()" ng-disabled="node.saving">繼續</md-button>
@@ -100,13 +100,14 @@ angular.module('ngSurvey.directives', [])
         `,
         controller: function($scope, $http, $filter) {
 
-            $scope.node = {saving: true};
+            $scope.node = {saving: true, ready: false};
 
             $scope.getNextNode = function() {
                 console.log($scope.node);
                 surveyFactory.get('getNextNode', {node: $scope.node}, $scope.node).then(function(response) {
                     console.log(response);
                     $scope.node = response.node;
+                    $scope.node.ready = true;
                 });
             };
 
@@ -139,9 +140,10 @@ angular.module('ngSurvey.directives', [])
             };
         },
         controller: function($scope, $http, $window, $filter, $rootScope) {
+            console.log($scope);
             $scope.saveTextNgOptions = {updateOn: 'default blur', debounce:{default: 10000, blur: 0}};
             $scope.answers = surveyFactory.answers;
-            $scope.answers = {};console.log();
+            $scope.answers = {};
 
             $scope.save_answers = function(question) {
                 question.error = true;

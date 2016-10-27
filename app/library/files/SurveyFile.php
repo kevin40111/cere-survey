@@ -53,18 +53,8 @@ class SurveyFile extends CommFile {
 
         $parent = $class::find(Input::get('parent.id'));
 
-        $nextNodes = $parent->initNode()->childrenNodes->load([
-            'questions',
-            'answers',
-            //'byRules',
-        ])->keyBy('previous_id');
-
-        $nodes = $nextNodes->isEmpty() ? [] : [$nextNodes['']];
-
-        $nextNodes->each(function($node) use ($nextNodes, &$nodes) {
-            $previous_id = $nodes[count($nodes)-1]->id;
-            if (isset($nextNodes[$previous_id]))
-                array_push($nodes, $nextNodes[$previous_id]);
+        $nodes = $parent->initNode()->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions', 'answers', 'byRules'])->each(function($node) {
+            $node->sortByPrevious(['questions', 'answers']);
         });
 
         return ['nodes' => $nodes, 'paths' => $parent->getPaths()];
@@ -72,7 +62,6 @@ class SurveyFile extends CommFile {
 
     public function getNextNode()
     {
-
         if (Input::has('node.id')) {
             $childrens = Survey\Node::find(Input::get('node.id'))->childrenModels();
 
@@ -81,7 +70,7 @@ class SurveyFile extends CommFile {
             $node = $this->file->book->childrenNodes->first();
         }
 
-        return ['node' => $node];
+        return ['node' => $node->load(['questions', 'answers'])];
     }
 
     public function createNode()
@@ -97,7 +86,7 @@ class SurveyFile extends CommFile {
 
     public function createQuestion()
     {
-        $question = SurveyORM\Node::find(Input::get('node.id'))->questions()->save(new SurveyORM\Question([]));
+        $question = SurveyORM\Node::find(Input::get('node.id'))->questions()->save(new SurveyORM\Question([]))->after(Input::get('previous.id'));
 
         return ['question' => $question];
     }
@@ -146,6 +135,8 @@ class SurveyFile extends CommFile {
     public function removeQuestion()
     {
         $question = SurveyORM\Question::find(Input::get('question.id'));
+
+        $question->next->after($question->previous->id);
 
         return ['deleted' => $question->delete(), 'questions' => $question->node->questions];
     }

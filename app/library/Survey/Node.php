@@ -4,7 +4,7 @@ namespace Plat\Survey;
 
 use Plat\Eloquent\Survey as SurveyORM;
 
-class Node {
+class Node {    
 
     protected $parent;
 
@@ -49,7 +49,7 @@ class Node {
 
     public function delete()
     {
-        $this->next() && $this->next()->update(['previous_id' => $this->node->previous_id]);
+        $this->node->next && $this->node->next->update(['previous_id' => $this->node->previous_id]);
 
         $this->node->answers()->delete();
 

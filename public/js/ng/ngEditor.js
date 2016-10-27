@@ -279,7 +279,7 @@ angular.module('ngEditor.directives', [])
                     <md-button class="md-secondary md-icon-button" ng-click="moveSort(question, 1)" aria-label="下移"><md-icon md-svg-icon="arrow-drop-down"></md-icon></md-button>
                     <md-icon class="md-secondary" aria-label="刪除子題" md-svg-icon="delete" ng-click="removeQuestion(question)"></md-icon>
                 </md-list-item>
-                <md-list-item ng-click="createQuestion(questions.length)">
+                <md-list-item ng-click="createQuestion(questions[questions.length-1])">
                     <md-icon md-svg-icon="help"></md-icon>
                     <p>新增問題</p>
                 </md-list-item>
@@ -291,8 +291,9 @@ angular.module('ngEditor.directives', [])
             $scope.searchLoaded = '';
             $scope.searchText = {};
 
-            $scope.createQuestion = function() {
-                editorFactory.ajax('createQuestion', {node: $scope.node}, $scope.node).then(function(response) {
+            $scope.createQuestion = function(previous) {
+                console.log(previous);
+                editorFactory.ajax('createQuestion', {node: $scope.node, previous: previous}, $scope.node).then(function(response) {
                     console.log(response);
                     $scope.questions.push(response.question);
                 });

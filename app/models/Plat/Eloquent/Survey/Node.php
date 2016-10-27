@@ -6,6 +6,8 @@ use Eloquent;
 
 class Node extends Eloquent {
 
+    use \Plat\Survey\Tree;
+
     protected $table = 'survey_nodes';
 
     public $timestamps = false;

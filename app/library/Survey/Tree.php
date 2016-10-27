@@ -22,4 +22,43 @@ trait Tree {
         return $this;
     }
 
+    public function sortByPrevious(array $relations)
+    {
+        foreach ($relations as $relation) {
+
+            $nextNodes = $this->$relation->keyBy('previous_id');
+
+            $nodes = \Illuminate\Database\Eloquent\Collection::make($nextNodes->isEmpty() ? [] : [$nextNodes['']]);
+
+            $nextNodes->each(function($node) use ($nextNodes, &$nodes) {
+                $previous_id = $nodes[count($nodes)-1]->id;
+                if (isset($nextNodes[$previous_id]))
+                    $nodes->add($nextNodes[$previous_id]);
+            });
+
+            $this->setRelation($relation, $nodes);
+        }
+
+        return $this;
+    }
+
+    public function after($previous_id)
+    {
+        $next = isset($previous_id) ? self::find($previous_id)->next : false;
+
+        if ($next) {
+            $next->update(['previous_id' => $this->id]);              
+        }
+
+        $this->update(['previous_id' => $previous_id]);
+
+        return $this;
+    }
+
+    public function sortRelationsByPrevious(array $relations)
+    {
+
+        return $this;
+    }
+
 }
