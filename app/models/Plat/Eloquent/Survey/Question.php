@@ -6,6 +6,8 @@ use Eloquent;
 
 class Question extends Eloquent {
 
+    use \Plat\Survey\Tree;
+
     protected $table = 'survey_questions';
 
     public $timestamps = false;

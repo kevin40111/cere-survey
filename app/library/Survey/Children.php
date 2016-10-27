@@ -43,4 +43,13 @@ trait Children {
         });
     }
 
+    public function setChildren($question)
+    {
+        $childrenRule = $this->answer->childrenRule();
+
+        $rule = $childrenRule->getResults() ?: $childrenRule->create([]);
+
+        $rule->questions()->attach([$question->id]);
+    }
+
 }

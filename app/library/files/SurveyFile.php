@@ -53,7 +53,7 @@ class SurveyFile extends CommFile {
 
         $parent = $class::find(Input::get('parent.id'));
 
-        $nextNodes = $parent->initNode()->getChildrenNodeModels()->load([
+        $nextNodes = $parent->initNode()->childrenNodes->load([
             'questions',
             'answers',
             //'byRules',
@@ -76,9 +76,9 @@ class SurveyFile extends CommFile {
         if (Input::has('node.id')) {
             $childrens = Survey\Node::find(Input::get('node.id'))->childrenModels();
 
-            $node = $childrens->isEmpty() ? Survey\Node::find(Input::get('node.id'))->next()->getModel() : $childrens->first();
+            $node = $childrens->isEmpty() ? Survey\Node::find(Input::get('node.id'))->getModel()->next : $childrens->first();
         } else {
-            $node = Survey\Book::make($this->file->book)->getFirstNode()->getModel();
+            $node = $this->file->book->childrenNodes->first();
         }
 
         return ['node' => $node];
@@ -88,7 +88,7 @@ class SurveyFile extends CommFile {
     {
         $class = Input::get('parent.class');
 
-        $parent = $class::find(Input::get('parent.id'))->getModel();
+        $parent = $class::find(Input::get('parent.id'));
 
         $node = Survey\Node::create($parent, Input::get('node'));
 
@@ -97,37 +97,43 @@ class SurveyFile extends CommFile {
 
     public function createQuestion()
     {
-        $question = Survey\Question::create(SurveyORM\Node::find(Input::get('node.id')), []);
+        $question = SurveyORM\Node::find(Input::get('node.id'))->questions()->save(new SurveyORM\Question([]));
 
-        return ['question' => $question->getModel()];
+        return ['question' => $question];
     }
 
     public function createAnswer()
     {
-        $answer = Survey\Answer::create(SurveyORM\Node::find(Input::get('node.id')), []);
+        $answer = SurveyORM\Node::find(Input::get('node.id'))->answers()->save(new SurveyORM\Answer([]));
 
-        return ['answer' => $answer->getModel()];
+        return ['answer' => $answer];
     }
 
     public function saveNodeTitle()
     {
-        $node = Survey\Node::find(Input::get('node.id'))->update(['title' => Input::get('node.title')]);
+        $node = Survey\Node::find(Input::get('node.id'))->getModel();
+        
+        $node->update(['title' => Input::get('node.title')]);
 
-        return ['title' => $node->getModel()->title];
+        return ['title' => $node->title];
     }
 
     public function saveQuestionTitle()
     {
-        $question = Survey\Question::find(Input::get('question.id'))->update(['title' => Input::get('question.title')]);
+        $question = SurveyORM\Question::find(Input::get('question.id'));
 
-        return ['title' => $question->getModel()->title];
+        $question->update(['title' => Input::get('question.title')]);
+
+        return ['question' => $question];
     }
 
     public function saveAnswerTitle()
     {
-        $answer = Survey\Answer::find(Input::get('answer.id'))->update(['title' => Input::get('answer.title')]);
+        $answer = SurveyORM\Answer::find(Input::get('answer.id'));
+        
+        $answer->update(['title' => Input::get('answer.title')]);
 
-        return ['title' => $answer->getModel()->title];
+        return ['answer' => $answer];
     }
 
     public function removeNode()
@@ -139,16 +145,16 @@ class SurveyFile extends CommFile {
 
     public function removeQuestion()
     {
-        $question = Survey\Question::find(Input::get('question.id'));
+        $question = SurveyORM\Question::find(Input::get('question.id'));
 
-        return ['deleted' => $question->delete(), 'questions' => $question->getNodeModel()->questions];
+        return ['deleted' => $question->delete(), 'questions' => $question->node->questions];
     }
 
     public function removeAnswer()
     {
-        $answer = Survey\Answer::find(Input::get('answer.id'));
+        $answer = SurveyORM\Answer::find(Input::get('answer.id'));
 
-        return ['deleted' => $answer->delete(), 'answers' => $answer->getNodeModel()->answers];
+        return ['deleted' => $answer->delete(), 'answers' => $answer->node->answers];
     }
 
     public function moveSort()

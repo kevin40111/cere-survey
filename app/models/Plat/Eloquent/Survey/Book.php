@@ -28,7 +28,7 @@ class Book extends Eloquent {
 
     public function getClassAttribute()
     {
-        return \Plat\Survey\Book::class;
+        return \Plat\Eloquent\Survey\Book::class;
     }
 
     public function getRewriteAttribute($value)

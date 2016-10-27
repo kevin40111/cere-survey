@@ -6,6 +6,8 @@ use Eloquent;
 
 class Answer extends Eloquent {
 
+    use \Plat\Survey\Tree;
+
     protected $table = 'survey_answers';
 
     public $timestamps = false;
@@ -48,7 +50,7 @@ class Answer extends Eloquent {
 
     public function getClassAttribute()
     {
-        return \Plat\Survey\Answer::class;
+        return \Plat\Eloquent\Survey\Answer::class;
     }
 
     public function getChildrenExpressionAttribute()

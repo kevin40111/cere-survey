@@ -36,19 +36,6 @@
 
 </div>
 
-<script type="text/ng-template" id="bar">
-    @include('files.survey.template_editor_bar')
-</script>
-<script type="text/ng-template" id="search">
-    @include('files.survey.template_editor_search')
-</script>
-<script type="text/ng-template" id="list">
-    @include('files.survey.template_editor_list')
-</script>
-<script type="text/ng-template" id="jump">
-    @include('files.survey.template_editor_jump')
-</script>
-
 <script src="/js/angular-file-upload.min.js"></script>
 <script src="/js/ng/ngEditor.js"></script>
 

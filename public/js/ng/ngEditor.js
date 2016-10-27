@@ -46,12 +46,12 @@ angular.module('ngEditor.directives', [])
                         <question-bar></question-bar>
                     </md-card-header>
                     <md-card-content>
-                        <md-input-container class="md-block">
+                        <md-input-container class="md-block" ng-if="node.type.editor.title">
                             <label>標題</label>
                             <textarea ng-model="node.title" md-maxlength="150" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
                         </md-input-container>
-                        <div ng-if="node.type.questions" questions="node.questions" node="node"></div>
-                        <div ng-if="node.type.answers" answers="node.answers" node="node"></div>
+                        <div ng-if="node.type.editor.questions" questions="node.questions" node="node"></div>
+                        <div ng-if="node.type.editor.answers" answers="node.answers" node="node"></div>
                     </md-card-content>
                     <md-card-actions>
                         <md-menu>
@@ -128,7 +128,38 @@ angular.module('ngEditor.directives', [])
         restrict: 'E',
         replace: true,
         transclude: false,
-        templateUrl: 'bar',
+        template: `
+            <div flex layout="row" layout-align="start center">
+                <div>
+                    <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="{{node.type.icon}}"></md-icon>
+                </div>
+                <div style="margin: 0 0 0 16px">{{node.type.title}}</div>
+
+                <span flex></span>
+
+                <div ng-if="node.previous_id">
+                    <div class="ui input" ng-if="node.open.moving">
+                        <input type="text" ng-model="settedPage" placeholder="輸入移動到的頁數..." />
+                        <md-button class="md-icon-button no-animate" ng-disabled="node.saving" aria-label="移動到某頁" ng-click="setPage(node, settedPage)">
+                            <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="send"></md-icon>
+                        </md-button>
+                    </div>
+                    <md-button class="md-icon-button no-animate" ng-disabled="node.saving" aria-label="移動到某頁" ng-click="node.open.moving=!node.open.moving" ng-if="!node.open.moving">
+                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="send"></md-icon>
+                    </md-button>    
+                    <md-button class="md-icon-button" aria-label="上移" ng-disabled="node.saving" ng-if="!$first" ng-click="moveSort(node, -1)">
+                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="arrow-drop-up"></md-icon>
+                    </md-button>
+                    <md-button class="md-icon-button" aria-label="下移" ng-disabled="node.saving" ng-if="!$last" ng-click="moveSort(node, 1)">
+                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="arrow-drop-down"></md-icon>
+                    </md-button>
+                    <md-button class="md-icon-button" aria-label="刪除" ng-disabled="node.saving" ng-click="removeNode(node)">
+                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
+                    </md-button>
+                </div>
+            </div>
+        `,
+        
         require: ['^questionNodes'],
         link: function(scope, iElement, iAttrs, ctrls) {
             var pageCtrl = ctrls[0];
@@ -210,7 +241,7 @@ angular.module('ngEditor.directives', [])
             $scope.saveAnswerTitle = function(answer) {
                 editorFactory.ajax('saveAnswerTitle', {answer: answer}, answer).then(function(response) {
                     console.log(response);
-                    answer.title = response.title;
+                    angular.extend(answer, response.answer);
                 });
             };
 
@@ -270,7 +301,7 @@ angular.module('ngEditor.directives', [])
             $scope.saveQuestionTitle = function(question) {
                 editorFactory.ajax('saveQuestionTitle', {question: question}, question).then(function(response) {
                     console.log(response);
-                    question.title = response.title;
+                    angular.extend(question, response.question);
                 });
             };
 

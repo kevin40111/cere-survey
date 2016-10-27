@@ -20,17 +20,17 @@ class Node {
     {
         //$first = $parent->childrenNodes()->whereNull('previous_id')->first();
 
-        $next = $attributes['previous_id'] && Node::find($attributes['previous_id'])->next();
+        $next = isset($attributes['previous_id']) ? Node::find($attributes['previous_id'])->getModel()->next : false;
 
         //$next = $previous ? $previous->next() : $first;
 
-        $node = $parent->childrenNodes()->save(new SurveyORM\Node($attributes));
+        $node = $parent->childrenNodes()->save(new SurveyORM\Node($attributes));         
 
-        $node->questions()->save(new SurveyORM\Question([]));
-
-        $next && $next->update(['previous_id' => $node->id]);        
+        $next && $next->update(['previous_id' => $node->id]);       
 
         //$parent['class']::find($parent['id'])->setChildren($question);
+
+        $node->questions()->save(new SurveyORM\Question([]));
 
         return new static($parent, $node);
     }
@@ -45,18 +45,6 @@ class Node {
         $node = SurveyORM\Node::find($id);
 
         return $node ? self::make($node) : NULL;
-    }
-
-    public function update(array $attributes)
-    {
-        foreach ($attributes as $key => $value)
-        {
-            $this->node->$key = $value;
-        }
-
-        $this->node->save();
-
-        return $this;
     }
 
     public function delete()
@@ -75,11 +63,6 @@ class Node {
     public function getModel()
     {
         return $this->node->load(['questions', 'answers']);
-    }
-
-    public function next()
-    {
-        return $this->node->next ? Node::make($this->node->next) : NULL;
     }
 
     public function childrenModels()
