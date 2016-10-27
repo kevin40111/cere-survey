@@ -16,7 +16,7 @@ class Question extends Eloquent {
 
     protected $attributes = ['title' => ''];
 
-    protected $appends = ['class'];
+    protected $appends = ['class', 'relation'];
 
     public function node()
     {
@@ -36,6 +36,11 @@ class Question extends Eloquent {
     public function getClassAttribute()
     {
         return self::class;
+    }
+
+    public function getRelationAttribute()
+    {
+        return 'questions';
     }
 
     public function getRequiredAttribute($value)

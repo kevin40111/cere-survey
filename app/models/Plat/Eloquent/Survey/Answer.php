@@ -16,7 +16,7 @@ class Answer extends Eloquent {
 
     protected $attributes = ['value' => '', 'title' => ''];
 
-    protected $appends = ['class'];
+    protected $appends = ['class', 'relation'];
 
     public function node()
     {
@@ -60,7 +60,12 @@ class Answer extends Eloquent {
 
     public function getClassAttribute()
     {
-        return \Plat\Eloquent\Survey\Answer::class;
+        return self::class;
+    }
+
+    public function getRelationAttribute()
+    {
+        return 'answers';
     }
 
     public function getChildrenExpressionAttribute()

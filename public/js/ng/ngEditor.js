@@ -144,13 +144,12 @@ angular.module('ngEditor.directives', [])
                             <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="send"></md-icon>
                         </md-button>
                     </div>
-                    <md-button class="md-icon-button no-animate" ng-disabled="node.saving" aria-label="移動到某頁" ng-click="node.open.moving=!node.open.moving" ng-if="!node.open.moving">
-                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="send"></md-icon>
-                    </md-button>    
-                    <md-button class="md-icon-button" aria-label="上移" ng-disabled="node.saving" ng-if="!$first" ng-click="moveSort(node, -1)">
+                    <md-button class="md-icon-button" aria-label="上移" ng-disabled="$index==1" ng-click="moveUp(node)">
+                        <md-tooltip md-direction="bottom">上移</md-tooltip>
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="arrow-drop-up"></md-icon>
                     </md-button>
-                    <md-button class="md-icon-button" aria-label="下移" ng-disabled="node.saving" ng-if="!$last" ng-click="moveSort(node, 1)">
+                    <md-button class="md-icon-button" aria-label="下移" ng-disabled="$last" ng-click="moveDown(node)">
+                        <md-tooltip md-direction="bottom">下移</md-tooltip>
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
                     <md-button class="md-icon-button" aria-label="刪除" ng-disabled="node.saving" ng-click="removeNode(node)">
@@ -159,19 +158,35 @@ angular.module('ngEditor.directives', [])
                 </div>
             </div>
         `,
-        
+
         require: ['^questionNodes'],
         link: function(scope, iElement, iAttrs, ctrls) {
             var pageCtrl = ctrls[0];
         },
         controller: function($scope, $http) {
 
-            $scope.removeNode = function(node) {                
+            $scope.removeNode = function(node) {
                 editorFactory.ajax('removeNode', {node: node}, node).then(function(response) {
                     console.log(response);
                     if (response.deleted) {
                         $scope.nodes.splice($scope.nodes.indexOf(node), 1);
                     };
+                });
+            };
+
+            $scope.moveUp = function(node) {
+                editorFactory.ajax('moveNodeUp', {item: node}, node).then(function(response) {
+                    console.log(response);
+                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)-1], response.item);
+                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)], response.previous);
+                });
+            };
+
+            $scope.moveDown = function(node) {
+                editorFactory.ajax('moveNodeDown', {item: node}, node).then(function(response) {
+                    console.log(response);
+                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)+1], response.item);
+                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)], response.next);
                 });
             };
 
@@ -207,17 +222,25 @@ angular.module('ngEditor.directives', [])
             <md-list>
                 <md-subheader class="md-no-sticky">選項 ({{ answers.length || 0 }})</md-subheader>
                 <md-list-item ng-repeat="answer in answers">
-                    <md-icon ng-style="{fill: !answer.title ? 'red' : ''}" md-svg-icon="radio-button-checked"></md-icon>
+                    <md-icon ng-style="{fill: !answer.title ? 'red' : ''}" md-svg-icon="{{node.type.icon}}"></md-icon>
                     <div flex>
                         <div class="ui transparent fluid input" ng-class="{loading: answer.saving}">
                             <input type="text" placeholder="輸入選項名稱..." ng-model="answer.title" ng-model-options="saveTitleNgOptions" ng-change="saveAnswerTitle(answer)" />
                         </div>
                     </div>
                     <md-button class="md-secondary" aria-label="設定子題" ng-click="getNodes(answer)">設定子題</md-button>
+                    <md-button class="md-secondary md-icon-button" ng-click="moveUp(answer)" aria-label="上移" ng-disabled="$first">
+                        <md-tooltip md-direction="left">上移</md-tooltip>
+                        <md-icon md-svg-icon="arrow-drop-up"></md-icon>
+                    </md-button>
+                    <md-button class="md-secondary md-icon-button" ng-click="moveDown(answer)" aria-label="下移" ng-disabled="$last">
+                        <md-tooltip md-direction="left">下移</md-tooltip>
+                        <md-icon md-svg-icon="arrow-drop-down"></md-icon>
+                    </md-button>
                     <md-icon class="md-secondary" aria-label="刪除選項" md-svg-icon="delete" ng-click="removeAnswer(answer)"></md-icon>
                 </md-list-item>
                 <md-list-item ng-click="createAnswer(answers[answers.length-1])">
-                    <md-icon md-svg-icon="radio-button-checked"></md-icon>
+                    <md-icon md-svg-icon="{{node.type.icon}}"></md-icon>
                     <p>新增選項</p>
                 </md-list-item>
             </md-list>
@@ -252,7 +275,21 @@ angular.module('ngEditor.directives', [])
                         $scope.node.answers = response.answers;
                     };
                 });
-            };            
+            };
+
+            $scope.moveUp = function(answer) {
+                editorFactory.ajax('moveUp', {item: answer}, answer).then(function(response) {
+                    console.log(response);
+                    $scope.node.answers = response.items;
+                });
+            };
+
+            $scope.moveDown = function(answer) {
+                editorFactory.ajax('moveDown', {item: answer}, answer).then(function(response) {
+                    console.log(response);
+                    $scope.node.answers = response.items;
+                });
+            };
 
         }
     };
@@ -275,8 +312,14 @@ angular.module('ngEditor.directives', [])
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
                         <input type="text" placeholder="輸入問題..." ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)" />
                     </p>
-                    <md-button class="md-secondary md-icon-button" ng-click="moveUp(question)" aria-label="上移"><md-icon md-svg-icon="arrow-drop-up"></md-icon></md-button>
-                    <md-button class="md-secondary md-icon-button" ng-click="moveSort(question, 1)" aria-label="下移"><md-icon md-svg-icon="arrow-drop-down"></md-icon></md-button>
+                    <md-button class="md-secondary md-icon-button" ng-click="moveUp(question)" aria-label="上移" ng-disabled="$first">
+                        <md-tooltip md-direction="left">上移</md-tooltip>
+                        <md-icon md-svg-icon="arrow-drop-up"></md-icon>
+                    </md-button>
+                    <md-button class="md-secondary md-icon-button" ng-click="moveDown(question)" aria-label="下移" ng-disabled="$last">
+                        <md-tooltip md-direction="left">下移</md-tooltip>
+                        <md-icon md-svg-icon="arrow-drop-down"></md-icon>
+                    </md-button>
                     <md-icon class="md-secondary" aria-label="刪除子題" md-svg-icon="delete" ng-click="removeQuestion(question)"></md-icon>
                 </md-list-item>
                 <md-list-item ng-click="createQuestion(questions[questions.length-1])">
@@ -317,6 +360,13 @@ angular.module('ngEditor.directives', [])
 
             $scope.moveUp = function(question) {
                 editorFactory.ajax('moveUp', {item: question}, question).then(function(response) {
+                    console.log(response);
+                    $scope.node.questions = response.items;
+                });
+            };
+
+            $scope.moveDown = function(question) {
+                editorFactory.ajax('moveDown', {item: question}, question).then(function(response) {
                     console.log(response);
                     $scope.node.questions = response.items;
                 });

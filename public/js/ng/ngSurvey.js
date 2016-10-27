@@ -86,7 +86,7 @@ angular.module('ngSurvey.directives', [])
                         </md-card-title-text>
                     </md-card-title>
                     <md-card-content>
-                        <question ng-if="node.ready" node="node"></question>
+                        <question ng-if="!node.saving" node="node"></question>
                     </md-card-content>
                     <md-card-actions layout="row" layout-align="end center">
                         <md-button class="md-raised md-primary" ng-click="getNextNode()" ng-disabled="node.saving">繼續</md-button>
@@ -100,14 +100,13 @@ angular.module('ngSurvey.directives', [])
         `,
         controller: function($scope, $http, $filter) {
 
-            $scope.node = {saving: true, ready: false};
+            $scope.node = {saving: true};
 
             $scope.getNextNode = function() {
                 console.log($scope.node);
                 surveyFactory.get('getNextNode', {node: $scope.node}, $scope.node).then(function(response) {
                     console.log(response);
                     $scope.node = response.node;
-                    $scope.node.ready = true;
                 });
             };
 
@@ -130,12 +129,10 @@ angular.module('ngSurvey.directives', [])
             var compiledContents = {};
 
             return function(scope, iElement, iAttr) {
-                scope.$watch('node.type', function(newType, oldType) {
-                    var contents = iElement.contents().remove();
-                    compiledContents[newType.name] = $compile($templateCache.get(newType.name));
-                    compiledContents[newType.name](scope, function(clone, scope) {
-                        iElement.append(clone);
-                    });
+                var contents = iElement.contents().remove();
+                compiledContents[scope.node.type.name] = $compile($templateCache.get(scope.node.type.name));
+                compiledContents[scope.node.type.name](scope, function(clone, scope) {
+                    iElement.append(clone);
                 });
             };
         },

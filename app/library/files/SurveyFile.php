@@ -156,26 +156,44 @@ class SurveyFile extends CommFile {
     {
         $class = '\\' . Input::get('item.class');
 
+        $relation = Input::get('item.relation');
+
         $item = $class::find(Input::get('item.id'))->moveUp();
 
-        return ['items' => $item->node->sortByPrevious(['questions'])->questions];
+        return ['items' => $item->node->sortByPrevious([$relation])->$relation];
     }
 
-    public function moveChildrenSort()
+    public function moveDown()
     {
-        $sbook = $this->file->book->set;
+        $class = '\\' . Input::get('item.class');
 
-        $cQuestions = $sbook->questions()->page(Input::get('question.page'))->where('parent_answer_id', Input::get('question.parent_answer_id'))->get()->except(Input::get('question.id'));
+        $relation = Input::get('item.relation');
 
-        $this->sortQuestion(Input::get('question.sorter')*1, $cQuestions);
+        $item = $class::find(Input::get('item.id'))->moveDown();
 
-        $cQuestion = Set\Question::find(Input::get('question.id'));
+        return ['items' => $item->node->sortByPrevious([$relation])->$relation];
+    }
 
-        $cQuestion->sorter = Input::get('question.sorter');
+    public function moveNodeUp()
+    {
+        $class = '\\' . Input::get('item.class');
 
-        $cQuestion->save();
+        $relation = Input::get('item.relation');
 
-        return ['question' => $cQuestion->load(['answers', 'parent'])];
+        $item = $class::find(Input::get('item.id'))->moveUp()->getModel();
+
+        return ['item' => $item->load(['questions', 'answers']), 'previous' => $item->previous->load(['questions', 'answers'])];
+    }
+
+    public function moveNodeDown()
+    {
+        $class = '\\' . Input::get('item.class');
+
+        $relation = Input::get('item.relation');
+
+        $item = $class::find(Input::get('item.id'))->moveDown()->getModel();
+
+        return ['item' => $item->load(['questions', 'answers']), 'next' => $item->next->load(['questions', 'answers'])];
     }
 
     public function getBooks()

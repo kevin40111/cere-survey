@@ -16,6 +16,8 @@ class Node extends Eloquent {
 
     protected $attributes = ['title' => ''];
 
+    protected $appends = ['class', 'relation'];
+
     public function book()
     {
         return $this->hasOne('Plat\Eloquent\Survey\Book', 'id', 'book_id');
@@ -44,6 +46,16 @@ class Node extends Eloquent {
     public function previous()
     {
         return $this->hasOne('Plat\Eloquent\Survey\Node', 'id', 'previous_id');
+    }
+
+    public function getClassAttribute()
+    {
+        return self::class;
+    }
+
+    public function getRelationAttribute()
+    {
+        return 'childrenNodes';
     }
 
     public function byRules()
