@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('ngSurvey', [
     'ngSurvey.factories',
     'ngSurvey.directives'
@@ -68,15 +70,56 @@ angular.module('ngSurvey.directives', [])
     };
 })
 
-.directive('questionNode', function(surveyFactory) {
+.directive('surveyPage', function(surveyFactory) {
     return {
         restrict: 'E',
         replace: true,
         transclude: false,
         scope: {
-            book: '=',
+            book: '='
+        },
+        template:  `
+            <div>
+            <survey-node ng-repeat="node in nodes" node="node"></survey-node>
+            <md-button class="md-raised md-primary" ng-click="getNextNode()" ng-disabled="node.saving">繼續</md-button>
+            </div>
+        `,
+        controller: function($scope, $http, $filter) {
+
+            $scope.node = {saving: true};
+
+            $scope.getNextNode = function() {
+                console.log($scope.node);
+                surveyFactory.get('getNextNodes', {node: $scope.node}, $scope.node).then(function(response) {
+                    console.log(response);
+                    $scope.node = response.node;
+                    $scope.nodes = response.nodes;
+                });
+            };
+
+            $scope.getNextNode();
+
+            this.addChildren = function() {
+                var node = {};
+                angular.copy($scope.node, node)
+                $scope.nodes.push(node);
+                console.log($scope.nodes);
+            };
+
+        }
+    };
+})
+
+.directive('surveyNode', function($compile, surveyFactory) {
+    return {
+        restrict: 'E',
+        replace: true,
+        transclude: false,
+        scope: {
+            node: '=',
             page: '='
         },
+        //require: '^surveyPage',
         template:  `
             <div>
                 <md-card>
@@ -86,21 +129,23 @@ angular.module('ngSurvey.directives', [])
                         </md-card-title-text>
                     </md-card-title>
                     <md-card-content>
-                        <question ng-if="!node.saving" node="node"></question>
+                        <question node="node"></question>
                     </md-card-content>
                     <md-card-actions layout="row" layout-align="end center">
-                        <md-button class="md-raised md-primary" ng-click="getNextNode()" ng-disabled="node.saving">繼續</md-button>
+                        
                     </md-card-actions>
                     <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
                 </md-card>
-                <div layout="row" layout-align="space-around" ng-if="node.saving">
-                    
-                </div>
+                <survey-node ng-if="childrens" ng-repeat="children in childrens" node="children"></survey-node>
             </div>
         `,
-        controller: function($scope, $http, $filter) {
+        link: function(scope, element, attrs, ctrl) {
+            //scope.test = ctrl.addChildren;
+        },
+        controller: function($scope, $http, $filter, $element) {
 
-            $scope.node = {saving: true};
+            //$scope.node.saving = true;
+            //$scope.node = {saving: true};
 
             $scope.getNextNode = function() {
                 console.log($scope.node);
@@ -110,7 +155,15 @@ angular.module('ngSurvey.directives', [])
                 });
             };
 
-            $scope.getNextNode();
+            this.addChildren = function(answer) {
+                surveyFactory.get('getChildren', {answer_id: answer.id}, $scope.node).then(function(response) {
+                    console.log(response);
+                    $scope.childrens = response.nodes;
+                });
+                //$scope.children = node;
+            };
+
+            //$scope.getNextNode();
 
         }
     };
@@ -124,11 +177,13 @@ angular.module('ngSurvey.directives', [])
         scope: {
             node: '='
         },
+        require: '^surveyNode',
         compile: function(tElement, tAttr) {
             var contents = tElement.contents().remove();
             var compiledContents = {};
 
-            return function(scope, iElement, iAttr) {
+            return function(scope, iElement, iAttr, ctrl) {
+                scope.addChildren = ctrl.addChildren;
                 var contents = iElement.contents().remove();
                 compiledContents[scope.node.type.name] = $compile($templateCache.get(scope.node.type.name));
                 compiledContents[scope.node.type.name](scope, function(clone, scope) {
@@ -137,18 +192,21 @@ angular.module('ngSurvey.directives', [])
             };
         },
         controller: function($scope, $http, $window, $filter, $rootScope) {
-            console.log($scope);
             $scope.saveTextNgOptions = {updateOn: 'default blur', debounce:{default: 10000, blur: 0}};
-            $scope.answers = surveyFactory.answers;
+            //$scope.answers = surveyFactory.answers;
             $scope.answers = {};
 
-            $scope.save_answers = function(question) {
-                question.error = true;
-                surveyFactory.save(question);
+            $scope.saveAnswer = function(question) {
+
+                var answer = $scope.answers[question.id];
+                console.log(answer);
+                $scope.addChildren(answer);
+                //question.error = true;
+                //surveyFactory.save(question);
             }
 
             $scope.$on('$destroy', function() {
-                $scope.setConfirm(false);
+                // /$scope.setConfirm(false);
             });
 
             $scope.setConfirm = function(confirm) {

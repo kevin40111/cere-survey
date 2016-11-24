@@ -5,7 +5,7 @@
     </div>
     <md-content layout="column" layout-padding layout-align="start center">
         <div style="width:960px">
-            <question-node ng-if="book" book="book"></question-node>
+            <survey-page book="book"></survey-page>
         </div>        
     </md-content>
 </md-content>

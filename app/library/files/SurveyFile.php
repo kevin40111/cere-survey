@@ -75,6 +75,14 @@ class SurveyFile extends CommFile {
         return ['nodes' => $nodes, 'node' => $node->load(['questions', 'answers'])];
     }
 
+    public function getChildren()
+    {
+        $nodes = SurveyORM\Answer::find(Input::get('answer_id'))->childrenNodes->load(['questions', 'answers']);
+
+
+        return ['nodes' => $nodes];
+    }
+
     public function createNode()
     {
         $class = Input::get('parent.class');
