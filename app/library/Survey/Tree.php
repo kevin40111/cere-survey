@@ -1,6 +1,7 @@
 <?php
 
 namespace Plat\Survey;
+use Plat\Eloquent\Survey as SurveyORM;
 
 trait Tree {
 
@@ -14,7 +15,7 @@ trait Tree {
     public function initNode()
     {
         if ($this->childrenNodes->isEmpty()) {
-            Node::create($this, ['type' => 'explain', 'previous_id' => NULL]);
+            $node = $this->childrenNodes()->save(new SurveyORM\Node(['type' => 'explain']))->after(NULL);
 
             $this->load('childrenNodes');
         }

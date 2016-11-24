@@ -105,4 +105,23 @@ class Node extends Eloquent {
         return $types[$value];
     }
 
+    public static function boot()
+    {
+        parent::boot();
+
+        static::created(function($node) {
+
+            $node->questions()->save(new Question([]));
+
+        });
+
+        self::deleted(function($node) {
+
+            $node->answers()->delete();
+
+            $node->questions()->delete();
+
+        });
+    }
+
 }

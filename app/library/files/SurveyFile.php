@@ -60,7 +60,7 @@ class SurveyFile extends CommFile {
         return ['nodes' => $nodes, 'paths' => $parent->getPaths()];
     }
 
-    public function getNextNode()
+    public function getNextNodes()
     {
         if (Input::has('node.id')) {
             $childrens = Survey\Node::find(Input::get('node.id'))->childrenModels();
@@ -70,7 +70,9 @@ class SurveyFile extends CommFile {
             $node = $this->file->book->childrenNodes->first();
         }
 
-        return ['node' => $node->load(['questions', 'answers'])];
+        $nodes = $this->file->book->childrenNodes->load(['questions', 'answers']);
+
+        return ['nodes' => $nodes, 'node' => $node->load(['questions', 'answers'])];
     }
 
     public function createNode()
@@ -79,9 +81,9 @@ class SurveyFile extends CommFile {
 
         $parent = $class::find(Input::get('parent.id'));
 
-        $node = Survey\Node::create($parent, Input::get('node'))->getModel()->after(Input::get('previous.id'));
+        $node = $parent->childrenNodes()->save(new SurveyORM\Node(Input::get('node')))->after(Input::get('previous.id'));
 
-        return ['node' => $node];
+        return ['node' => $node->load(['questions', 'answers'])];
     }
 
     public function createQuestion()
@@ -100,7 +102,7 @@ class SurveyFile extends CommFile {
 
     public function saveNodeTitle()
     {
-        $node = Survey\Node::find(Input::get('node.id'))->getModel();
+        $node = SurveyORM\Node::find(Input::get('node.id'));
 
         $node->update(['title' => Input::get('node.title')]);
 
@@ -127,9 +129,9 @@ class SurveyFile extends CommFile {
 
     public function removeNode()
     {
-        $node = Survey\Node::find(Input::get('node.id'));
+        $node = SurveyORM\Node::find(Input::get('node.id'));
 
-        $node->getModel()->next->after($node->getModel()->previous->id);
+        $node->next->after($node->previous->id);
 
         return ['deleted' => $node->delete()];
     }
@@ -180,7 +182,7 @@ class SurveyFile extends CommFile {
 
         $relation = Input::get('item.relation');
 
-        $item = $class::find(Input::get('item.id'))->moveUp()->getModel();
+        $item = $class::find(Input::get('item.id'))->moveUp();
 
         return ['item' => $item->load(['questions', 'answers']), 'previous' => $item->previous->load(['questions', 'answers'])];
     }
@@ -191,7 +193,7 @@ class SurveyFile extends CommFile {
 
         $relation = Input::get('item.relation');
 
-        $item = $class::find(Input::get('item.id'))->moveDown()->getModel();
+        $item = $class::find(Input::get('item.id'))->moveDown();
 
         return ['item' => $item->load(['questions', 'answers']), 'next' => $item->next->load(['questions', 'answers'])];
     }
