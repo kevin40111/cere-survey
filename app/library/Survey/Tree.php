@@ -7,7 +7,9 @@ trait Tree {
 
     public function getPaths()
     {
-        $paths = $this->node ? $paths = $this->node->parent->getPaths()->add($this) : \Illuminate\Database\Eloquent\Collection::make([$this]);
+        $parent = is_a($this, 'Plat\Eloquent\Survey\Answer') ? $this->node->parent : $this->parent;
+
+        $paths = $parent ? $parent->getPaths()->add($this) : \Illuminate\Database\Eloquent\Collection::make([$this]);
 
         return $paths;
     }

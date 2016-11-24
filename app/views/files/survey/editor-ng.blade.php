@@ -28,7 +28,7 @@
         <md-divider></md-divider>
         <div layout="column" layout-align="start center" style="height:100%;overflow-y:scroll">
             <div style="width:960px">
-                <question-nodes ng-if="book" book="book" page="page"></question-nodes>
+                <survey-book ng-if="book" book="book"></survey-book>
             </div>
         </div>
 

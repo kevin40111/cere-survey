@@ -27,80 +27,41 @@ angular.module('ngEditor.factories', []).factory('editorFactory', function($http
 
 angular.module('ngEditor.directives', [])
 
-.directive('questionNodes', function(editorFactory) {
+.directive('surveyBook', function(editorFactory) {
     return {
         restrict: 'E',
         replace: true,
         transclude: false,
         scope: {
-            book: '=',
-            page: '='
+            book: '='
         },
         template:  `
             <div>
                 <div layout="row">
                     <md-button ng-repeat="path in paths" ng-click="getNodes(path)">{{path.title}}/</md-button>
                 </div>
-                <md-card ng-repeat="node in nodes">
-                    <md-card-header md-colors="{background: 'indigo'}">
-                        <question-bar></question-bar>
-                    </md-card-header>
-                    <md-card-content>
-                        <md-input-container class="md-block" ng-if="node.type.editor.title">
-                            <label>標題</label>
-                            <textarea ng-model="node.title" md-maxlength="150" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
-                        </md-input-container>
-                        <div ng-if="node.type.editor.questions" questions="node.questions" node="node"></div>
-                        <div ng-if="node.type.editor.answers" answers="node.answers" node="node"></div>
-                    </md-card-content>
-                    <md-card-actions>
-                        <md-menu>
-                            <md-button aria-label="新增題目" ng-click="$mdOpenMenu($event)">新增題目</md-button>
-                            <md-menu-content width="2">
-                            <md-menu-item ng-repeat="type in quesTypes | filter:{disabled:'!'}">
-                                <md-button ng-click="addNode(type, node)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
-                            </md-menu-item>
-                            </md-menu-content>
-                        </md-menu>
-                    </md-card-actions>
-                    <md-card-content layout="row" layout-align="space-around" ng-if="node.saving">
-                        <md-progress-circular md-mode="indeterminate"></md-progress-circular>
-                    </md-card-content>
-                </md-card>
+                <survey-node ng-if="paths.length>1" ng-repeat="node in nodes" node="node" first="$index==1" last="$last"></survey-node>
+                <div ng-if="paths.length==1" ng-repeat="node in nodes">
+                    <md-button ng-click="getNodes(node)">{{node.title}}</md-button>
+                </div>
             </div>
         `,
         controller: function($scope, $filter) {
 
-            $scope.nodes = [];
-
-            $scope.quesTypes = [
-                {name: 'explain', title: '說明文字', icon: 'info-outline'},
-                {name: 'select', title: '單選題(下拉式)', icon: 'arrow-drop-down-circle'},
-                {name: 'radio', title: '單選題(點選)', icon: 'radio-button-checked'},
-                {name: 'checkbox', title: '複選題', icon: 'check-box'},
-                {name: 'scale', title: '量表題', icon: 'list'},
-                {name: 'text', title: '文字填答', icon: 'mode-edit'},
-                {name: 'list', title: '題組', icon: 'sitemap icon', disabled: true},
-                {name: 'textarea', title: '文字欄位(大型欄位)', disabled: true},
-                {name: 'textscale', title: '文字欄位(表格)', disabled: true},
-                {name: 'table', title: '表格', disabled: true},
-                {name: 'jump', title: '開啟題本', type: 'rule'}
-            ];
-
-            this.getNodes = function(parent) {
-                console.log(parent);
-                editorFactory.ajax('getNodes', {parent: parent}).then(function(response) {
+            this.getNodes = function(root) {
+                editorFactory.ajax('getNodes', {root: root}).then(function(response) {
                     console.log(response);
-                    $scope.root = parent;
+                    $scope.root = root;
                     $scope.nodes = response.nodes;
                     $scope.paths = response.paths;
                 });
             };
 
-            this.getNodes($scope.book);
+            $scope.getNodes = this.getNodes;
+            $scope.getNodes($scope.book);
 
-            $scope.addNode = function(type, previous, parent = $scope.root) {
-                console.log($scope.nodes);
+            this.addNode = function(type, previous, parent = $scope.root) {
+
                 var node = {type: type.name};
 
                 $scope.nodes.splice($scope.nodes.indexOf(previous)+1, 0, node);
@@ -111,13 +72,87 @@ angular.module('ngEditor.directives', [])
                 });
             };
 
+            this.removeNode = function(node) {
+                editorFactory.ajax('removeNode', {node: node}, node).then(function(response) {
+                    console.log(response);
+                    if (response.deleted) {
+                        $scope.nodes.splice($scope.nodes.indexOf(node), 1);
+                    };
+                });
+            };
+
+            this.moveUp = function(node, offset) {
+                editorFactory.ajax('moveNodeUp', {item: node}, node).then(function(response) {
+                    console.log(response);
+                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)-1], response.item);
+                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)], response.previous);
+                });
+            };
+
+            this.moveDown = function(node) {
+                editorFactory.ajax('moveNodeDown', {item: node}, node).then(function(response) {
+                    console.log(response);
+                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)+1], response.item);
+                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)], response.next);
+                });
+            };
+
+        }
+    };
+})
+
+.directive('surveyNode', function(editorFactory) {
+    return {
+        restrict: 'E',
+        replace: true,
+        transclude: false,
+        scope: {
+            node: '=',
+            first: '=',
+            last: '='
+        },
+        template:  `
+            <md-card>
+                <md-card-header md-colors="{background: 'indigo'}">
+                    <question-bar></question-bar>
+                </md-card-header>
+                <md-card-content>
+                    <md-input-container class="md-block" ng-if="node.type.editor.title">
+                        <label>標題</label>
+                        <textarea ng-model="node.title" md-maxlength="150" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
+                    </md-input-container>
+                    <div ng-if="node.type.editor.questions" questions="node.questions" node="node"></div>
+                    <div ng-if="node.type.editor.answers" answers="node.answers" node="node"></div>
+                </md-card-content>
+                <md-card-actions>
+                    <md-menu>
+                        <md-button aria-label="新增題目" ng-click="$mdOpenMenu($event)">新增題目</md-button>
+                        <md-menu-content width="2">
+                        <md-menu-item ng-repeat="type in node.types | filter:{disabled:'!'}">
+                            <md-button ng-click="addNode(type, node)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
+                        </md-menu-item>
+                        </md-menu-content>
+                    </md-menu>
+                </md-card-actions>
+                <md-card-content layout="row" layout-align="space-around" ng-if="node.saving">
+                    <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+                </md-card-content>
+            </md-card>
+        `,
+        require: '^surveyBook',
+        link: function(scope, iElement, iAttrs, surveyBookCtrl) {
+            scope.addNode = surveyBookCtrl.addNode;
+            scope.removeNode = surveyBookCtrl.removeNode;
+            scope.moveUp = surveyBookCtrl.moveUp;
+            scope.moveDown = surveyBookCtrl.moveDown;
+        },
+        controller: function($scope, $filter) {
+
             $scope.saveNodeTitle = function(node) {
                 editorFactory.ajax('saveNodeTitle', {node: node}, node).then(function(response) {
                     node.title = response.title;
                 });
             };
-
-            $scope.getNodes = this.getNodes;
 
         }
     };
@@ -144,11 +179,11 @@ angular.module('ngEditor.directives', [])
                             <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="send"></md-icon>
                         </md-button>
                     </div>
-                    <md-button class="md-icon-button" aria-label="上移" ng-disabled="$index==1" ng-click="moveUp(node)">
+                    <md-button class="md-icon-button" aria-label="上移" ng-disabled="first" ng-click="moveUp(node)">
                         <md-tooltip md-direction="bottom">上移</md-tooltip>
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="arrow-drop-up"></md-icon>
                     </md-button>
-                    <md-button class="md-icon-button" aria-label="下移" ng-disabled="$last" ng-click="moveDown(node)">
+                    <md-button class="md-icon-button" aria-label="下移" ng-disabled="last" ng-click="moveDown(node)">
                         <md-tooltip md-direction="bottom">下移</md-tooltip>
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
@@ -158,52 +193,7 @@ angular.module('ngEditor.directives', [])
                 </div>
             </div>
         `,
-
-        require: ['^questionNodes'],
-        link: function(scope, iElement, iAttrs, ctrls) {
-            var pageCtrl = ctrls[0];
-        },
         controller: function($scope, $http) {
-
-            $scope.removeNode = function(node) {
-                editorFactory.ajax('removeNode', {node: node}, node).then(function(response) {
-                    console.log(response);
-                    if (response.deleted) {
-                        $scope.nodes.splice($scope.nodes.indexOf(node), 1);
-                    };
-                });
-            };
-
-            $scope.moveUp = function(node) {
-                editorFactory.ajax('moveNodeUp', {item: node}, node).then(function(response) {
-                    console.log(response);
-                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)-1], response.item);
-                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)], response.previous);
-                });
-            };
-
-            $scope.moveDown = function(node) {
-                editorFactory.ajax('moveNodeDown', {item: node}, node).then(function(response) {
-                    console.log(response);
-                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)+1], response.item);
-                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)], response.next);
-                });
-            };
-
-            this.moveSort = function(question, offset) {
-                question.sorter = question.sorter+offset;
-                question.saving = true;
-                $http({method: 'POST', url: 'moveSort', data:{question: question}})
-                .success(function(data, status, headers, config) {
-                    console.log(data);
-                    $scope.question.childrens = data.questions;
-                    question.saving = false;
-                }).error(function(e) {
-                    console.log(e);
-                });
-            };
-
-            //$scope.moveSort = this.moveSort;
 
         }
     };
@@ -245,10 +235,9 @@ angular.module('ngEditor.directives', [])
                 </md-list-item>
             </md-list>
         `,
-        require: ['^questionNodes'],
-        link: function(scope, iElement, iAttrs, ctrls) {
-            var nodeCtrl = ctrls[0];
-            scope.getNodes = nodeCtrl.getNodes;
+        require: '^surveyBook',
+        link: function(scope, iElement, iAttrs, surveyBookCtrl) {
+            scope.getNodes = surveyBookCtrl.getNodes;
         },
         controller: function($scope, $filter) {
 

@@ -21,19 +21,9 @@ class Book extends Eloquent {
         return $this->morphMany('Plat\Eloquent\Survey\Node', 'parent');
     }
 
-    // public function nodes()
-    // {
-    //     return $this->hasMany('Plat\Eloquent\Survey\Node', 'book_id', 'id');
-    // }
-
     public function getClassAttribute()
     {
-        return \Plat\Eloquent\Survey\Book::class;
-    }
-
-    public function getRewriteAttribute($value)
-    {
-        return (bool)$value;
+        return self::class;
     }
 
 }

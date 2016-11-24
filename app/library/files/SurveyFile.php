@@ -44,20 +44,20 @@ class SurveyFile extends CommFile {
 
     public function getBook()
     {
-        return ['book' => $this->file->book, 'edit' => true, 'log' => DB::getQueryLog()];
+        return ['book' => $this->file->book];
     }
 
     public function getNodes()
     {
-        $class = Input::get('parent.class');
+        $class = Input::get('root.class');
 
-        $parent = $class::find(Input::get('parent.id'));
+        $root = $class::find(Input::get('root.id'));
 
-        $nodes = $parent->initNode()->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions', 'answers', 'byRules'])->each(function($node) {
+        $nodes = $root->initNode()->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions', 'answers', 'byRules'])->each(function($node) {
             $node->sortByPrevious(['questions', 'answers']);
         });
 
-        return ['nodes' => $nodes, 'paths' => $parent->getPaths()];
+        return ['nodes' => $nodes, 'paths' => $root->getPaths()];
     }
 
     public function getNextNodes()
@@ -70,14 +70,14 @@ class SurveyFile extends CommFile {
             $node = $this->file->book->childrenNodes->first();
         }
 
-        $nodes = $this->file->book->childrenNodes->load(['questions', 'answers']);
+        $nodes = $this->file->book->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions', 'answers']);
 
         return ['nodes' => $nodes, 'node' => $node->load(['questions', 'answers'])];
     }
 
     public function getChildren()
     {
-        $nodes = SurveyORM\Answer::find(Input::get('answer_id'))->childrenNodes->load(['questions', 'answers']);
+        $nodes = SurveyORM\Answer::find(Input::get('answer_id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions', 'answers']);
 
 
         return ['nodes' => $nodes];

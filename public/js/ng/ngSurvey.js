@@ -97,6 +97,10 @@ angular.module('ngSurvey.directives', [])
                 });
             };
 
+            $scope.getNodes = function() {
+
+            };
+
             $scope.getNextNode();
 
             this.addChildren = function() {
@@ -132,7 +136,7 @@ angular.module('ngSurvey.directives', [])
                         <question node="node"></question>
                     </md-card-content>
                     <md-card-actions layout="row" layout-align="end center">
-                        
+
                     </md-card-actions>
                     <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
                 </md-card>
