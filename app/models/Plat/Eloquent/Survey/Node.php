@@ -83,11 +83,13 @@ class Node extends Eloquent {
         return json_encode($json);
     }
 
-    public function getChildrenNodesAttribute()
-    {
-        dd(1);
-        return [];
-    }
+    // public function getChildrenNodesAttribute()
+    // {
+    //     $this->load('childrenNodes');
+    //     ddd($this->childrenNodes);
+
+    //     return $this->attributes['childrenNodes'];
+    // }
 
     public function getChildrensAttribute()
     {
