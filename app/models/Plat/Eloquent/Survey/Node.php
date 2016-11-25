@@ -16,7 +16,7 @@ class Node extends Eloquent {
 
     protected $attributes = ['title' => ''];
 
-    protected $appends = ['class', 'relation', 'types'];
+    protected $appends = ['class', 'relation'];
 
     public function book()
     {
