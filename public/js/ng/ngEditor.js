@@ -134,18 +134,18 @@ angular.module('ngEditor.directives', [])
                     <question-bar node="node" first="first" last="last"></question-bar>
                 </md-card-header>
                 <md-card-content>
-                    <md-input-container class="md-block" ng-if="node.type.editor.title">
+                    <md-input-container class="md-block" ng-if="types[node.type].editor.title">
                         <label>標題</label>
                         <textarea ng-model="node.title" md-maxlength="150" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
                     </md-input-container>
-                    <div ng-if="node.type.editor.questions" questions="node.questions" node="node"></div>
-                    <div ng-if="node.type.editor.answers" answers="node.answers" node="node"></div>
+                    <div ng-if="types[node.type].editor.questions" questions="node.questions" node="node"></div>
+                    <div ng-if="types[node.type].editor.answers" answers="node.answers" node="node"></div>
                 </md-card-content>
                 <md-card-actions>
                     <md-menu>
                         <md-button aria-label="新增題目" ng-click="$mdOpenMenu($event)">新增題目</md-button>
                         <md-menu-content width="2">
-                        <md-menu-item ng-repeat="type in types | filter:{disabled:'!'}">
+                        <md-menu-item ng-repeat="type in getArray(types) | filter:{disabled:'!'}">
                             <md-button ng-click="addNode(type, node, $index+1)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
                         </md-menu-item>
                         </md-menu-content>
@@ -162,7 +162,11 @@ angular.module('ngEditor.directives', [])
         },
         controller: function($scope, $filter) {
 
-            $scope.types = Object.values(editorFactory.types);
+            $scope.types = editorFactory.types;
+
+            $scope.getArray = function(object) {
+                return Object.values(object);
+            };
 
             $scope.saveNodeTitle = function(node) {
                 editorFactory.ajax('saveNodeTitle', {node: node}, node).then(function(response) {
