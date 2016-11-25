@@ -76,7 +76,7 @@ angular.module('ngSurvey.directives', [])
         replace: true,
         transclude: false,
         scope: {
-            book: '='
+            book: '=',
         },
         template:  `
             <div>

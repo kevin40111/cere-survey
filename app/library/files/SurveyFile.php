@@ -53,7 +53,13 @@ class SurveyFile extends CommFile {
 
         $root = $class::find(Input::get('root.id'));
 
-        $nodes = $root->initNode()->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions', 'answers', 'byRules'])->each(function($node) {
+        if ($root->childrenNodes->isEmpty()) {
+            $node = $root->childrenNodes()->save(new SurveyORM\Node(['type' => 'explain']));
+
+            $root->load('childrenNodes');
+        }
+
+        $nodes = $root->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions', 'answers', 'byRules'])->each(function($node) {
             $node->sortByPrevious(['questions', 'answers']);
         });
 
@@ -91,7 +97,7 @@ class SurveyFile extends CommFile {
 
         $node = $parent->childrenNodes()->save(new SurveyORM\Node(Input::get('node')))->after(Input::get('previous.id'));
 
-        return ['node' => $node->load(['questions', 'answers'])];
+        return ['node' => $node->load(['questions', 'answers']), 'next' => $node->next];
     }
 
     public function createQuestion()

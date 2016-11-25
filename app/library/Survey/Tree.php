@@ -14,30 +14,23 @@ trait Tree {
         return $paths;
     }
 
-    public function initNode()
-    {
-        if ($this->childrenNodes->isEmpty()) {
-            $node = $this->childrenNodes()->save(new SurveyORM\Node(['type' => 'explain']))->after(NULL);
-
-            $this->load('childrenNodes');
-        }
-
-        return $this;
-    }
-
     public function sortByPrevious(array $relations)
     {
         foreach ($relations as $relation) {
 
             $nextNodes = $this->$relation->keyBy('previous_id');
 
-            $nodes = \Illuminate\Database\Eloquent\Collection::make($nextNodes->isEmpty() ? [] : [$nextNodes['']]);
+            $last = $nextNodes->pull('', false);
 
-            $nextNodes->each(function($node) use ($nextNodes, &$nodes) {
-                $previous_id = $nodes[count($nodes)-1]->id;
-                if (isset($nextNodes[$previous_id]))
-                    $nodes->add($nextNodes[$previous_id]);
-            });
+            $nodes = \Illuminate\Database\Eloquent\Collection::make([]);
+
+            while ($last) {
+
+                $nodes->push($last);
+
+                $last = $nextNodes->pull($last->id, false);
+
+            }
 
             $this->setRelation($relation, $nodes);
         }
