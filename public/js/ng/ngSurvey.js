@@ -9,7 +9,9 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
     var answers = {};
     var book = {};
     var record = {};
+    var types = {};
     return {
+        types: types,
         get: function(url, data, node = {}) {
             var deferred = $q.defer();
 
@@ -70,7 +72,7 @@ angular.module('ngSurvey.directives', [])
     };
 })
 
-.directive('surveyPage', function(surveyFactory) {
+.directive('surveyBook', function(surveyFactory) {
     return {
         restrict: 'E',
         replace: true,
@@ -80,35 +82,47 @@ angular.module('ngSurvey.directives', [])
         },
         template:  `
             <div>
-            <survey-node ng-repeat="node in nodes" node="node"></survey-node>
-            <md-button class="md-raised md-primary" ng-click="getNextNode()" ng-disabled="node.saving">繼續</md-button>
+                <survey-page ng-if="node" page="node"></survey-page>
+                <md-button class="md-raised md-primary" ng-click="getNextNode()" ng-disabled="node.saving">繼續</md-button>
             </div>
         `,
         controller: function($scope, $http, $filter) {
 
-            $scope.node = {saving: true};
+            surveyFactory.types = $scope.book.types;
 
             $scope.getNextNode = function() {
-                console.log($scope.node);
-                surveyFactory.get('getNextNodes', {node: $scope.node}, $scope.node).then(function(response) {
+                surveyFactory.get('getNextNode', {node: $scope.node, book: $scope.book}, $scope.node).then(function(response) {
                     console.log(response);
                     $scope.node = response.node;
-                    $scope.nodes = response.nodes;
                 });
             };
 
-            $scope.getNodes = function() {
-
-            };
-
             $scope.getNextNode();
+        }
+    };
+})
 
-            this.addChildren = function() {
-                var node = {};
-                angular.copy($scope.node, node)
-                $scope.nodes.push(node);
-                console.log($scope.nodes);
-            };
+.directive('surveyPage', function(surveyFactory) {
+    return {
+        restrict: 'E',
+        replace: true,
+        transclude: false,
+        scope: {
+            page: '=',
+        },
+        template:  `
+            <div>
+                <survey-node ng-repeat="node in nodes" node="node"></survey-node>
+            </div>
+        `,
+        controller: function($scope, $http, $filter) {
+
+            $scope.$watch('page', function() {
+                surveyFactory.get('getNextNodes', {page: $scope.page}, $scope.page).then(function(response) {
+                    console.log(response);
+                    $scope.nodes = response.nodes;
+                });
+            });
 
         }
     };
@@ -120,8 +134,7 @@ angular.module('ngSurvey.directives', [])
         replace: true,
         transclude: false,
         scope: {
-            node: '=',
-            page: '='
+            node: '='
         },
         //require: '^surveyPage',
         template:  `
@@ -133,7 +146,7 @@ angular.module('ngSurvey.directives', [])
                         </md-card-title-text>
                     </md-card-title>
                     <md-card-content>
-                        <question node="node"></question>
+                        <survey-question node="node"></survey-question>
                     </md-card-content>
                     <md-card-actions layout="row" layout-align="end center">
 
@@ -151,14 +164,6 @@ angular.module('ngSurvey.directives', [])
             //$scope.node.saving = true;
             //$scope.node = {saving: true};
 
-            $scope.getNextNode = function() {
-                console.log($scope.node);
-                surveyFactory.get('getNextNode', {node: $scope.node}, $scope.node).then(function(response) {
-                    console.log(response);
-                    $scope.node = response.node;
-                });
-            };
-
             this.addChildren = function(answer) {
                 surveyFactory.get('getChildren', {answer_id: answer.id}, $scope.node).then(function(response) {
                     console.log(response);
@@ -167,13 +172,11 @@ angular.module('ngSurvey.directives', [])
                 //$scope.children = node;
             };
 
-            //$scope.getNextNode();
-
         }
     };
 })
 
-.directive('question', function($compile, surveyFactory, $templateCache, templates) {
+.directive('surveyQuestion', function($compile, surveyFactory, $templateCache, templates) {
     return {
         restrict: 'E',
         replace: true,
@@ -187,10 +190,12 @@ angular.module('ngSurvey.directives', [])
             var compiledContents = {};
 
             return function(scope, iElement, iAttr, ctrl) {
+                console.log(surveyFactory.types);
                 scope.addChildren = ctrl.addChildren;
                 var contents = iElement.contents().remove();
-                compiledContents[scope.node.type.name] = $compile($templateCache.get(scope.node.type.name));
-                compiledContents[scope.node.type.name](scope, function(clone, scope) {
+                var type = surveyFactory.types[scope.node.type].name;
+                compiledContents[type] = $compile($templateCache.get(type));
+                compiledContents[type](scope, function(clone, scope) {
                     iElement.append(clone);
                 });
             };

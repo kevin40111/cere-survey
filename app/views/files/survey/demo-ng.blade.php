@@ -5,8 +5,8 @@
     </div>
     <md-content layout="column" layout-padding layout-align="start center">
         <div style="width:960px">
-            <survey-page book="book"></survey-page>
-        </div>        
+            <survey-book ng-if="book" book="book"></survey-book>
+        </div>
     </md-content>
 </md-content>
 
@@ -35,32 +35,19 @@
 app.requires.push('ngSurvey');
 app.controller('quesController', function quesController($scope, $http, $filter, surveyFactory){
 
-    $scope.question;
-
-    var index = 0;
-
-    $scope.getQuestions = function() {
-        $scope.questions = [];
+    $scope.getBook = function() {
         $scope.$parent.main.loading = true;
         $http({method: 'POST', url: 'getBook', data:{}})
         .success(function(data, status, headers, config) {
             console.log(data);
             $scope.book = data.book;
-            $scope.page = 1;
-            //$scope.book.pages[1] = $scope.book.pages[1] || [];
-            //$scope.lastPage = Object.keys($scope.book.pages)[Object.keys($scope.book.pages).length-1];
             $scope.$parent.main.loading = false;
         }).error(function(e) {
             console.log(e);
         });
     };
 
-    $scope.getQuestions();
-
-    $scope.next = function() {
-        $scope.question = $scope.questions[++index];
-        console.log($scope.question);
-    };
+    $scope.getBook();
 
 });
 </script>
