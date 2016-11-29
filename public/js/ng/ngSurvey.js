@@ -82,8 +82,13 @@ angular.module('ngSurvey.directives', [])
         },
         template:  `
             <div>
-                <survey-page ng-if="node" page="node"></survey-page>
-                <md-button class="md-raised md-primary" ng-click="getNextNode()" ng-disabled="node.saving">繼續</md-button>
+                <div layout="row" layout-align="space-around" ng-if="book.saving">
+                    <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+                </div>
+                <div ng-if="!book.saving">
+                    <survey-page ng-if="node" page="node"></survey-page>
+                    <md-button class="md-raised md-primary" ng-click="getNextNode()" ng-disabled="book.saving">繼續</md-button>
+                </div>
             </div>
         `,
         controller: function($scope, $http, $filter) {
@@ -91,7 +96,7 @@ angular.module('ngSurvey.directives', [])
             surveyFactory.types = $scope.book.types;
 
             $scope.getNextNode = function() {
-                surveyFactory.get('getNextNode', {node: $scope.node, book: $scope.book}, $scope.node).then(function(response) {
+                surveyFactory.get('getNextNode', {node: $scope.node, book: $scope.book}, $scope.book).then(function(response) {
                     console.log(response);
                     $scope.node = response.node;
                 });
