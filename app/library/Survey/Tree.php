@@ -41,7 +41,6 @@ trait Tree {
     public function after($previous_id)
     {
         $next = isset($previous_id) ? self::find($previous_id)->next : false;
-
         if ($next) {
             $next->update(['previous_id' => $this->id]);
         }
@@ -68,6 +67,19 @@ trait Tree {
     {
         $this->next->moveUp();
 
+        return $this;
+    }
+
+    public function delete()
+    {
+        if ($this->next) {
+            if ($this->previous == NULL) {
+                $this->next->after(NULL);
+            } else {
+                $this->next->after($this->previous->id);
+            }
+        }
+        parent::delete();
         return $this;
     }
 
