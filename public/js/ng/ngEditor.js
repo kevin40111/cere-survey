@@ -44,7 +44,7 @@ angular.module('ngEditor.directives', [])
                     <md-button ng-repeat="path in paths" ng-click="getNodes(path)">{{path.title}}/</md-button>
                 </div>
 
-                <survey-node ng-if="paths.length>1" ng-repeat="node in nodes" node="node" first="$first" last="$last"></survey-node>
+                <survey-node ng-if="paths.length>1" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
 
                 <md-card ng-if="paths.length==1" ng-repeat="node in nodes">
                     <md-card-header md-colors="{background: 'indigo'}">
@@ -125,6 +125,7 @@ angular.module('ngEditor.directives', [])
         transclude: false,
         scope: {
             node: '=',
+            index: '=',
             first: '=',
             last: '='
         },
@@ -146,7 +147,7 @@ angular.module('ngEditor.directives', [])
                         <md-button aria-label="新增題目" ng-click="$mdOpenMenu($event)">新增題目</md-button>
                         <md-menu-content width="2">
                         <md-menu-item ng-repeat="type in getArray(types) | filter:{disabled:'!'}">
-                            <md-button ng-click="addNode(type, node, $index+1)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
+                            <md-button ng-click="addNode(type, node, index+1)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
                         </md-menu-item>
                         </md-menu-content>
                     </md-menu>
