@@ -241,7 +241,7 @@ angular.module('ngEditor.directives', [])
             <md-list>
                 <md-subheader class="md-no-sticky">選項 ({{ answers.length || 0 }})</md-subheader>
                 <md-list-item ng-repeat="answer in answers">
-                    <md-icon ng-style="{fill: !answer.title ? 'red' : ''}" md-svg-icon="{{node.type.icon}}"></md-icon>
+                    <md-icon ng-style="{fill: !answer.title ? 'red' : ''}" md-svg-icon="{{types[node.type].icon}}"></md-icon>
                     <div flex>
                         <div class="ui transparent fluid input" ng-class="{loading: answer.saving}">
                             <input type="text" placeholder="輸入選項名稱..." ng-model="answer.title" ng-model-options="saveTitleNgOptions" ng-change="saveAnswerTitle(answer)" />
@@ -258,8 +258,8 @@ angular.module('ngEditor.directives', [])
                     </md-button>
                     <md-icon class="md-secondary" aria-label="刪除選項" md-svg-icon="delete" ng-click="removeAnswer(answer)"></md-icon>
                 </md-list-item>
-                <md-list-item ng-click="createAnswer(answers[answers.length-1])">
-                    <md-icon md-svg-icon="{{node.type.icon}}"></md-icon>
+                <md-list-item ng-if="node.answers.length < types[node.type].editor.answers" ng-click="createAnswer(answers[answers.length-1])">
+                    <md-icon md-svg-icon="{{types[node.type].icon}}"></md-icon>
                     <p>新增選項</p>
                 </md-list-item>
             </md-list>
@@ -270,6 +270,7 @@ angular.module('ngEditor.directives', [])
         },
         controller: function($scope, $filter) {
 
+            $scope.types = editorFactory.types;
             $scope.saveTitleNgOptions = {updateOn: 'default blur', debounce:{default: 2000, blur: 0}};
 
             $scope.createAnswer = function(previous) {
@@ -324,8 +325,8 @@ angular.module('ngEditor.directives', [])
         },
         template:  `
             <md-list>
-                <md-subheader class="md-no-sticky">問題 ({{ questions.length || 0 }})</md-subheader>
-                <md-list-item ng-repeat="question in questions">
+                <md-subheader class="md-no-sticky">問題 ({{ node.questions.length || 0 }})</md-subheader>
+                <md-list-item ng-repeat="question in node.questions">
                     <md-icon md-svg-icon="help"><md-tooltip md-direction="left">{{$index+1}}</md-tooltip></md-icon>
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
                         <input type="text" placeholder="輸入問題..." ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)" />
@@ -340,7 +341,7 @@ angular.module('ngEditor.directives', [])
                     </md-button>
                     <md-icon class="md-secondary" aria-label="刪除子題" md-svg-icon="delete" ng-click="removeQuestion(question)"></md-icon>
                 </md-list-item>
-                <md-list-item ng-click="createQuestion(questions[questions.length-1])">
+                <md-list-item ng-if="node.questions.length < types[node.type].editor.questions" ng-click="createQuestion(node.questions[node.questions.length-1])">
                     <md-icon md-svg-icon="help"></md-icon>
                     <p>新增問題</p>
                 </md-list-item>
@@ -348,6 +349,7 @@ angular.module('ngEditor.directives', [])
         `,
         controller: function($scope, $http, $filter) {
 
+            $scope.types = editorFactory.types;
             $scope.saveTitleNgOptions = {updateOn: 'default blur', debounce:{default: 2000, blur: 0}};
             $scope.searchLoaded = '';
             $scope.searchText = {};
