@@ -29,7 +29,7 @@ class Book extends Eloquent {
     protected $types = [
         'explain'  => ['name' => 'explain',  'editor' => ['title' => true, 'questions' => 0, 'answers' => 0], 'title' =>'說明文字',   'icon' =>'info-outline'],
         'select'   => ['name' => 'select',   'editor' => ['title' => false, 'questions' => 1, 'answers' => 100], 'title' =>'下拉式選單', 'icon' =>'arrow-drop-down-circle'],
-        'radio'    => ['name' => 'radio',    'editor' => ['title' => true, 'questions' => 1, 'answers' => 20], 'title' =>'單選題',     'icon' =>'radio-button-checked'],
+        'radio'    => ['name' => 'radio',    'editor' => ['title' => false, 'questions' => 1, 'answers' => 20], 'title' =>'單選題',     'icon' =>'radio-button-checked'],
         'checkbox' => ['name' => 'checkbox', 'editor' => ['title' => true, 'questions' => 20, 'answers' => 0], 'title' =>'複選題',     'icon' =>'check-box'],
         'scale'    => ['name' => 'scale',    'editor' => ['title' => true, 'questions' => 20, 'answers' => 10], 'title' =>'量表題',     'icon' =>'list'],
         'text'     => ['name' => 'text',     'editor' => ['title' => true, 'questions' => 20, 'answers' => 0], 'title' =>'文字填答',   'icon' =>'mode-edit'],
@@ -37,7 +37,7 @@ class Book extends Eloquent {
         'textarea' => ['name' => 'textarea', 'editor' => ['title' => true, 'questions' => 0, 'answers' => 0], 'title' =>'文字欄位',   'disabled' => true],
         'table'    => ['name' => 'table',    'editor' => ['title' => true, 'questions' => 0, 'answers' => 0], 'title' =>'表格',       'disabled' => true],
         'jump'     => ['name' => 'jump',     'editor' => ['title' => true, 'questions' => 0, 'answers' => 0], 'title' =>'開啟題本',   'type' =>'rule'],
-        'page'     => ['name' => 'page',     'editor' => ['title' => false, 'questions' => 0, 'answers' => 0], 'title' =>'頁',   'icon' =>'insert-drive-file'],
+        'page'     => ['name' => 'page',     'editor' => ['title' => false, 'questions' => 0, 'answers' => 0], 'title' =>'頁',   'icon' =>'insert-drive-file', 'disabled' => true],
     ];
 
     public function getTypesAttribute()
