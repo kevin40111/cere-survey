@@ -33,6 +33,11 @@ class Question extends Eloquent {
         return $this->hasOne('Plat\Eloquent\Survey\Question', 'id', 'previous_id');
     }
 
+    public function childrenNodes()
+    {
+        return $this->morphMany('Plat\Eloquent\Survey\Node', 'parent');
+    }
+
     public function getClassAttribute()
     {
         return self::class;

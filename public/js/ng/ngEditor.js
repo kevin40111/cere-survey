@@ -332,6 +332,7 @@ angular.module('ngEditor.directives', [])
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
                         <input type="text" placeholder="輸入問題..." ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)" />
                     </p>
+                    <md-button class="md-secondary" ng-if="types[node.type].editor.questions.childrens" aria-label="設定子題" ng-click="getNodes(question)">設定子題</md-button>
                     <md-button class="md-secondary md-icon-button" ng-click="moveUp(question)" aria-label="上移" ng-disabled="$first">
                         <md-tooltip md-direction="left">上移</md-tooltip>
                         <md-icon md-svg-icon="arrow-drop-up"></md-icon>
@@ -342,12 +343,16 @@ angular.module('ngEditor.directives', [])
                     </md-button>
                     <md-icon class="md-secondary" aria-label="刪除子題" md-svg-icon="delete" ng-click="removeQuestion(question)"></md-icon>
                 </md-list-item>
-                <md-list-item ng-if="node.questions.length < types[node.type].editor.questions" ng-click="createQuestion(node.questions[node.questions.length-1])">
+                <md-list-item ng-if="node.questions.length < types[node.type].editor.questions.amount" ng-click="createQuestion(node.questions[node.questions.length-1])">
                     <md-icon md-svg-icon="help"></md-icon>
                     <p>新增問題</p>
                 </md-list-item>
             </md-list>
         `,
+        require: '^surveyBook',
+        link: function(scope, iElement, iAttrs, surveyBookCtrl) {
+            scope.getNodes = surveyBookCtrl.getNodes;
+        },
         controller: function($scope, $http, $filter) {
 
             $scope.types = editorFactory.types;

@@ -169,12 +169,8 @@ angular.module('ngSurvey.directives', [])
             //$scope.node.saving = true;
             //$scope.node = {saving: true};
 
-            this.addChildren = function(answer) {
-                surveyFactory.get('getChildren', {answer_id: answer.id}, $scope.node).then(function(response) {
-                    console.log(response);
-                    $scope.childrens = response.nodes;
-                });
-                //$scope.children = node;
+            this.addChildren = function(childrens) {
+                $scope.childrens = childrens;
             };
 
         }
@@ -195,7 +191,6 @@ angular.module('ngSurvey.directives', [])
             var compiledContents = {};
 
             return function(scope, iElement, iAttr, ctrl) {
-                console.log(surveyFactory.types);
                 scope.addChildren = ctrl.addChildren;
                 var contents = iElement.contents().remove();
                 var type = surveyFactory.types[scope.node.type].name;
@@ -213,8 +208,15 @@ angular.module('ngSurvey.directives', [])
             $scope.saveAnswer = function(question) {
 
                 var answer = $scope.answers[question.id];
+                var parent = $scope.node.type == 'checkbox' ? question : answer;
+
+                surveyFactory.get('getChildren', {parent: parent, answer: answer}, $scope.node).then(function(response) {
+                    console.log(response);
+                    question.childrens = response.nodes;
+                });
+
                 console.log(answer);
-                $scope.addChildren(answer);
+
                 //question.error = true;
                 //surveyFactory.save(question);
             }
