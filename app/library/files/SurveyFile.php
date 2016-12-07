@@ -22,7 +22,7 @@ class SurveyFile extends CommFile {
 
     public function get_views()
     {
-        return ['open', 'demo'];
+        return ['open', 'demo', 'application'];
     }
 
     public function create()
@@ -40,6 +40,11 @@ class SurveyFile extends CommFile {
     public function demo()
     {
         return 'files.survey.demo-ng';
+    }
+
+    public function application()
+    {
+        return 'files.survey.application-ng';
     }
 
     public function getBook()
