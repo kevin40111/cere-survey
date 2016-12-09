@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('ngEditor', ['ngEditor.directives', 'ngEditor.factories']);
 
 angular.module('ngEditor.factories', []).factory('editorFactory', function($http, $q) {
@@ -11,15 +13,14 @@ angular.module('ngEditor.factories', []).factory('editorFactory', function($http
 
             node.saving = true;
             $http({method: 'POST', url: url, data: data, timeout: deferred.promise})
-            .success(function(data, status, headers, config) {
+            .success(function(data) {
                 deferred.resolve(data);
-            }).error(function(e) {
+            }).error(function() {
                 deferred.reject();
-                console.log(e);
             });
 
             deferred.promise.finally(function() {
-                node.saving = false
+                node.saving = false;
             });
 
             return deferred.promise;
@@ -57,13 +58,12 @@ angular.module('ngEditor.directives', [])
                 </md-card>
             </div>
         `,
-        controller: function($scope, $filter) {
+        controller: function($scope) {
 
             editorFactory.types = $scope.book.types;
 
             this.getNodes = function(root) {
                 editorFactory.ajax('getNodes', {root: root}).then(function(response) {
-                    console.log(response);
                     $scope.root = root;
                     $scope.nodes = response.nodes;
                     $scope.paths = response.paths;
@@ -75,7 +75,6 @@ angular.module('ngEditor.directives', [])
                 var node = {type: type.name, title: Math.random()};
 
                 editorFactory.ajax('createNode', {node: node, parent: $scope.root, previous: previous}, node).then(function(response) {
-                    console.log(response);
                     angular.extend(node, response.node);
                     $scope.nodes.splice(offset, 0, node);
                 });
@@ -83,16 +82,14 @@ angular.module('ngEditor.directives', [])
 
             this.removeNode = function(node) {
                 editorFactory.ajax('removeNode', {node: node}, node).then(function(response) {
-                    console.log(response);
                     if (response.deleted) {
                         $scope.nodes.splice($scope.nodes.indexOf(node), 1);
-                    };
+                    }
                 });
             };
 
             this.moveUp = function(node, offset) {
                 editorFactory.ajax('moveNodeUp', {item: node}, node).then(function(response) {
-                    console.log(response);
                     angular.extend($scope.nodes[$scope.nodes.indexOf(node)-1], response.item);
                     angular.extend($scope.nodes[$scope.nodes.indexOf(node)], response.previous);
                 });
@@ -100,7 +97,6 @@ angular.module('ngEditor.directives', [])
 
             this.moveDown = function(node) {
                 editorFactory.ajax('moveNodeDown', {item: node}, node).then(function(response) {
-                    console.log(response);
                     angular.extend($scope.nodes[$scope.nodes.indexOf(node)+1], response.item);
                     angular.extend($scope.nodes[$scope.nodes.indexOf(node)], response.next);
                 });
@@ -161,7 +157,7 @@ angular.module('ngEditor.directives', [])
         link: function(scope, iElement, iAttrs, surveyBookCtrl) {
             scope.addNode = surveyBookCtrl.addNode;
         },
-        controller: function($scope, $filter) {
+        controller: function($scope) {
 
             $scope.types = editorFactory.types;
 
@@ -269,44 +265,39 @@ angular.module('ngEditor.directives', [])
         link: function(scope, iElement, iAttrs, surveyBookCtrl) {
             scope.getNodes = surveyBookCtrl.getNodes;
         },
-        controller: function($scope, $filter) {
+        controller: function($scope) {
 
             $scope.types = editorFactory.types;
             $scope.saveTitleNgOptions = {updateOn: 'default blur', debounce:{default: 2000, blur: 0}};
 
             $scope.createAnswer = function(previous) {
                 editorFactory.ajax('createAnswer', {node: $scope.node, previous: previous}, $scope.node).then(function(response) {
-                    console.log(response);
                     $scope.node.answers.push(response.answer);
                 });
             };
 
             $scope.saveAnswerTitle = function(answer) {
                 editorFactory.ajax('saveAnswerTitle', {answer: answer}, answer).then(function(response) {
-                    console.log(response);
                     angular.extend(answer, response.answer);
                 });
             };
 
             $scope.removeAnswer = function(answer) {
                 editorFactory.ajax('removeAnswer', {answer: answer}, answer).then(function(response) {
-                    console.log(response);
                     if (response.deleted) {
                         $scope.node.answers = response.answers;
-                    };
+                    }
                 });
             };
 
             $scope.moveUp = function(answer) {
                 editorFactory.ajax('moveUp', {item: answer}, answer).then(function(response) {
-                    console.log(response);
                     $scope.node.answers = response.items;
                 });
             };
 
             $scope.moveDown = function(answer) {
                 editorFactory.ajax('moveDown', {item: answer}, answer).then(function(response) {
-                    console.log(response);
                     $scope.node.answers = response.items;
                 });
             };
@@ -361,39 +352,33 @@ angular.module('ngEditor.directives', [])
             $scope.searchText = {};
 
             $scope.createQuestion = function(previous) {
-                console.log(previous);
                 editorFactory.ajax('createQuestion', {node: $scope.node, previous: previous}, $scope.node).then(function(response) {
-                    console.log(response);
                     $scope.questions.push(response.question);
                 });
             };
 
             $scope.saveQuestionTitle = function(question) {
                 editorFactory.ajax('saveQuestionTitle', {question: question}, question).then(function(response) {
-                    console.log(response);
                     angular.extend(question, response.question);
                 });
             };
 
             $scope.removeQuestion = function(question) {
                 editorFactory.ajax('removeQuestion', {question: question}, question).then(function(response) {
-                    console.log(response);
                     if (response.deleted) {
                         $scope.node.questions = response.questions;
-                    };
+                    }
                 });
             };
 
             $scope.moveUp = function(question) {
                 editorFactory.ajax('moveUp', {item: question}, question).then(function(response) {
-                    console.log(response);
                     $scope.node.questions = response.items;
                 });
             };
 
             $scope.moveDown = function(question) {
                 editorFactory.ajax('moveDown', {item: question}, question).then(function(response) {
-                    console.log(response);
                     $scope.node.questions = response.items;
                 });
             };
@@ -401,11 +386,10 @@ angular.module('ngEditor.directives', [])
             $scope.getBooks = function() {
                 if (!$scope.books) {
                     var promise = $http({method: 'POST', url: 'getBooks', data:{}})
-                    .success(function(data, status, headers, config) {
-                        console.log(data);
+                    .success(function(data) {
                         $scope.books = data.books;
-                    }).error(function(e) {
-                        console.log(e);
+                    }).error(function() {
+
                     });
 
                     return promise;
@@ -415,11 +399,10 @@ angular.module('ngEditor.directives', [])
             $scope.getRowsFiles = function() {
                 if (!$scope.rowsFiles) {
                     var promise = $http({method: 'POST', url: '/docs/lists', data:{}})
-                    .success(function(data, status, headers, config) {
-                                       console.log(data);
+                    .success(function(data) {
                         $scope.rowsFiles = $filter('filter')(data.docs, {type: '5'}, true);
-                    }).error(function(e) {
-                        console.log(e);
+                    }).error(function() {
+
                     });
 
                     return promise;
@@ -429,11 +412,10 @@ angular.module('ngEditor.directives', [])
             $scope.getColumns = function() {
                 if (!$scope.columns) {
                     var promise = $http({method: 'POST', url: 'getColumns', data:{file_id: $scope.question.file}})
-                    .success(function(data, status, headers, config) {
-                        console.log(data);
+                    .success(function(data) {
                         $scope.columns = data.columns;
-                    }).error(function(e) {
-                        console.log(e);
+                    }).error(function() {
+
                     });
 
                     return promise;
@@ -444,28 +426,26 @@ angular.module('ngEditor.directives', [])
     };
 })
 
-.directive('questionPool', function($compile, FileUploader, $templateCache) {
+.directive('questionPool', function($compile, FileUploader) {
     return {
         restrict: 'E',
         replace: true,
         transclude: false,
         templateUrl: 'pool',
-        controller: function($scope, $http) {
+        controller: function($scope, $http, $filter) {
 
             $scope.getPoolQuestions = function(position) {
                 var sBooks = $filter('filter')($scope.sbooks, {checked: true});
-                console.log(angular.toJson(sBooks));
                 if ($scope.searchLoaded != angular.toJson(sBooks)) {
                     $http({method: 'POST', url: 'getPoolQuestions', data:{type: $scope.question.type, sBooks: sBooks}})
-                    .success(function(data, status, headers, config) {
-                        console.log(data);
+                    .success(function(data) {
                         $scope.pQuestions = data.questions;
                         $scope.question.searching = position;
                         $scope.searchLoaded == angular.toJson(sBooks);
-                    }).error(function(e) {
-                        console.log(e);
+                    }).error(function() {
+
                     });
-                };
+                }
             };
 
             $scope.setPoolQuestion = function(pQuestion) {
@@ -474,15 +454,15 @@ angular.module('ngEditor.directives', [])
                 $scope.searchText = {};
                 if ($scope.question.parent_question_id) {
                     $scope.setPoolBranchNormalQuestion(pQuestion);
-                };
+                }
 
                 if ($scope.question.parent_answer_id) {
                     $scope.setPoolChildrenQuestion(pQuestion);
-                };
+                }
 
                 if (!$scope.question.parent_question_id && !$scope.question.parent_answer_id) {
                     $scope.setPoolRootQuestion(pQuestion);
-                };
+                }
             };
 
             $scope.setPoolRootQuestion = function(pQuestion) {
@@ -491,16 +471,15 @@ angular.module('ngEditor.directives', [])
                 pQuestion.sorter = roots.indexOf($scope.question);
                 pQuestion.parent_answer_id = $scope.question.parent_answer_id || null;
                 $http({method: 'POST', url: 'setPoolRootQuestion', data:{sbook: $scope.sbook, pQuestion: pQuestion}})
-                .success(function(data, status, headers, config) {
-                    console.log(data);
+                .success(function(data) {
                     angular.extend($scope.question, data.sQuestion);
                     angular.forEach(data.csQuestions, function(csQuestion) {
                         $scope.questions.push(csQuestion);
                     });
                     $scope.question.saving = false;
                     $scope.question.open = {questions: true, answers: true};
-                }).error(function(e) {
-                    console.log(e);
+                }).error(function() {
+
                 });
             };
 
@@ -509,56 +488,51 @@ angular.module('ngEditor.directives', [])
                 pQuestion.sorter = $scope.question.sorter;
                 pQuestion.parent_answer_id = $scope.question.parent_answer_id;
                 $http({method: 'POST', url: 'setPoolRootQuestion', data:{pQuestion: pQuestion}})
-                .success(function(data, status, headers, config) {
-                    console.log(data);
+                .success(function(data) {
                     angular.extend($scope.question, data.sQuestion);
                     angular.forEach(data.csQuestions, function(csQuestion) {
                         $scope.questions.push(csQuestion);
                     });
                     $scope.question.saving = false;
                     $scope.question.open = {questions: true, answers: true};
-                }).error(function(e) {
-                    console.log(e);
+                }).error(function() {
+
                 });
             };
 
             $scope.setPoolBranchNormalQuestion = function(pQuestion) {
                 $http({method: 'POST', url: 'setPoolBranchNormalQuestion', data:{bQuestion: $scope.question, pQuestion: pQuestion}})
-                .success(function(data, status, headers, config) {
-                    console.log(data);
+                .success(function(data) {
                     angular.extend($scope.question, data.question);
                     angular.forEach(data.bbQuestions, function(question) {
                         $scope.questions.push(question);
                     });
                     $scope.question.saving = false;
                     $scope.question.open = {questions: true, answers: true};
-                }).error(function(e) {
-                    console.log(e);
+                }).error(function() {
+
                 });
-            }
+            };
 
             $scope.setPoolScaleBranchQuestion = function(pQuestion) {
                 pQuestion.page = $scope.page;
                 $http({method: 'POST', url: 'setPoolScaleBranchQuestion', data:{question: $scope.question, pQuestion: pQuestion}})
-                .success(function(data, status, headers, config) {
-                    console.log(data);
+                .success(function(data) {
                     angular.forEach(data.questions, function(question) {
                         $scope.questions.push(question);
                     });
                     $scope.question.saving = false;
                     $scope.question.open = {questions: true, answers: true};
-                }).error(function(e) {
-                    console.log(e);
+                }).error(function() {
+
                 });
             };
 
             $scope.save_img_db = function(ques_id, path) {
-                var data = {ques_id:ques_id, path:path}
+                var data = {ques_id:ques_id, path:path};
                 $http({method: 'POST', url: 'save_img_db', data:data })
-                .success(function(data, status, headers, config) {
-                    console.log(data);
-                }).error(function(e) {
-                    console.log(e);
+                .success(function(data) {
+                }).error(function() {
                 });
             };
 
@@ -578,12 +552,11 @@ angular.module('ngEditor.directives', [])
                 $scope.progress = fileItem.progress;
             };
 
-            $scope.uploader.onErrorItem = function(fileItem, response, status, headers) {
+            $scope.uploader.onErrorItem = function(fileItem) {
                 $scope.error = fileItem.isError == true;
             };
 
-            $scope.uploader.onCompleteItem  = function(fileItem, response, status, headers) {
-                //console.log(array_key_exists('CDBimg', response));
+            $scope.uploader.onCompleteItem  = function(fileItem, response, status) {
                 if(response.result == 1){
                     $scope.success = fileItem.isSuccess == true;
                     $scope.save_img_db(fileItem.formData, response.path);
@@ -602,7 +575,7 @@ angular.module('ngEditor.directives', [])
             $scope.ques_import_var = function(question) {
                 question.answers.length = 0;
                 var list = question.importText.split('\n');
-                for(index in list){
+                for(var index in list){
                     var itemn = list[index].split(' ');
                     question.answers.push({value:itemn[0], title:itemn[1]});
                 }

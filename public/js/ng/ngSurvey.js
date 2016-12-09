@@ -17,15 +17,14 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
 
             node.saving = true;
             $http({method: 'POST', url: url, data: data, timeout: deferred.promise})
-            .success(function(data, status, headers, config) {
+            .success(function(data) {
                 deferred.resolve(data);
-            }).error(function(e) {
+            }).error(function() {
                 deferred.reject();
-                console.log(e);
             });
 
             deferred.promise.finally(function() {
-                node.saving = false
+                node.saving = false;
             });
 
             return deferred.promise;
@@ -40,25 +39,25 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
             });
         },
         save: function(question, callback) {
+            var answer;
             if (question.type=='text') {
-                var answer = {id: question.answers[0].id, string: answers[question.id]};
+                answer = {id: question.answers[0].id, string: answers[question.id]};
             } else {
-                var answer = {id: answers[question.id], string: null};
+                answer = {id: answers[question.id], string: null};
             }
             question.saving = true;
             $http({method: 'POST', url: 'saveAnswer', data:{book: book, record: record, question: question, answer: answer}})
-            .success(function(data, status, headers, config) {
+            .success(function(data) {
                 angular.forEach(data.deletedAnswers, function(deletedAnswer) {
                     if (answers[deletedAnswer]) {
                         delete answers[deletedAnswer];
-                    };
+                    }
                 });
                 if (answers[question.id] == data.string || data.id) {
                     question.saving = false;
-                };
+                }
                 (callback) && callback(data);
-            }).error(function(e){
-                console.log(e);
+            }).error(function(){
             });
         }
     };
@@ -91,13 +90,12 @@ angular.module('ngSurvey.directives', [])
                 </div>
             </div>
         `,
-        controller: function($scope, $http, $filter) {
+        controller: function($scope) {
 
             surveyFactory.types = $scope.book.types;
 
             $scope.getNextNode = function() {
                 surveyFactory.get('getNextNode', {node: $scope.node, book: $scope.book}, $scope.book).then(function(response) {
-                    console.log(response);
                     $scope.node = response.node;
                 });
             };
@@ -120,11 +118,10 @@ angular.module('ngSurvey.directives', [])
                 <survey-node ng-repeat="node in nodes" node="node"></survey-node>
             </div>
         `,
-        controller: function($scope, $http, $filter) {
+        controller: function($scope) {
 
             $scope.$watch('page', function() {
                 surveyFactory.get('getNextNodes', {page: $scope.page}, $scope.page).then(function(response) {
-                    console.log(response);
                     $scope.nodes = response.nodes;
                 });
             });
@@ -133,7 +130,7 @@ angular.module('ngSurvey.directives', [])
     };
 })
 
-.directive('surveyNode', function($compile, surveyFactory) {
+.directive('surveyNode', function() {
     return {
         restrict: 'E',
         replace: true,
@@ -161,10 +158,7 @@ angular.module('ngSurvey.directives', [])
                 <survey-node ng-if="childrens" ng-repeat="children in childrens" node="children"></survey-node>
             </div>
         `,
-        link: function(scope, element, attrs, ctrl) {
-            //scope.test = ctrl.addChildren;
-        },
-        controller: function($scope, $http, $filter, $element) {
+        controller: function($scope) {
 
             //$scope.node.saving = true;
             //$scope.node = {saving: true};
@@ -177,7 +171,7 @@ angular.module('ngSurvey.directives', [])
     };
 })
 
-.directive('surveyQuestion', function($compile, surveyFactory, $templateCache, templates) {
+.directive('surveyQuestion', function($compile, surveyFactory, $templateCache) {
     return {
         restrict: 'E',
         replace: true,
@@ -187,12 +181,12 @@ angular.module('ngSurvey.directives', [])
         },
         require: '^surveyNode',
         compile: function(tElement, tAttr) {
-            var contents = tElement.contents().remove();
+            tElement.contents().remove();
             var compiledContents = {};
 
             return function(scope, iElement, iAttr, ctrl) {
                 scope.addChildren = ctrl.addChildren;
-                var contents = iElement.contents().remove();
+                //var contents = iElement.contents().remove();
                 var type = surveyFactory.types[scope.node.type].name;
                 compiledContents[type] = $compile($templateCache.get(type));
                 compiledContents[type](scope, function(clone, scope) {
@@ -211,15 +205,12 @@ angular.module('ngSurvey.directives', [])
                 var parent = $scope.node.type == 'checkbox' ? question : answer;
 
                 surveyFactory.get('getChildren', {parent: parent, answer: answer}, $scope.node).then(function(response) {
-                    console.log(response);
                     question.childrens = response.nodes;
                 });
 
-                console.log(answer);
-
                 //question.error = true;
                 //surveyFactory.save(question);
-            }
+            };
 
             $scope.$on('$destroy', function() {
                 // /$scope.setConfirm(false);
@@ -228,18 +219,18 @@ angular.module('ngSurvey.directives', [])
             $scope.setConfirm = function(confirm) {
                 if ($scope.question.type == 'select' || $scope.question.type == 'radio') {
                     $scope.question.confirm = confirm;
-                };
+                }
                 if ($scope.question.type == 'scales') {
                     angular.forEach($filter('filter')($scope.branchs, {parent_question_id: $scope.question.id}, true), function(question) {
                         question.confirm = confirm;
                     });
-                };
+                }
             };
 
             $scope.compareRule = function(question) {
                 //console.log(question);
                 var show = true;
-                if (('close' in question)) {show = false;};
+                if (('close' in question)) {show = false;}
                 if (question.rules.length > 0) {
                     angular.forEach(question.rules, function(rule){
                         var parameter = rule.is.parameters[0];
