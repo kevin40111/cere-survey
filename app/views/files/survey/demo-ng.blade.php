@@ -28,6 +28,9 @@
 <script type="text/ng-template" id="text">
     @include('files.survey.template_question_text')
 </script>
+<script type="text/ng-template" id="number">
+    @include('files.survey.template_question_number')
+</script>
 
 <script src="/js/ng/ngSurvey.js"></script>
 

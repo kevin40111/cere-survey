@@ -45,9 +45,9 @@ angular.module('ngEditor.directives', [])
                     <md-button ng-repeat="path in paths" ng-click="getNodes(path)">{{path.title}}/</md-button>
                 </div>
 
-                <survey-node ng-if="paths.length>1" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
+                <survey-node ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
 
-                <md-card ng-if="paths.length==1" ng-repeat="node in nodes">
+                <md-card ng-if="false&&paths.length==1" ng-repeat="node in nodes">
                     <md-card-header md-colors="{background: 'indigo'}">
                         <question-bar node="node" first="$first" last="$last"></question-bar>
                     </md-card-header>
@@ -131,22 +131,23 @@ angular.module('ngEditor.directives', [])
                     <question-bar node="node" first="first" last="last"></question-bar>
                 </md-card-header>
                 <md-card-content>
-                    <md-input-container class="md-block" ng-if="types[node.type].editor.title">
+                    <md-input-container class="md-block" ng-if="type.editor.title">
                         <label>標題</label>
                         <textarea ng-model="node.title" md-maxlength="150" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
                     </md-input-container>
-                    <div ng-if="types[node.type].editor.questions" questions="node.questions" node="node"></div>
-                    <div ng-if="types[node.type].editor.answers" answers="node.answers" node="node"></div>
+                    <div ng-if="type.editor.amount.questions" questions="node.questions" node="node"></div>
+                    <div ng-if="type.editor.answers" answers="node.answers" node="node"></div>
                 </md-card-content>
                 <md-card-actions>
                     <md-menu>
-                        <md-button aria-label="新增題目" ng-click="$mdOpenMenu($event)">新增題目</md-button>
-                        <md-menu-content width="2">
-                        <md-menu-item ng-repeat="type in getArray(types) | filter:{disabled:'!'}">
+                        <md-button aria-label="新增" ng-click="$mdOpenMenu($event)">新增</md-button>
+                        <md-menu-content width="3">
+                        <md-menu-item ng-repeat="type in getTypesArray()">
                             <md-button ng-click="addNode(type, node, index+1)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
                         </md-menu-item>
                         </md-menu-content>
                     </md-menu>
+                    <md-button ng-if="type.editor.enter" ng-click="getNodes(node)">編輯</md-button>
                 </md-card-actions>
                 <md-card-content layout="row" layout-align="space-around" ng-if="node.saving">
                     <md-progress-circular md-mode="indeterminate"></md-progress-circular>
@@ -156,13 +157,16 @@ angular.module('ngEditor.directives', [])
         require: '^surveyBook',
         link: function(scope, iElement, iAttrs, surveyBookCtrl) {
             scope.addNode = surveyBookCtrl.addNode;
+            scope.getNodes = surveyBookCtrl.getNodes;
         },
         controller: function($scope) {
 
-            $scope.types = editorFactory.types;
+            $scope.type = editorFactory.types[$scope.node.type];
 
-            $scope.getArray = function(object) {
-                return Object.values(object);
+            $scope.getTypesArray = function() {
+                var types = $scope.node.type == 'page' ? [editorFactory.types['page']] : Object.values(editorFactory.types);
+
+                return types;
             };
 
             $scope.saveNodeTitle = function(node) {
