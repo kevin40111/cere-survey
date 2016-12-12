@@ -52,31 +52,6 @@ class SurveyFile extends CommFile {
         return ['book' => $this->file->book];
     }
 
-    public function getNextNode()
-    {
-        $node = Input::has('node.id')
-            ? SurveyORM\Node::find(Input::get('node.id'))->next
-            : SurveyORM\book::find(Input::get('book.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->first();
-
-        return ['node' => $node];
-    }
-
-    public function getNextNodes()
-    {
-        $nodes = SurveyORM\Node::find(Input::get('page.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions', 'answers']);
-
-        return ['nodes' => $nodes];
-    }
-
-    public function getChildren()
-    {
-        $class = Input::get('parent.class');
-
-        $nodes = Input::has('answer') ? $class::find(Input::get('parent.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions', 'answers']) : [];
-
-        return ['nodes' => $nodes];
-    }
-
     public function getNodes()
     {
         $class = Input::get('root.class');

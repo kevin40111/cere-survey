@@ -13,26 +13,7 @@
             </md-list>
         </md-content>
     </md-sidenav>
-
-    <md-content flex="100" layout="column">
-
-        <md-toolbar md-colors="{background: 'grey-100'}">
-            <div class="md-toolbar-tools">
-                <span flex></span>
-                <md-button href="demo" target="_blank">預覽</md-button>
-                <md-button href="skip" target="_blank">跳題設定</md-button>
-                <md-button ng-click="openBooks()">設定題本</md-button>
-                <span flex></span>
-            </div>
-        </md-toolbar>
-        <md-divider></md-divider>
-        <div layout="column" layout-align="start center" style="height:100%;overflow-y:scroll">
-            <div style="width:960px">
-                <survey-book ng-if="book" book="book"></survey-book>
-            </div>
-        </div>
-
-    </md-content>
+    <survey-book ng-if="book" book="book"></survey-book>
 
 </div>
 

@@ -42,12 +42,26 @@ angular.module('ngEditor.directives', [])
             book: '='
         },
         template:  `
-            <div>
-                <div layout="row">
-                    <md-button ng-repeat="path in paths" ng-click="getNodes(path)">{{path.title}}/</md-button>
+            <md-content flex="100" layout="column">
+                <md-toolbar md-colors="{background: 'grey-100'}">
+                    <div class="md-toolbar-tools">
+                        <span flex></span>
+                        <div class="ui breadcrumb" style="width:960px">
+                            <a class="section" ng-class="{active: $last}" ng-repeat-start="path in paths" ng-click="getNodes(path)"
+                               style="max-width: 250px;text-overflow: ellipsis;overflow: hidden;white-space: nowrap">{{path.title}}</a>
+                            <div ng-repeat-end class="divider"> / </div>
+                        </div>
+                        <span flex></span>
+                        <md-button href="/survey/{{book.id}}/page" target="_blank">預覽</md-button>
+                    </div>
+                </md-toolbar>
+                <md-divider></md-divider>
+                <div layout="column" layout-align="start center" style="height:100%;overflow-y:scroll">
+                    <div style="width:960px">
+                        <survey-node ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
+                    </div>
                 </div>
-                <survey-node ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
-            </div>
+            </md-content>
         `,
         controller: function($scope, $filter) {
 
@@ -120,10 +134,10 @@ angular.module('ngEditor.directives', [])
                 </md-card-header>
                 <md-card-content>
                     <md-input-container class="md-block" ng-if="type.editor.title">
-                        <label>標題</label>
+                        <label>{{type.editor.title}}</label>
                         <textarea ng-model="node.title" md-maxlength="150" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
                     </md-input-container>
-                    <div ng-if="type.editor.amount.questions" questions="node.questions" node="node"></div>
+                    <div ng-if="type.editor.questions.amount" questions="node.questions" node="node"></div>
                     <div ng-if="type.editor.answers" answers="node.answers" node="node"></div>
                 </md-card-content>
                 <md-card-actions>
@@ -137,9 +151,7 @@ angular.module('ngEditor.directives', [])
                     </md-menu>
                     <md-button ng-if="type.editor.enter" ng-click="getNodes(node)">編輯</md-button>
                 </md-card-actions>
-                <md-card-content layout="row" layout-align="space-around" ng-if="node.saving">
-                    <md-progress-circular md-mode="indeterminate"></md-progress-circular>
-                </md-card-content>
+                <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
             </md-card>
         `,
         require: '^surveyBook',
