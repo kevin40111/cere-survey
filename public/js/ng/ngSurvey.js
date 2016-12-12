@@ -1,9 +1,6 @@
 'use strict';
 
-angular.module('ngSurvey', [
-    'ngSurvey.factories',
-    'ngSurvey.directives'
-]);
+angular.module('ngSurvey', ['ngSurvey.directives', 'ngSurvey.factories']);
 
 angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http, $q) {
     var answers = {};

@@ -38,7 +38,7 @@ class Book extends Eloquent {
         'textarea' => ['name' => 'textarea', 'editor' => ['enter' => false, 'title' => true, 'questions' => ['amount' => 0], 'answers' => 0], 'title' =>'文字欄位',   'disabled' => true],
         'table'    => ['name' => 'table',    'editor' => ['enter' => false, 'title' => true, 'questions' => ['amount' => 0], 'answers' => 0], 'title' =>'表格',       'disabled' => true],
         'jump'     => ['name' => 'jump',     'editor' => ['enter' => false, 'title' => true, 'questions' => ['amount' => 0], 'answers' => 0], 'title' =>'開啟題本',   'type' =>'rule'],
-        'page'     => ['name' => 'page',     'editor' => ['enter' => true, 'title' => false, 'questions' => ['amount' => 0], 'answers' => 0], 'title' =>'頁',   'icon' =>'insert-drive-file', 'disabled' => true],
+        'page'     => ['name' => 'page',     'editor' => ['enter' => true, 'title' => true, 'questions' => ['amount' => 0], 'answers' => 0], 'title' =>'頁',   'icon' =>'insert-drive-file', 'disabled' => true],
     ];
 
     public function getTypesAttribute()

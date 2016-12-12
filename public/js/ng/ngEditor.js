@@ -4,10 +4,12 @@ angular.module('ngEditor', ['ngEditor.directives', 'ngEditor.factories']);
 
 angular.module('ngEditor.factories', []).factory('editorFactory', function($http, $q) {
 
-    var types = [];
+    var types = {};
+    var typesInPage = [];
 
     return {
         types: types,
+        typesInPage: typesInPage,
         ajax: function(url, data, node = {}) {
             var deferred = $q.defer();
 
@@ -44,23 +46,13 @@ angular.module('ngEditor.directives', [])
                 <div layout="row">
                     <md-button ng-repeat="path in paths" ng-click="getNodes(path)">{{path.title}}/</md-button>
                 </div>
-
                 <survey-node ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
-
-                <md-card ng-if="false&&paths.length==1" ng-repeat="node in nodes">
-                    <md-card-header md-colors="{background: 'indigo'}">
-                        <question-bar node="node" first="$first" last="$last"></question-bar>
-                    </md-card-header>
-                    <md-button ng-click="getNodes(node)">{{node.title}}</md-button>
-                    <md-card-actions>
-                        <md-button ng-click="addNode(book.types['page'], node, $index+1)">新增一頁</md-button>
-                    </md-card-actions>
-                </md-card>
             </div>
         `,
-        controller: function($scope) {
+        controller: function($scope, $filter) {
 
             editorFactory.types = $scope.book.types;
+            editorFactory.typesInPage = $filter('filter')(Object.values(editorFactory.types), {disabled: '!'})
 
             this.getNodes = function(root) {
                 editorFactory.ajax('getNodes', {root: root}).then(function(response) {
@@ -103,10 +95,6 @@ angular.module('ngEditor.directives', [])
             };
 
             $scope.getNodes = this.getNodes;
-            $scope.addNode = this.addNode;
-            $scope.removeNode = this.removeNode;
-            $scope.moveUp = this.moveUp;
-            $scope.moveDown = this.moveDown;
 
             $scope.getNodes($scope.book);
 
@@ -128,7 +116,7 @@ angular.module('ngEditor.directives', [])
         template:  `
             <md-card>
                 <md-card-header md-colors="{background: 'indigo'}">
-                    <question-bar node="node" first="first" last="last"></question-bar>
+                    <question-bar></question-bar>
                 </md-card-header>
                 <md-card-content>
                     <md-input-container class="md-block" ng-if="type.editor.title">
@@ -157,16 +145,17 @@ angular.module('ngEditor.directives', [])
         require: '^surveyBook',
         link: function(scope, iElement, iAttrs, surveyBookCtrl) {
             scope.addNode = surveyBookCtrl.addNode;
+            scope.removeNode = surveyBookCtrl.removeNode;
             scope.getNodes = surveyBookCtrl.getNodes;
+            scope.moveUp = surveyBookCtrl.moveUp;
+            scope.moveDown = surveyBookCtrl.moveDown;
         },
         controller: function($scope) {
 
             $scope.type = editorFactory.types[$scope.node.type];
 
             $scope.getTypesArray = function() {
-                var types = $scope.node.type == 'page' ? [editorFactory.types['page']] : Object.values(editorFactory.types);
-
-                return types;
+                return $scope.node.type == 'page' ? [editorFactory.types['page']] : editorFactory.typesInPage;
             };
 
             $scope.saveNodeTitle = function(node) {
@@ -184,17 +173,12 @@ angular.module('ngEditor.directives', [])
         restrict: 'E',
         replace: true,
         transclude: false,
-        scope: {
-            node: '=',
-            first: '=',
-            last: '='
-        },
         template: `
             <div flex layout="row" layout-align="start center">
                 <div>
-                    <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="{{types[node.type].icon}}"></md-icon>
+                    <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="{{type.icon}}"></md-icon>
                 </div>
-                <div style="margin: 0 0 0 16px">{{types[node.type].title}}</div>
+                <div style="margin: 0 0 0 16px">{{type.title}}</div>
 
                 <span flex></span>
 
@@ -218,14 +202,7 @@ angular.module('ngEditor.directives', [])
                     </md-button>
                 </div>
             </div>
-        `,
-        require: '^surveyBook',
-        link: function(scope, iElement, iAttrs, surveyBookCtrl) {
-            scope.removeNode = surveyBookCtrl.removeNode;
-            scope.moveUp = surveyBookCtrl.moveUp;
-            scope.moveDown = surveyBookCtrl.moveDown;
-            scope.types = editorFactory.types;
-        },
+        `
     };
 })
 
