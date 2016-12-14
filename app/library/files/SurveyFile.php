@@ -71,6 +71,28 @@ class SurveyFile extends CommFile {
         return ['nodes' => $nodes, 'paths' => $root->getPaths()];
     }
 
+    public function createTable()
+    {
+        \Schema::create($this->file->book->id, function ($table) {
+            $table->increments('id');
+            $questions = $this->file->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function($carry, $page) {
+                $questions = $page->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function($carry, $node) {
+                    return array_merge($carry, $node->sortByPrevious(['questions'])->questions->toArray());
+                }, []);
+                return array_merge($carry, $questions);
+            }, []);
+
+            foreach ($questions as $question) {
+                $table->text($question['id'])->nullable();
+            }
+
+            $table->integer('page_id');
+            $table->integer('created_by');
+        });
+
+        return 1;
+    }
+
     public function createNode()
     {
         $class = Input::get('parent.class');
@@ -133,7 +155,7 @@ class SurveyFile extends CommFile {
     public function removeQuestion()
     {
         $question = SurveyORM\Question::find(Input::get('question.id'));
-        
+
         return ['deleted' => $question->delete(), 'questions' => $question->node->questions];
     }
 

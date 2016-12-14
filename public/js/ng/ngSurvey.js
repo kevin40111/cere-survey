@@ -83,7 +83,7 @@ angular.module('ngSurvey.directives', [])
                 </div>
                 <div ng-if="!book.saving">
                     <survey-page ng-if="node" page="node"></survey-page>
-                    <md-button class="md-raised md-primary" ng-click="getNextNode()" ng-disabled="book.saving">繼續</md-button>
+                    <md-button class="md-raised md-primary" ng-click="getNextNode(true)" ng-disabled="book.saving">繼續</md-button>
                 </div>
             </div>
         `,
@@ -91,8 +91,8 @@ angular.module('ngSurvey.directives', [])
 
             surveyFactory.types = $scope.book.types;
 
-            $scope.getNextNode = function() {
-                surveyFactory.get('getNextNode', {node: $scope.node, book: $scope.book}, $scope.book).then(function(response) {
+            $scope.getNextNode = function(next = false) {
+                surveyFactory.get('getNextNode', {next: next, book: $scope.book}, $scope.book).then(function(response) {
                     $scope.node = response.node;
                 });
             };
@@ -201,7 +201,7 @@ angular.module('ngSurvey.directives', [])
                 var answer = $scope.answers[question.id];
                 var parent = $scope.node.type == 'checkbox' ? question : answer;
 
-                surveyFactory.get('getChildren', {parent: parent, answer: answer}, $scope.node).then(function(response) {
+                surveyFactory.get('getChildren', {parent: parent, question: question, answer: answer}, $scope.node).then(function(response) {
                     question.childrens = response.nodes;
                 });
 
