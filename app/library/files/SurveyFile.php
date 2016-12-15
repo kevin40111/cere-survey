@@ -222,4 +222,19 @@ class SurveyFile extends CommFile {
         return ['columns' => $columns];
     }
 
+    public function setApplication()
+    {
+        return User::find(192)->extQuestions()->get();
+    }
+
+    public function getApplication()
+    {
+        $items = [
+            'columns' => [],
+            'options' => [],
+        ];
+        return $this->file->book->extention()->get();
+        // return ['items' => $items,'rawdata' => User::find(192)->extQuestions()->first()];
+    }
+
 }

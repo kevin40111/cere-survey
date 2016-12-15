@@ -46,4 +46,9 @@ class Book extends Eloquent {
         return $this->types;
     }
 
+    public function extention()
+    {
+        return $this->hasOne('Plat\Eloquent\Survey\Extension', 'book_id', 'id');
+    }
+
 }
