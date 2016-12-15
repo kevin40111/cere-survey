@@ -46,7 +46,7 @@ class SurveyController extends \BaseController {
             DB::table('35')->update(['page_id' => $page->id]);
         }
 
-        return ['node' => $page];
+        return ['node' => $page, 'answers' => $answers];
     }
 
 
@@ -70,11 +70,15 @@ class SurveyController extends \BaseController {
      */
     public function getChildren()
     {
-        $class = Input::get('parent.class');
+        if (Input::has('parent')) {
+            $class = Input::get('parent.class');
 
-        $nodes = Input::has('answer') ? $class::find(Input::get('parent.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions', 'answers']) : [];
+            $nodes = $class::find(Input::get('parent.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions', 'answers']);
+        } else {
+            $nodes = [];
+        }
 
-        DB::table('35')->update([Input::get('question.id') => Input::get('answer.id')]);
+        Input::has('value') && DB::table('35')->update([Input::get('question.id') => Input::get('value')]);sleep(1);
 
         return ['nodes' => $nodes];
     }

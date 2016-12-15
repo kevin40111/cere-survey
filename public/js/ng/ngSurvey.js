@@ -16,7 +16,8 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
             $http({method: 'POST', url: url, data: data, timeout: deferred.promise})
             .success(function(data) {
                 deferred.resolve(data);
-            }).error(function() {
+            }).error(function(e) {
+                console.log(e);
                 deferred.reject();
             });
 
@@ -94,6 +95,7 @@ angular.module('ngSurvey.directives', [])
             $scope.getNextNode = function(next = false) {
                 surveyFactory.get('getNextNode', {next: next, book: $scope.book}, $scope.book).then(function(response) {
                     $scope.node = response.node;
+                    surveyFactory.answers = response.answers;
                 });
             };
 
@@ -168,6 +170,38 @@ angular.module('ngSurvey.directives', [])
     };
 })
 
+.directive('surveyInput', function($compile, surveyFactory) {
+    return {
+        priority: 1,
+        restrict: 'A',
+        require: 'ngModel',
+        controller: function($scope, $attrs) {
+
+            $scope.saveAnswer = function(parent, value) {
+                console.log(parent);
+                surveyFactory.get('getChildren', {question: $scope.question, parent: parent, value: value}, $scope.node).then(function(response) {
+                    $scope.question.childrens = response.nodes;
+                });
+            };
+
+            var oldAnswer = surveyFactory.answers[$scope.question.id] ? surveyFactory.answers[$scope.question.id] : null;
+
+            $scope.answer = $scope.node.answers.length > 0 ? $scope.node.answers.find(function(answer) {
+                return answer.id == oldAnswer;
+            }) : oldAnswer;
+
+            var parent = $scope.$eval($attrs.parent);
+
+            if (parent) {
+                surveyFactory.get('getChildren', {question: $scope.question, parent: parent}, $scope.node).then(function(response) {
+                    $scope.question.childrens = response.nodes;
+                });
+            }
+
+        }
+    };
+})
+
 .directive('surveyQuestion', function($compile, surveyFactory, $templateCache) {
     return {
         restrict: 'E',
@@ -192,22 +226,9 @@ angular.module('ngSurvey.directives', [])
             };
         },
         controller: function($scope, $http, $window, $filter, $rootScope) {
-            $scope.saveTextNgOptions = {updateOn: 'default blur', debounce:{default: 10000, blur: 0}};
-            //$scope.answers = surveyFactory.answers;
-            $scope.answers = {};
-
-            $scope.saveAnswer = function(question) {
-
-                var answer = $scope.answers[question.id];
-                var parent = $scope.node.type == 'checkbox' ? question : answer;
-
-                surveyFactory.get('getChildren', {parent: parent, question: question, answer: answer}, $scope.node).then(function(response) {
-                    question.childrens = response.nodes;
-                });
-
-                //question.error = true;
-                //surveyFactory.save(question);
-            };
+            $scope.saveTextNgOptions = {updateOn: 'default blur', debounce:{default: 1000, blur: 0}};
+            $scope.answers = surveyFactory.answers;
+            //$scope.answers = $filter('filter')(node.answers, {id: });
 
             $scope.$on('$destroy', function() {
                 // /$scope.setConfirm(false);
@@ -241,6 +262,21 @@ angular.module('ngSurvey.directives', [])
                 question.show = show;
                 return show;
             };
+        }
+    };
+})
+
+.directive('stringConverter', function() {
+    return {
+        priority: 1,
+        restrict: 'A',
+        require: 'ngModel',
+        link: function(scope, element, attr, ngModel) {
+            function toView(value) {
+                return value*1;
+            }
+
+            ngModel.$formatters.push(toView);
         }
     };
 });
