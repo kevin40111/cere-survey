@@ -52,7 +52,8 @@ angular.module('ngEditor.directives', [])
                             <div ng-repeat-end class="divider"> / </div>
                         </div>
                         <span flex></span>
-                        <md-button href="/survey/{{book.id}}/page" target="_blank">預覽</md-button>
+                        <md-button ng-click="createTable()">完成</md-button>
+                        <md-button href="/survey/{{book.id}}/page" ng-disabled="!book.lock" target="_blank">預覽</md-button>
                     </div>
                 </md-toolbar>
                 <md-divider></md-divider>
@@ -111,6 +112,13 @@ angular.module('ngEditor.directives', [])
             $scope.getNodes = this.getNodes;
 
             $scope.getNodes($scope.book);
+
+            $scope.createTable = function() {
+                editorFactory.ajax('createTable', {}, $scope.book).then(function(response) {
+                    console.log(response);
+                    $scope.book.lock = response.lock;
+                });
+            }
 
         }
     };

@@ -12,7 +12,9 @@ class Book extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = array('file_id', 'title');
+    protected $fillable = array('file_id', 'title', 'lock');
+
+    protected $attributes = ['lock' => false];
 
     protected $appends = ['class', 'types'];
 
@@ -44,6 +46,11 @@ class Book extends Eloquent {
     public function getTypesAttribute()
     {
         return $this->types;
+    }
+
+    public function getLockAttribute($value)
+    {
+        return (boolean)$value;
     }
 
     public function extention()

@@ -2,6 +2,7 @@
 namespace Plat\Files;
 
 use DB;
+use Schema;
 use Input;
 use User;
 use Files;
@@ -73,13 +74,12 @@ class SurveyFile extends CommFile {
 
     public function createTable()
     {
-        \Schema::create($this->file->book->id, function ($table) {
+        DB::table('INFORMATION_SCHEMA.COLUMNS')->where('TABLE_NAME', $this->file->book->id)->exists() && Schema::drop($this->file->book->id);
+
+        Schema::create($this->file->book->id, function ($table) {
             $table->increments('id');
             $questions = $this->file->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function($carry, $page) {
-                $questions = $page->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function($carry, $node) {
-                    return array_merge($carry, $node->sortByPrevious(['questions'])->questions->toArray());
-                }, []);
-                return array_merge($carry, $questions);
+                return array_merge($carry, $page->getQuestions());
             }, []);
 
             foreach ($questions as $question) {
@@ -90,7 +90,9 @@ class SurveyFile extends CommFile {
             $table->integer('created_by');
         });
 
-        return 1;
+        $this->file->book->update(['lock' => true]);
+
+        return ['lock' => true];
     }
 
     public function createNode()

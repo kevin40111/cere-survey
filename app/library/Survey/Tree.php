@@ -1,6 +1,7 @@
 <?php
 
 namespace Plat\Survey;
+
 use Plat\Eloquent\Survey as SurveyORM;
 
 trait Tree {
@@ -12,6 +13,24 @@ trait Tree {
         $paths = $parent ? $parent->getPaths()->add($this) : \Illuminate\Database\Eloquent\Collection::make([$this]);
 
         return $paths;
+    }
+
+    public function getQuestions()
+    {
+        $nodes = $this->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function($carry, $node) {
+
+            $questions = $node->sortByPrevious(['questions'])->questions->reduce(function($carry, $question) {
+                return array_merge($carry, $question->getQuestions());
+            }, $node->sortByPrevious(['questions'])->questions->toArray());
+
+            $questionsWithInAnswer = $node->sortByPrevious(['questions'])->answers->reduce(function($carry, $answer) {
+                return array_merge($carry, $answer->getQuestions());
+            }, $questions);
+
+            return array_merge($carry, $questionsWithInAnswer);
+        }, []);
+
+        return $nodes;
     }
 
     public function sortByPrevious(array $relations)
