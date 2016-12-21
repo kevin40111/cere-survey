@@ -4,9 +4,9 @@ namespace Plat\Eloquent\Survey;
 
 use Eloquent;
 
-class Extension extends Eloquent {
+class Application extends Eloquent {
 
-    protected $table = 'survey_extension';
+    protected $table = 'survey_application';
 
     public $timestamps = true;
 
