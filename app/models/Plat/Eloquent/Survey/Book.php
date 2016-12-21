@@ -58,4 +58,14 @@ class Book extends Eloquent {
         return $this->hasOne('Plat\Eloquent\Survey\Applicaiton', 'book_id', 'id');
     }
 
+    public function optionColumns()
+    {
+        return $this->morphedByMany('Row\Column', 'survey_apply_option');
+    }
+
+    public function optionQuestions()
+    {
+        return $this->morphedByMany('Plat\Eloquent\Survey\Question', 'survey_apply_option');
+    }
+
 }

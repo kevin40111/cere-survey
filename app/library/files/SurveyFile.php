@@ -224,19 +224,17 @@ class SurveyFile extends CommFile {
         return ['columns' => $columns];
     }
 
-    public function setApplication()
+    public function setAppliedOptions()
     {
-        return User::find(192)->extQuestions()->get();
+        return Plat\Eloquent\Survey\Book::find(192)->optionColumns;
     }
 
-    public function getApplication()
+    public function getAppliedOptions()
     {
-        $items = [
-            'columns' => [],
-            'options' => [],
-        ];
-        return $this->file->book->extention()->get();
-        // return ['items' => $items,'rawdata' => User::find(192)->extQuestions()->first()];
+        $options = [];
+        $options['columns'] = SurveyORM\Book::find($this->file->book->id)->optionColumns;
+        $options['questions'] = SurveyORM\Book::find($this->file->book->id)->optionQuestions;
+        return ['options' => $options];
     }
 
 }

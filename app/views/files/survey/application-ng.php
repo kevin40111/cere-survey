@@ -8,8 +8,8 @@
                 </md-card-header>
                 <md-card-content>
                     <md-list>
-                        <md-list-item ng-repeat="(subKey, option) in item.options">
-                            <p><md-checkbox ng-model="item.options[subKey].selected" ng-true-value="'1'" ng-false-value="" aria-label="{}">{{}}</md-checkbox></p>
+                        <md-list-item ng-repeat="column in options.columns">
+                            <p><md-checkbox ng-model="column.selected" ng-true-value="'1'" ng-false-value="" aria-label="{}">{{column.title}}</md-checkbox></p>
                         </md-list-item>
                     </md-list>
                 </md-card-content>
@@ -22,8 +22,8 @@
                 </md-card-header>
                 <md-card-content>
                     <md-list>
-                        <md-list-item ng-repeat="(subKey, option) in item.options">
-                            <p><md-checkbox ng-model="item.options[subKey].selected" ng-true-value="'1'" ng-false-value="" aria-label="{}">{{}}</md-checkbox></p>
+                        <md-list-item ng-repeat="question in options.questions">
+                            <p><md-checkbox ng-model="question.selected" ng-true-value="'1'" ng-false-value="" aria-label="{}">{{question.title}}</md-checkbox></p>
                         </md-list-item>
                     </md-list>
                 </md-card-content>
@@ -35,16 +35,16 @@
 <script>
     app.controller('application', function ($scope, $http, $filter){
         $scope.items = {};
-        $scope.getApplication = function() {
-            $http({method: 'POST', url: 'getApplication', data:{}})
+        $scope.getAppliedOptions = function() {
+            $http({method: 'POST', url: 'getAppliedOptions', data:{}})
             .success(function(data, status, headers, config) {
                console.log(data);
-               // $scope.items = data.items;
+               $scope.options = data.options;
             })
             .error(function(e){
                 console.log(e);
             });
         }
-        $scope.getApplication();
+        $scope.getAppliedOptions();
     });
 </script>
