@@ -3,6 +3,7 @@
 namespace Plat\Eloquent\Survey;
 
 use Eloquent;
+use Auth;
 
 class Book extends Eloquent {
 
@@ -53,19 +54,24 @@ class Book extends Eloquent {
         return (boolean)$value;
     }
 
-    public function extention()
+    public function application()
     {
-        return $this->hasOne('Plat\Eloquent\Survey\Applicaiton', 'book_id', 'id');
+        return $this->hasOne('Plat\Eloquent\Survey\Application', 'book_id', 'id')->where('user_id', Auth::user()->id);
     }
 
     public function optionColumns()
     {
-        return $this->morphedByMany('Row\Column', 'survey_apply_option');
+        return $this->morphedByMany('Row\Column', 'survey_apply_option')->withPivot('id');
     }
 
     public function optionQuestions()
     {
-        return $this->morphedByMany('Plat\Eloquent\Survey\Question', 'survey_apply_option');
+        return $this->morphedByMany('Plat\Eloquent\Survey\Question', 'survey_apply_option')->withPivot('id');
+    }
+
+    public function applicableOption()
+    {
+        return $this->hasMany('Plat\Eloquent\Survey\ApplicableOption', 'book_id', 'id');
     }
 
 }
