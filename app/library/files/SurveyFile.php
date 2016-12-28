@@ -60,7 +60,8 @@ class SurveyFile extends CommFile {
         $root = $class::find(Input::get('root.id'));
 
         if ($root->childrenNodes->isEmpty()) {
-            $node = $root->childrenNodes()->save(new SurveyORM\Node(['type' => 'explain']));
+            $type = get_class($root) == 'Plat\Eloquent\Survey\Book' ? 'page' : 'explain';
+            $node = $root->childrenNodes()->save(new SurveyORM\Node(['type' => $type]));
 
             $root->load('childrenNodes');
         }
