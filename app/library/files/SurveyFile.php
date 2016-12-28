@@ -226,15 +226,15 @@ class SurveyFile extends CommFile {
 
     public function setAppliedOptions()
     {
-        $this->file->book->application->appliedOptions()->sync([5, 7]);
-        // SurveyORM\Application::find($this->file->book->id)->optionColumns()->save(new SurveyORM\Node(Input::get('selected')['columns']));
+        $this->file->book->application->appliedOptions()->sync(Input::get('selected'));
     }
 
     public function getAppliedOptions()
     {
-        // $book = $this->file->book->load('optionColumns', 'optionQuestions');
-        $book = $this->file->book->applicableOption->load('surveyApplicableOption', 'appliedOption');
-        return ['book' => $book];
+        $applicableOption = $this->file->book->applicableOptions->load('surveyApplicableOption', 'appliedOption')->groupBy(function($applicableOption) {
+            return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'columns' : 'questions';
+        });
+        return ['applicableOption' => $applicableOption];
     }
 
 }

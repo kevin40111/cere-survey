@@ -19,7 +19,7 @@ class Application extends Eloquent {
 
     public function appliedOptions()
     {
-        return $this->belongsToMany('Plat\Eloquent\Survey\ApplyOption', 'survey_applied_options', 'application_id', 'apply_option_id');
+        return $this->belongsToMany('Plat\Eloquent\Survey\ApplicableOption', 'survey_applied_options', 'application_id', 'applicable_option_id');
     }
 
 }
