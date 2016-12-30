@@ -23,7 +23,14 @@ class SurveyFile extends CommFile {
 
     public function get_views()
     {
-        return ['open', 'demo', 'application'];
+        return ['open', 'demo', 'application', 'confirm'];
+    }
+
+    public static function tools()
+    {
+        return [
+            ['name' => 'confirm', 'title' => '加掛審核', 'method' => 'confirm', 'icon' => 'list']
+        ];
     }
 
     public function create()
@@ -46,6 +53,11 @@ class SurveyFile extends CommFile {
     public function application()
     {
         return 'files.survey.application-ng';
+    }
+
+    public function confirm()
+    {
+        return 'files.survey.confirm-ng';
     }
 
     public function getBook()
@@ -227,7 +239,7 @@ class SurveyFile extends CommFile {
 
     public function setAppliedOptions()
     {
-        $this->file->book->application->appliedOptions()->sync(Input::get('selected'));
+        $this->file->book->applications()->OfMe()->first()->appliedOptions()->sync(Input::get('selected'));
     }
 
     public function getAppliedOptions()
@@ -236,6 +248,11 @@ class SurveyFile extends CommFile {
             return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'columns' : 'questions';
         });
         return ['applicableOption' => $applicableOption];
+    }
+
+    public function getApplications()
+    {
+        return ['applications' => $this->file->book->applications->load('members.organizations.now')];
     }
 
 }
