@@ -6,6 +6,7 @@ use Schema;
 use Input;
 use User;
 use Files;
+use Auth;
 use Plat\Survey;
 use Plat\Eloquent\Survey as SurveyORM;
 
@@ -14,6 +15,8 @@ class SurveyFile extends CommFile {
     function __construct(Files $file, User $user)
     {
         parent::__construct($file, $user);
+
+        $this->configs = $this->file->configs->lists('value', 'name');
     }
 
     public function is_full()
@@ -23,7 +26,7 @@ class SurveyFile extends CommFile {
 
     public function get_views()
     {
-        return ['open', 'demo', 'application', 'confirm'];
+        return ['open', 'demo', 'application','confirm', 'applicableList'];
     }
 
     public static function tools()
@@ -58,6 +61,12 @@ class SurveyFile extends CommFile {
     public function confirm()
     {
         return 'files.survey.confirm-ng';
+    }
+
+    public function applicableList()
+    {
+        return 'files.survey.applicableList-ng';
+
     }
 
     public function getBook()
@@ -239,20 +248,86 @@ class SurveyFile extends CommFile {
 
     public function setAppliedOptions()
     {
+        $this->createApplication();
         $this->file->book->applications()->OfMe()->first()->appliedOptions()->sync(Input::get('selected'));
+        return $this->getAppliedOptions();
     }
 
     public function getAppliedOptions()
     {
-        $applicableOption = $this->file->book->applicableOptions->load('surveyApplicableOption', 'appliedOption')->groupBy(function($applicableOption) {
-            return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'columns' : 'questions';
+        $applicableOption = $this->file->book->applicableOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
+            return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
         });
-        return ['applicableOption' => $applicableOption];
+
+        $application = $this->file->book->applications()->OfMe()->first();
+        $appliedOptions = is_null($application) ? [] : $this->file->book->applications()->OfMe()->first()->appliedOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
+            return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
+        });
+
+        return ['applicableOption' => $applicableOption, 'appliedOptions' => $appliedOptions];
+    }
+
+    public function resetApplication()
+    {
+        $this->deleteApplication();
+        return $this->getAppliedOptions();
+    }
+
+    public function createApplication()
+    {
+        $this->file->book->applications()->create(['book_id' => Input::get('book_id'), 'member_id' => Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->id]);
+    }
+
+    public function deleteApplication()
+    {
+        $this->file->book->applications()->OfMe()->first()->delete();
+    }
+
+    public function setApplicableOptions()
+    {
+        $this->file->book->optionColumns()->sync(Input::get('selected')['columns']);
+        $this->file->book->optionQuestions()->sync(Input::get('selected')['questions']);
+    }
+
+    public function getApplicableOptions()
+    {
+        $edited = false; //!$this->file->book->optionColumns->isEmpty() || !$this->file->book->optionQuestions->isEmpty();
+
+        if ($edited) {
+            $columns = $this->file->book->optionColumns;
+            $questions = $this->file->book->optionQuestions;
+        } else {
+            $rowsFile_id = $this->configs['rows_file'];
+
+            $columns = Files::find($rowsFile_id)->sheets->first()->tables->first()->columns;
+
+            $questions = $this->file->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
+                return array_merge($carry, $page->getQuestions());
+            }, []);
+        }
+
+        return ['columns' => $columns, 'questions' => $questions, 'edited' => $edited];
     }
 
     public function getApplications()
     {
         return ['applications' => $this->file->book->applications->load('members.organizations.now')];
+    }
+
+    public function resetApplicableOptions()
+    {
+        $this->deleteApplication();
+        return $this->getAppliedOptions();
+    }
+
+    public function createApplicableOptions()
+    {
+        $this->file->book->applications()->create(['book_id' => Input::get('book_id'), 'member_id' => Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->id]);
+    }
+
+    public function deleteApplicableOptions()
+    {
+        $this->file->book->applications()->OfMe()->first()->delete();
     }
 
 }
