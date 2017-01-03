@@ -32,7 +32,8 @@ class SurveyFile extends CommFile {
     public static function tools()
     {
         return [
-            ['name' => 'confirm', 'title' => '加掛審核', 'method' => 'confirm', 'icon' => 'list']
+            ['name' => 'confirm', 'title' => '加掛審核', 'method' => 'confirm', 'icon' => 'list'],
+            ['name' => 'applicableList', 'title' => '加掛項目', 'method' => 'applicableList', 'icon' => 'list']
         ];
     }
 
@@ -260,11 +261,16 @@ class SurveyFile extends CommFile {
         });
 
         $application = $this->file->book->applications()->OfMe()->first();
-        $appliedOptions = is_null($application) ? [] : $this->file->book->applications()->OfMe()->first()->appliedOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
+        $appliedOptions = is_null($application) ? [] : $application->appliedOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
             return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
         });
 
-        return ['applicableOption' => $applicableOption, 'appliedOptions' => $appliedOptions];
+        $edited = !$appliedOptions->isEmpty();
+        $options = !empty($edited) ? $appliedOptions : $applicableOption;
+        $columns = isset($options['applicableColumns']) ? $options['applicableColumns'] : [];
+        $questions = isset($options['applicableQuestions']) ? $options['applicableQuestions'] : [];
+
+        return ['columns' => $columns, 'questions' => $questions, 'edited' => $edited];
     }
 
     public function resetApplication()
@@ -287,20 +293,20 @@ class SurveyFile extends CommFile {
     {
         $this->file->book->optionColumns()->sync(Input::get('selected')['columns']);
         $this->file->book->optionQuestions()->sync(Input::get('selected')['questions']);
+        return $this->getApplicableOptions();
     }
 
     public function getApplicableOptions()
     {
-        $edited = false; //!$this->file->book->optionColumns->isEmpty() || !$this->file->book->optionQuestions->isEmpty();
+        $edited = !$this->file->book->optionColumns->isEmpty() || !$this->file->book->optionQuestions->isEmpty();
 
         if ($edited) {
             $columns = $this->file->book->optionColumns;
             $questions = $this->file->book->optionQuestions;
         } else {
             $rowsFile_id = $this->configs['rows_file'];
-
-            $columns = Files::find($rowsFile_id)->sheets->first()->tables->first()->columns;
-
+            $file = Files::find($rowsFile_id);
+            $columns = !is_null($file) ? $file->sheets->first()->tables->first()->columns : [];
             $questions = $this->file->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
                 return array_merge($carry, $page->getQuestions());
             }, []);
@@ -316,18 +322,13 @@ class SurveyFile extends CommFile {
 
     public function resetApplicableOptions()
     {
-        $this->deleteApplication();
-        return $this->getAppliedOptions();
-    }
-
-    public function createApplicableOptions()
-    {
-        $this->file->book->applications()->create(['book_id' => Input::get('book_id'), 'member_id' => Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->id]);
+        $this->deleteApplicableOptions();
+        return $this->getApplicableOptions();
     }
 
     public function deleteApplicableOptions()
     {
-        $this->file->book->applications()->OfMe()->first()->delete();
+        $this->file->book->applicableOptions()->delete();
     }
 
 }

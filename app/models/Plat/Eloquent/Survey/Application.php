@@ -34,7 +34,6 @@ class Application extends Eloquent {
 
     public function scopeOfMe($query)
     {
-        //Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first();
         return $query->where('member_id', Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->id);
     }
 

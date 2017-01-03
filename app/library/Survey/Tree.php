@@ -23,7 +23,7 @@ trait Tree {
                 return array_merge($carry, $question->getQuestions());
             }, $node->sortByPrevious(['questions'])->questions->toArray());
 
-            $questionsWithInAnswer = $node->sortByPrevious(['questions'])->answers->reduce(function($carry, $answer) {
+            $questionsWithInAnswer = $node->sortByPrevious(['answers'])->answers->reduce(function($carry, $answer) {
                 return array_merge($carry, $answer->getQuestions());
             }, $questions);
 

@@ -33,8 +33,8 @@
                 </md-list>
             </md-content>
         </md-card>
-        <md-button class="md-raised md-primary md-display-2" ng-click="setAppliedOptions()" style="width: 100%;height: 50px;font-size: 18px" ng-if="!edited">送出</md-button>
-        <md-button class="md-raised md-primary md-display-2" ng-click="resetAppliedOptions()" style="width: 100%;height: 50px;font-size: 18px" ng-if="edited">重新申請</md-button>
+        <md-button class="md-raised md-primary md-display-2" ng-click="setApplicableOptions()" style="width: 100%;height: 50px;font-size: 18px" ng-if="!edited">送出</md-button>
+        <md-button class="md-raised md-primary md-display-2" ng-click="resetApplicableOptions()" style="width: 100%;height: 50px;font-size: 18px" ng-if="edited">重新設定</md-button>
     </div>
 </md-content>
 <script>
@@ -42,13 +42,10 @@
         $scope.columns = [];
         $scope.questions = [];
         $scope.edited = [];
-        $scope.getAppliedOptions = function() {
+        $scope.getApplicableOptions = function() {
             $http({method: 'POST', url: 'getApplicableOptions', data:{}})
             .success(function(data, status, headers, config) {
-                console.log(data);
-                $scope.columns = data.columns;
-                $scope.questions = data.questions;
-                $scope.edited = data.edited;
+                $scope.setVar(data.columns, data.questions, data.edited);
             })
             .error(function(e){
                 console.log(e);
@@ -65,29 +62,33 @@
             return {'columns': columns, 'questions': questions};
         }
 
-        $scope.setAppliedOptions = function() {
+        $scope.setApplicableOptions = function() {
             var selected = getSeleted();
             $http({method: 'POST', url: 'setApplicableOptions', data:{selected: selected}})
             .success(function(data, status, headers, config) {
-                console.log(data);
+                $scope.setVar(data.columns, data.questions, data.edited);
             })
             .error(function(e){
                 console.log(e);
             });
         }
 
-        $scope.resetApplication = function() {
-            $http({method: 'POST', url: 'resetApplication', data:{book_id: $scope.applicableOption.applicableColumns[0].book_id}})
+        $scope.resetApplicableOptions = function() {
+            $http({method: 'POST', url: 'resetApplicableOptions', data:{}})
             .success(function(data, status, headers, config) {
-                console.log(data);
-                $scope.applicableOption = data.applicableOption;
-                $scope.appliedOptions = data.appliedOptions;
+                $scope.setVar(data.columns, data.questions, data.edited);
             })
             .error(function(e){
                 console.log(e);
             });
         }
 
-        $scope.getAppliedOptions();
+        $scope.setVar = function(columns, questions, edited) {
+            $scope.columns = columns;
+            $scope.questions = questions;
+            $scope.edited = edited
+        }
+
+        $scope.getApplicableOptions();
     });
 </script>
