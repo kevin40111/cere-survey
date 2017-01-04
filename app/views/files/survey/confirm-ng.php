@@ -130,8 +130,32 @@
 </md-content>
 <script src="/js/ng/ngSurvey.js"></script>
 <script>
-    app.controller('confirm', function ($scope, $http, $filter){
+    app.controller('confirm', function ($scope, $http, $filter, $q){
         $scope.sheetLoaded = false;
+        $scope.currentPage = 1;
+        $scope.lastPage = 0;
+        $scope.pages = [];
+
+        $scope.$watch('lastPage', function(lastPage) {
+            $scope.pages = [];
+            for (var i = 1; i <= lastPage; i++) {
+                $scope.pages.push(i);
+            };
+        });
+
+        $scope.next = function() {
+            if ($scope.currentPage < $scope.lastPage) {
+                $scope.currentPage++;
+                $scope.getUsers($scope.currentPage);
+            }
+        };
+
+        $scope.prev = function() {
+            if ($scope.currentPage > 1) {
+                $scope.currentPage--;
+                $scope.getUsers($scope.currentPage);
+            }
+        };
         $scope.getApplications = function() {
             $scope.sheetLoaded = false;
             $http({method: 'POST', url: 'getApplications', data:{}})
@@ -141,6 +165,7 @@
                    ($scope.applications[i].extension == '1') ? true : false;
                }
                $scope.sheetLoaded = true;
+               $scope.getApplicationPages();
             })
             .error(function(e){
                 console.log(e);
@@ -157,6 +182,68 @@
                 application.saving = false;
             })
             .error(function(e) {
+                console.log(e);
+            });
+        };
+
+        $scope.queryOrganizations = function(query) {
+            if (!query) {
+                return [];
+            }
+
+            deferred = $q.defer();
+            $http({method: 'POST', url: 'queryOrganizations', data:{query: query}})
+            .success(function(data, status, headers, config) {
+                deferred.resolve(data.organizations);
+            })
+            .error(function(e) {
+                console.log(e);
+            });
+
+            return deferred.promise;
+        };
+
+        $scope.queryUsernames = function(query) {
+            if (!query) {
+                return [];
+            }
+
+            deferred = $q.defer();
+            $http({method: 'POST', url: 'queryUsernames', data:{query: query}})
+            .success(function(data, status, headers, config) {
+                deferred.resolve(data.usernames);
+            })
+            .error(function(e) {
+                console.log(e);
+            });
+
+            return deferred.promise;
+        };
+
+        $scope.queryEmails = function(query) {
+            if (!query) {
+                return [];
+            }
+
+            deferred = $q.defer();
+            $http({method: 'POST', url: 'queryEmails', data:{query: query}})
+            .success(function(data, status, headers, config) {
+                deferred.resolve(data.emails);
+            })
+            .error(function(e) {
+                console.log(e);
+            });
+
+            return deferred.promise;
+        };
+
+        $scope.getApplicationPages = function() {
+            $http({method: 'POST', url: 'getApplicationPages', data:{}})
+            .success(function(data, status, headers, config) {
+                $scope.currentPage = data.currentPage;
+                $scope.lastPage = data.lastPage;
+            })
+            .error(function(e){
                 console.log(e);
             });
         };

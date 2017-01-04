@@ -340,4 +340,45 @@ class SurveyFile extends CommFile {
         return $this->file->book->applications()->where('id', $applicationID)->first();
     }
 
+    public function queryOrganizations()
+    {
+        $organizationDetails = \Plat\Project\OrganizationDetail::where(function($query) {
+            $query->where('name', 'like', '%' . Input::get('query') . '%')->orWhere('id', Input::get('query'));
+        })->limit(2000)->lists('organization_id');
+
+        $organizations = \Plat\Project\Organization::find($organizationDetails)->load('now');
+
+        return ['organizations' => $organizations];
+    }
+
+    public function queryUsernames()
+    {
+        $members_id = $this->file->book->applications->load('members')->fetch('members.id')->all();
+
+        $usernames = \Plat\Member::with('user')->whereIn('id', $members_id)->whereHas('user', function($query) {
+            $query->where('users.username', 'like', '%' . Input::get('query') . '%')->groupBy('users.username');
+        })->limit(1000)->get()->fetch('user.username')->all();
+
+        return ['usernames' => $usernames];
+    }
+
+    public function queryEmails()
+    {
+        $members_id = $this->file->book->applications->load('members')->fetch('members.id')->all();
+
+        $emails = \Plat\Member::with('user')->whereIn('id', $members_id)->whereHas('user', function($query) {
+            $query->where('users.email', 'like', '%' . Input::get('query') . '%');
+        })->limit(1000)->get()->fetch('user.email');
+
+        return ['emails' => $emails];
+    }
+
+    public function getApplicationPages()
+    {
+        $members_id = $this->file->book->applications->load('members')->fetch('members.id')->all();
+        $members = \Plat\Member::with('user')->whereIn('id', $members_id)->paginate(10);
+        
+        return ['currentPage' => $members->getCurrentPage(), 'lastPage' => $members->getLastPage()];
+    }
+
 }
