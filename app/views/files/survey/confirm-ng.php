@@ -106,7 +106,7 @@
                         <div ng-if="application.members.user.email2">{{ application.members.user.email2 }}</div>
                     </td>
                     <td class="center aligned">
-                        <md-checkbox ng-model="application.actived" ng-disabled="application.saving" aria-label="加掛審核" ng-change="activeExtension(application)"></md-checkbox>
+                        <md-checkbox ng-model="application.extension" ng-disabled="application.saving" aria-label="加掛審核" ng-change="activeExtension(application)"></md-checkbox>
                     </td>
                     <td class="center aligned">
                         <md-button ng-click="" aria-label="檢視申請表"><md-icon md-svg-icon="assignment"></md-icon></md-button>
@@ -161,9 +161,6 @@
             $http({method: 'POST', url: 'getApplications', data:{}})
             .success(function(data, status, headers, config) {
                $scope.applications = data.applications;
-               for (var i in $scope.applications) {
-                   ($scope.applications[i].extension == '1') ? true : false;
-               }
                $scope.sheetLoaded = true;
                $scope.getApplicationPages();
             })
@@ -178,7 +175,6 @@
             application.saving = true;
             $http({method: 'POST', url: 'activeExtension', data:{application_id: application.id}})
             .success(function(data, status, headers, config) {
-                application.actived = (data.extension == '1') ? true : false ;
                 application.saving = false;
             })
             .error(function(e) {

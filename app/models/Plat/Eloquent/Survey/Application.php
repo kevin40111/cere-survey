@@ -37,4 +37,9 @@ class Application extends Eloquent {
         return $query->where('member_id', Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->id);
     }
 
+    public function getExtensionAttribute($value)
+    {
+        return (boolean)$value;
+    }
+
 }

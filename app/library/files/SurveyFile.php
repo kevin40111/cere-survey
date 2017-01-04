@@ -261,7 +261,7 @@ class SurveyFile extends CommFile {
         });
 
         $application = $this->file->book->applications()->OfMe()->first();
-        $appliedOptions = is_null($application) ? [] : $application->appliedOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
+        $appliedOptions = is_null($application) ? \Illuminate\Database\Eloquent\Collection::make([]) : $application->appliedOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
             return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
         });
 
@@ -334,10 +334,11 @@ class SurveyFile extends CommFile {
 
     public function activeExtension()
     {
-        $applicationID = Input::get('application_id');
-        $extension = $this->file->book->applications()->where('id', $applicationID)->first();
-        $this->file->book->applications()->where('id', $applicationID)->update(array('extension' => !$extension['extension']));
-        return $this->file->book->applications()->where('id', $applicationID)->first();
+        $application_id = Input::get('application_id');
+        $extension = $this->file->book->applications()->where('id', $application_id)->first();
+        $this->file->book->applications()->where('id', $application_id)->update(array('extension' => !$extension->extension));
+
+        return ['application' => $this->file->book->applications()->where('id', $application_id)->first()];
     }
 
     public function queryOrganizations()
@@ -377,7 +378,7 @@ class SurveyFile extends CommFile {
     {
         $members_id = $this->file->book->applications->load('members')->fetch('members.id')->all();
         $members = \Plat\Member::with('user')->whereIn('id', $members_id)->paginate(10);
-        
+
         return ['currentPage' => $members->getCurrentPage(), 'lastPage' => $members->getLastPage()];
     }
 

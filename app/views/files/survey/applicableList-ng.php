@@ -3,7 +3,7 @@
         <md-card style="width: 100%">
             <md-card-header md-colors="{background: 'indigo'}">
                 <md-card-header-text>
-                    <span class="md-title">加掛題申請表</span>
+                    <span class="md-title">可申請加掛項目列表</span>
                 </md-card-header-text>
             </md-card-header>
             <md-content>
