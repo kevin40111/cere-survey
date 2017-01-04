@@ -317,7 +317,8 @@ class SurveyFile extends CommFile {
 
     public function getApplications()
     {
-        return ['applications' => $this->file->book->applications->load('members.organizations.now')];
+        $applications = $this->file->book->applications->load('members.organizations.now', 'members.user', 'members.contact');
+        return ['applications' => $applications];
     }
 
     public function resetApplicableOptions()
@@ -329,6 +330,14 @@ class SurveyFile extends CommFile {
     public function deleteApplicableOptions()
     {
         $this->file->book->applicableOptions()->delete();
+    }
+
+    public function activeExtension()
+    {
+        $applicationID = Input::get('application_id');
+        $extension = $this->file->book->applications()->where('id', $applicationID)->first();
+        $this->file->book->applications()->where('id', $applicationID)->update(array('extension' => !$extension['extension']));
+        return $this->file->book->applications()->where('id', $applicationID)->first();
     }
 
 }
