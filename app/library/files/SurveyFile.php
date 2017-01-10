@@ -3,7 +3,7 @@ namespace Plat\Files;
 
 use DB;
 use Schema;
-use Input;
+use Input, View;
 use User;
 use Files;
 use Auth;
@@ -68,6 +68,11 @@ class SurveyFile extends CommFile {
     {
         return 'files.survey.applicableList-ng';
 
+    }
+
+    public function userApplication()
+    {
+        return View::make('files.survey.userApplication-ng');
     }
 
     public function getBook()
@@ -259,8 +264,8 @@ class SurveyFile extends CommFile {
         $applicableOption = $this->file->book->applicableOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
             return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
         });
-
-        $application = $this->file->book->applications()->OfMe()->first();
+        $member_id = Input::get('member_id');
+        $application = isset($member_id) ? $this->file->book->applications()->where('member_id', Input::get('member_id'))->first() : $this->file->book->applications()->OfMe()->first();
         $appliedOptions = is_null($application) ? \Illuminate\Database\Eloquent\Collection::make([]) : $application->appliedOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
             return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
         });

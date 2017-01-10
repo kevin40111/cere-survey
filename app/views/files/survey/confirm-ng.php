@@ -109,7 +109,7 @@
                         <md-checkbox ng-model="application.extension" ng-disabled="application.saving" aria-label="加掛審核" ng-change="activeExtension(application)"></md-checkbox>
                     </td>
                     <td class="center aligned">
-                        <md-button ng-click="" aria-label="檢視申請表"><md-icon md-svg-icon="assignment"></md-icon></md-button>
+                        <md-button ng-click="openApplication(application.members.id)" aria-label="檢視申請表"><md-icon md-svg-icon="assignment"></md-icon></md-button>
                     </td>
                     <td>
                         <md-button aria-label="加掛問卷" class="md-icon-button" ng-click="">
@@ -121,7 +121,7 @@
                         <div><i class="text telephone icon"></i>{{ application.members.contact.tel }}</div>
                         <div><i class="fax icon"></i>{{ application.members.contact.fax }}</div>
                     </td>
-                    
+
                 </tr>
             <tbody>
         </table>
@@ -130,7 +130,7 @@
 </md-content>
 <script src="/js/ng/ngSurvey.js"></script>
 <script>
-    app.controller('confirm', function ($scope, $http, $filter, $q){
+    app.controller('confirm', function ($scope, $http, $filter, $q, $mdDialog){
         $scope.sheetLoaded = false;
         $scope.currentPage = 1;
         $scope.lastPage = 0;
@@ -242,6 +242,67 @@
             .error(function(e){
                 console.log(e);
             });
+        };
+
+        $scope.openApplication = function(member_id) {
+            $mdDialog.show({
+                controller: function($scope){
+                    $scope.columns = [];
+                    $scope.questions = [];
+                    $scope.edited = [];
+                    $scope.getAppliedOptions = function() {
+                        $http({method: 'POST', url: 'getAppliedOptions', data:{member_id: member_id}})
+                        .success(function(data, status, headers, config) {
+                            $scope.setVar(data.columns, data.questions, data.edited);
+                        })
+                        .error(function(e){
+                            console.log(e);
+                        });
+                    }
+
+                    function getSeleted() {
+                        var columns = $filter('filter')($scope.columns, {selected: true}).map(function(column) {
+                            return column.id;
+                        });
+                        var questions = $filter('filter')($scope.questions, {selected: true}).map(function(question) {
+                            return question.id;
+                        });
+                        return columns.concat(questions);
+                    }
+
+                    $scope.setAppliedOptions = function() {
+                        var selected = getSeleted();
+                        $http({method: 'POST', url: 'setAppliedOptions', data:{selected: selected, book_id: $scope.columns[0].book_id}})
+                        .success(function(data, status, headers, config) {
+                            $scope.setVar(data.columns, data.questions, data.edited);
+                        })
+                        .error(function(e){
+                            console.log(e);
+                        });
+                    }
+
+                    $scope.resetApplication = function() {
+                        $http({method: 'POST', url: 'resetApplication', data:{}})
+                        .success(function(data, status, headers, config) {
+                            $scope.setVar(data.columns, data.questions, data.edited);
+                        })
+                        .error(function(e){
+                            console.log(e);
+                        });
+                    }
+
+                    $scope.setVar = function(columns, questions, edited) {
+                        $scope.columns = columns;
+                        $scope.questions = questions;
+                        $scope.edited = edited;
+                    }
+
+                    $scope.getAppliedOptions();
+                },
+                templateUrl: 'userApplication',
+                parent: angular.element(document.body),
+                clickOutsideToClose: true
+            })
         };
     });
 </script>
