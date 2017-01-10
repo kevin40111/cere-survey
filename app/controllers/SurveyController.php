@@ -35,15 +35,15 @@ class SurveyController extends \BaseController {
      */
     public function getNextNode($book_id)
     {
-        $answers = DB::table('35')->first();
+        $answers = DB::table($book_id)->first();
 
         if (!$answers) {
             $page = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
-            DB::table('35')->insert(['page_id' => $page->id, 'created_by' => 1]);
+            DB::table($book_id)->insert(['page_id' => $page->id, 'created_by' => 2038]);
         } else {
             $previous = SurveyORM\Node::find($answers->page_id);
             $page = Input::get('next') ? $previous->next : $previous;
-            DB::table('35')->update(['page_id' => $page->id]);
+            DB::table($book_id)->update(['page_id' => $page->id]);
         }
 
         return ['node' => $page, 'answers' => $answers];
@@ -78,7 +78,7 @@ class SurveyController extends \BaseController {
             $nodes = [];
         }
 
-        Input::has('value') && DB::table('35')->update([Input::get('question.id') => Input::get('value')]);sleep(1);
+        Input::has('value') && DB::table('47')->update([Input::get('question.id') => Input::get('value')]);sleep(1);
 
         return ['nodes' => $nodes];
     }
