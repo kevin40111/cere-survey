@@ -178,21 +178,40 @@ class SurveyFile extends CommFile {
     public function removeNode()
     {
         $node = SurveyORM\Node::find(Input::get('node.id'));
+        if ($node->next) {
+            $previous_id = $node->previous ? $node->previous->id : NULL;
+            $node->next->update(['previous_id' => $previous_id]);
+        }
+        $deleted =  $node->deleteNode();
 
-        return ['deleted' => $node->delete()];
+        return ['deleted' => $deleted];
     }
 
     public function removeQuestion()
     {
         $question = SurveyORM\Question::find(Input::get('question.id'));
-
+        if ($question->next) {
+            $previous_id = $question->previous ? $question->previous->id : NULL;
+            $question->next->update(['previous_id' => $previous_id]);
+        }
+        $childrenNodes = $question->childrenNodes->each(function($subNode) {
+            $subNode->deleteNode();
+        });
+        
         return ['deleted' => $question->delete(), 'questions' => $question->node->questions];
     }
 
     public function removeAnswer()
     {
         $answer = SurveyORM\Answer::find(Input::get('answer.id'));
-
+        if ($answer->next) {
+            $previous_id = $answer->previous ? $answer->previous->id : NULL;
+            $answer->next->update(['previous_id' => $previous_id]);
+        }
+        $childrenNodes = $answer->childrenNodes->each(function($subNode) {
+            $subNode->deleteNode();
+        });
+                
         return ['deleted' => $answer->delete(), 'answers' => $answer->node->answers];
     }
 

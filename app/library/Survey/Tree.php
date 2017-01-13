@@ -98,8 +98,25 @@ trait Tree {
                 $this->next->after($this->previous->id);
             }
         }
-        parent::delete();
-        return $this;
+
+        return parent::delete();
+    }
+
+    public function deleteNode()
+    {
+        $this->sortByPrevious(['questions'])->questions->each(function($question) {
+            $question->childrenNodes->each(function($subNode) {
+                $subNode->deleteNode();
+            });
+        });
+
+        $this->sortByPrevious(['answers'])->answers->each(function($answer) {
+            $answer->childrenNodes->each(function($subNode) {
+                $subNode->deleteNode();
+            });
+        });
+        
+        return $this->delete();
     }
 
 }
