@@ -73,4 +73,10 @@ class Book extends Eloquent {
         return $this->morphedByMany('Plat\Eloquent\Survey\Question', 'survey_applicable_option')->withPivot('id');
     }
 
+    public function file()
+    {
+        return $this->belongsTo('Files', 'file_id', 'id');
+    }
+
+
 }

@@ -36,14 +36,17 @@
             </md-content>
         </md-card>
         <md-button class="md-raised md-primary md-display-2" ng-click="setAppliedOptions()" ng-if="!edited" style="width: 100%;height: 50px;font-size: 18px">送出</md-button>
+        <md-button class="md-raised md-primary md-display-2" ng-click="toExtBook()" ng-if="extBook.applied" style="width: 100%;height: 50px;font-size: 18px">前往編製加掛問卷</md-button>
         <md-button class="md-raised md-primary md-display-2" ng-click="resetApplication()" ng-if="edited" style="width: 100%;height: 50px;font-size: 18px">重新申請</md-button>
     </div>
 </md-content>
 <script>
-    app.controller('application', function ($scope, $http, $filter){
+    app.controller('application', function ($scope, $http, $filter, $location){
         $scope.columns = [];
         $scope.questions = [];
         $scope.edited = [];
+        $scope.extBook = {};
+        $scope.newDoc = {title: "test", type: 6};
         $scope.getAppliedOptions = function() {
             $http({method: 'POST', url: 'getAppliedOptions', data:{}})
             .success(function(data, status, headers, config) {
@@ -69,6 +72,7 @@
             $http({method: 'POST', url: 'setAppliedOptions', data:{selected: selected, book_id: $scope.columns[0].book_id}})
             .success(function(data, status, headers, config) {
                 $scope.setVar(data.columns, data.questions, data.edited);
+                $scope.createExtBook();
             })
             .error(function(e){
                 console.log(e);
@@ -76,9 +80,11 @@
         }
 
         $scope.resetApplication = function() {
-            $http({method: 'POST', url: 'resetApplication', data:{}})
+            $http({method: 'POST', url: 'resetApplication', data:{extBook: $scope.extBook}})
             .success(function(data, status, headers, config) {
+                console.log(data);
                 $scope.setVar(data.columns, data.questions, data.edited);
+                $scope.extBook.applied = false;
             })
             .error(function(e){
                 console.log(e);
@@ -91,6 +97,39 @@
             $scope.edited = edited
         }
 
+        $scope.createExtBook = function() {
+            $http({method: 'POST', url: '/file/create', data:{fileInfo: $scope.newDoc}})
+            .success(function(data, status, headers, config) {
+                $scope.setExtBook(data.doc.id);
+            }).error(function(e){
+                console.log(e);
+            });
+        };
+
+        $scope.setExtBook = function(doc_id) {
+            $http({method: 'POST', url: 'setExtBook', data:{doc_id: doc_id}})
+            .success(function(data, status, headers, config) {
+                $scope.extBook = data;
+            }).error(function(e){
+                console.log(e);
+            });
+        };
+
+        $scope.getExtBook = function() {
+            $http({method: 'POST', url: 'getExtBook', data:{}})
+            .success(function(data, status, headers, config) {
+                $scope.extBook = data;
+                console.log(data);
+            }).error(function(e){
+                console.log(e);
+            });
+        };
+
+        $scope.toExtBook = function() {
+            location.href = $scope.extBook.link;
+        };
+
         $scope.getAppliedOptions();
+        $scope.getExtBook();
     });
 </script>

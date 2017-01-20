@@ -300,6 +300,7 @@ class SurveyFile extends CommFile {
     public function resetApplication()
     {
         $this->deleteApplication();
+        $this->deleteDoc(Input::get('extBook')['doc_id']);
         return $this->getAppliedOptions();
     }
 
@@ -404,6 +405,34 @@ class SurveyFile extends CommFile {
         $members = \Plat\Member::with('user')->whereIn('id', $members_id)->paginate(10);
 
         return ['currentPage' => $members->getCurrentPage(), 'lastPage' => $members->getLastPage()];
+    }
+
+    public function setExtBook()
+    {
+        $application = $this->file->book->applications()->OfMe()->first();
+        $application->ext_book_id = \ShareFile::find(Input::get('doc_id'))->isFile->book()->first()->id;
+        $application->save();
+        return $this->getExtBook();
+    }
+
+    public function getExtBook()
+    {
+        $ext_book_id = $this->file->book->applications()->OfMe()->count() > 0 ? $this->file->book->applications()->OfMe()->first()->ext_book_id : 0;
+        $file = SurveyORM\Book::find($ext_book_id)->file;
+        $title = $file->title;
+        $doc = $file->Docs()->OfMe()->first();
+        $applied = !empty($ext_book_id) ? true : false;
+        return [
+            'doc_id' => $doc->id,
+            'title' => $title,
+            'link'  => '/doc/' . $doc->id . '/open',
+            'applied' => $applied,
+        ];
+    }
+
+    public function deleteDoc($docId)
+    {
+        \ShareFile::find($docId)->delete();
     }
 
 }
