@@ -5,7 +5,6 @@ namespace Plat\Survey;
 use Plat\Eloquent\Survey as SurveyORM;
 
 trait Tree {
-
     public function getPaths()
     {
         $parent = is_a($this, 'Plat\Eloquent\Survey\Answer') || is_a($this, 'Plat\Eloquent\Survey\Question') ? $this->node->parent : $this->parent;
@@ -21,7 +20,7 @@ trait Tree {
 
             $questions = $node->sortByPrevious(['questions'])->questions->reduce(function($carry, $question) {
                 return array_merge($carry, $question->getQuestions());
-            }, $node->sortByPrevious(['questions'])->questions->toArray());
+            }, $node->sortByPrevious(['questions'])->questions->load(['node.answers'])->toArray());
 
             $questionsWithInAnswer = $node->sortByPrevious(['answers'])->answers->reduce(function($carry, $answer) {
                 return array_merge($carry, $answer->getQuestions());

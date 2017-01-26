@@ -26,14 +26,15 @@ class SurveyFile extends CommFile {
 
     public function get_views()
     {
-        return ['open', 'demo', 'application','confirm', 'applicableList'];
+        return ['open', 'demo', 'application','confirm', 'applicableList', 'browser'];
     }
 
     public static function tools()
     {
         return [
             ['name' => 'confirm', 'title' => '加掛審核', 'method' => 'confirm', 'icon' => 'list'],
-            ['name' => 'applicableList', 'title' => '加掛項目', 'method' => 'applicableList', 'icon' => 'list']
+            ['name' => 'applicableList', 'title' => '加掛項目', 'method' => 'applicableList', 'icon' => 'list'],
+            ['name' => 'browser', 'title' => '題目瀏覽', 'method' => 'browser', 'icon' => 'list'],
         ];
     }
 
@@ -67,7 +68,16 @@ class SurveyFile extends CommFile {
     public function applicableList()
     {
         return 'files.survey.applicableList-ng';
+    }
 
+    public function browser()
+    {
+        return 'files.survey.browser-ng';
+    }
+
+    public function questionBrowser()
+    {
+        return  View::make('files.survey.template_question_browser');
     }
 
     public function userApplication()
@@ -78,6 +88,14 @@ class SurveyFile extends CommFile {
     public function getBook()
     {
         return ['book' => $this->file->book];
+    }
+
+    public function getQuestion()
+    {
+        $questions = $this->file->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
+            return array_merge($carry, $page->getQuestions());
+        }, []);
+        return ['questions' => $questions];
     }
 
     public function getNodes()
@@ -346,6 +364,17 @@ class SurveyFile extends CommFile {
             }, []);
         }
 
+        return ['columns' => $columns, 'questions' => $questions, 'edited' => $edited];
+    }
+
+    public function browserQuestion()
+    {
+        $rowsFile_id = $this->configs['rows_file'];
+        $file = Files::find($rowsFile_id);
+        $columns = !is_null($file) ? $file->sheets->first()->tables->first()->columns : [];
+        $questions = $this->file->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
+            return array_merge($carry, $page->getQuestions());
+        }, []);
         return ['columns' => $columns, 'questions' => $questions, 'edited' => $edited];
     }
 
