@@ -46,7 +46,7 @@
         $scope.questions = [];
         $scope.edited = [];
         $scope.book = [];
-        $scope.extBook = {};
+        $scope.extBook = {applied: false};
         $scope.newDoc = {title: "加掛題本", type: 6};
         $scope.getAppliedOptions = function() {
             $http({method: 'POST', url: 'getAppliedOptions', data:{}})
@@ -86,7 +86,7 @@
         $scope.resetApplication = function() {
             $http({method: 'POST', url: 'resetApplication', data:{extBook: $scope.extBook}})
             .success(function(data, status, headers, config) {
-                $scope.setVar(data.columns, data.questions, data.edited);
+                $scope.setVar(data.columns, data.questions, data.edited, data.extBook);
                 $scope.extBook.applied = false;
             })
             .error(function(e){
