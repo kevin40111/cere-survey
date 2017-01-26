@@ -197,7 +197,7 @@ class SurveyFile extends CommFile {
         $childrenNodes = $question->childrenNodes->each(function($subNode) {
             $subNode->deleteNode();
         });
-        
+
         return ['deleted' => $question->delete(), 'questions' => $question->node->questions];
     }
 
@@ -211,7 +211,7 @@ class SurveyFile extends CommFile {
         $childrenNodes = $answer->childrenNodes->each(function($subNode) {
             $subNode->deleteNode();
         });
-                
+
         return ['deleted' => $answer->delete(), 'answers' => $answer->node->answers];
     }
 
@@ -273,8 +273,14 @@ class SurveyFile extends CommFile {
 
     public function setAppliedOptions()
     {
-        $this->createApplication();
-        $this->file->book->applications()->OfMe()->first()->appliedOptions()->sync(Input::get('selected'));
+        $application = $this->file->book->applications()->OfMe()->withTrashed();
+        if ($application->exists()) {
+            $this->file->book->applications()->OfMe()->withTrashed()->first()->restore();
+            SurveyORM\Book::find($application->first()->ext_book_id)->file->docs()->OfMe()->withTrashed()->first()->restore();
+        } else {
+            $this->createApplication();
+        }
+        $application->first()->appliedOptions()->sync(Input::get('selected'));
         return $this->getAppliedOptions();
     }
 
@@ -293,28 +299,31 @@ class SurveyFile extends CommFile {
         $options = !empty($edited) ? $appliedOptions : $applicableOption;
         $columns = isset($options['applicableColumns']) ? $options['applicableColumns'] : [];
         $questions = isset($options['applicableQuestions']) ? $options['applicableQuestions'] : [];
+        $extBook = !empty($application->ext_book_id) ? $this->getExtBook($application->ext_book_id) : [];
 
-        return ['columns' => $columns, 'questions' => $questions, 'edited' => $edited];
+        return ['book' => $this->file->book, 'columns' => $columns, 'questions' => $questions, 'edited' => $edited, 'extBook' => $extBook];
     }
 
     public function resetApplication()
     {
+        $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
+        $doc = SurveyORM\Book::find($application->ext_book_id)->file->docs()->OfMe()->withTrashed()->first();
+        $this->deleteDoc($doc->id);
         $this->deleteApplication();
-        $this->deleteDoc(Input::get('extBook')['doc_id']);
         return $this->getAppliedOptions();
     }
 
-    public function createApplication()
+    private function createApplication()
     {
         $this->file->book->applications()->create(['book_id' => Input::get('book_id'), 'member_id' => Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->id]);
     }
 
-    public function deleteApplication()
+    private function deleteApplication()
     {
         $this->file->book->applications()->OfMe()->first()->delete();
     }
 
-    public function setApplicableOptions()
+    private function setApplicableOptions()
     {
         $this->file->book->optionColumns()->sync(Input::get('selected')['columns']);
         $this->file->book->optionQuestions()->sync(Input::get('selected')['questions']);
@@ -409,19 +418,18 @@ class SurveyFile extends CommFile {
 
     public function setExtBook()
     {
-        $application = $this->file->book->applications()->OfMe()->first();
+        $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
         $application->ext_book_id = \ShareFile::find(Input::get('doc_id'))->isFile->book()->first()->id;
         $application->save();
-        return $this->getExtBook();
+        return $this->getExtBook($application->ext_book_id);
     }
 
-    public function getExtBook()
+    public function getExtBook($book_id)
     {
-        $ext_book_id = $this->file->book->applications()->OfMe()->count() > 0 ? $this->file->book->applications()->OfMe()->first()->ext_book_id : 0;
-        $file = SurveyORM\Book::find($ext_book_id)->file;
+        $file = SurveyORM\Book::find($book_id)->file;
         $title = $file->title;
-        $doc = $file->Docs()->OfMe()->first();
-        $applied = !empty($ext_book_id) ? true : false;
+        $doc = $file->docs()->OfMe()->withTrashed()->first();
+        $applied = !empty($book_id) ? true : false;
         return [
             'doc_id' => $doc->id,
             'title' => $title,

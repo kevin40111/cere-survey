@@ -7,13 +7,11 @@ use Auth;
 
 class Application extends Eloquent {
 
-    // use SoftDeletingTrait;
+    use \SoftDeletingTrait;
 
     protected $table = 'survey_application';
 
     public $timestamps = true;
-
-    // protected $dates = ['deleted_at'];
 
     protected $fillable = array('book_id', 'member_id', 'extension', 'ext_book_id', 'updated_at', 'created_at', 'deleted_at', 'deleted_by');
 

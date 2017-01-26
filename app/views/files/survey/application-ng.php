@@ -45,12 +45,14 @@
         $scope.columns = [];
         $scope.questions = [];
         $scope.edited = [];
+        $scope.book = [];
         $scope.extBook = {};
-        $scope.newDoc = {title: "test", type: 6};
+        $scope.newDoc = {title: "加掛題本", type: 6};
         $scope.getAppliedOptions = function() {
             $http({method: 'POST', url: 'getAppliedOptions', data:{}})
             .success(function(data, status, headers, config) {
-                $scope.setVar(data.columns, data.questions, data.edited);
+                $scope.book = data.book;
+                $scope.setVar(data.columns, data.questions, data.edited, data.extBook);
             })
             .error(function(e){
                 console.log(e);
@@ -71,8 +73,10 @@
             var selected = getSeleted();
             $http({method: 'POST', url: 'setAppliedOptions', data:{selected: selected, book_id: $scope.columns[0].book_id}})
             .success(function(data, status, headers, config) {
-                $scope.setVar(data.columns, data.questions, data.edited);
-                $scope.createExtBook();
+                $scope.setVar(data.columns, data.questions, data.edited, data.extBook);
+                if ($scope.extBook.length == 0) {
+                    $scope.createExtBook();
+                }
             })
             .error(function(e){
                 console.log(e);
@@ -82,7 +86,6 @@
         $scope.resetApplication = function() {
             $http({method: 'POST', url: 'resetApplication', data:{extBook: $scope.extBook}})
             .success(function(data, status, headers, config) {
-                console.log(data);
                 $scope.setVar(data.columns, data.questions, data.edited);
                 $scope.extBook.applied = false;
             })
@@ -91,13 +94,15 @@
             });
         }
 
-        $scope.setVar = function(columns, questions, edited) {
+        $scope.setVar = function(columns, questions, edited, extBook) {
             $scope.columns = columns;
             $scope.questions = questions;
-            $scope.edited = edited
+            $scope.edited = edited;
+            $scope.extBook = extBook;
         }
 
         $scope.createExtBook = function() {
+            $scope.newDoc.title = $scope.book.title + '(' + $scope.newDoc.title + ')';
             $http({method: 'POST', url: '/file/create', data:{fileInfo: $scope.newDoc}})
             .success(function(data, status, headers, config) {
                 $scope.setExtBook(data.doc.id);
@@ -115,21 +120,20 @@
             });
         };
 
-        $scope.getExtBook = function() {
+        /*$scope.getExtBook = function() {
             $http({method: 'POST', url: 'getExtBook', data:{}})
             .success(function(data, status, headers, config) {
                 $scope.extBook = data;
-                console.log(data);
             }).error(function(e){
                 console.log(e);
             });
-        };
+        };*/
 
         $scope.toExtBook = function() {
             location.href = $scope.extBook.link;
         };
 
         $scope.getAppliedOptions();
-        $scope.getExtBook();
+        // $scope.getExtBook();
     });
 </script>
