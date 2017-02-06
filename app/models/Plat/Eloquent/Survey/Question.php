@@ -53,4 +53,9 @@ class Question extends Eloquent {
         return (bool)$value;
     }
 
+    public function rules()
+    {
+        return $this->morphToMany('Plat\Eloquent\Survey\Rule', 'survey_rule_effect');
+    }
+
 }
