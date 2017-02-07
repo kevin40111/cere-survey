@@ -8,6 +8,13 @@
             </md-card-header>
             <md-content>
                 <md-list flex ng-if="!edited">
+                    <md-subheader class="md-no-sticky"><h4>主題本進入加掛題本條件設定</h4></md-subheader>
+                    <md-list-item>
+                            <md-select placeholder="請選擇" ng-model="column" ng-change="conditionSelected(column)" style="width: 920px">
+                                <md-option ng-value="column" ng-repeat="column in columns">{{column.title}}</md-option>
+                            </md-select>
+                    </md-list-item>
+                    <md-divider ></md-divider>
                     <md-subheader class="md-no-sticky"><h4>變向選擇</h4></md-subheader>
                     <md-list-item ng-repeat="column in columns">
                         <p>{{column.title}}</p>
@@ -21,6 +28,15 @@
                     </md-list-item>
                 </md-list>
                 <md-list flex ng-if="edited">
+                    <md-subheader class="md-no-sticky"><h4>主題本進入加掛題本條件設定</h4></md-subheader>
+                    <md-list-item>
+                        <md-input-container>
+                            <md-select placeholder="請選擇" ng-model="selected" style="min-width: 200px;">
+                              <md-option ng-value="column.id" ng-repeat="column in columns">{{column.title}}</md-option>
+                            </md-select>
+                        </md-input-container>
+                    </md-list-item>
+                    <md-divider ></md-divider>
                     <md-subheader class="md-no-sticky"><h4>變向選擇</h4></md-subheader>
                     <md-list-item ng-repeat="column in columns">
                         <p>{{column.title}}</p>
@@ -42,9 +58,11 @@
         $scope.columns = [];
         $scope.questions = [];
         $scope.edited = [];
+        $scope.conditionColumn = {};
         $scope.getApplicableOptions = function() {
             $http({method: 'POST', url: 'getApplicableOptions', data:{}})
             .success(function(data, status, headers, config) {
+                console.log(data);
                 $scope.setVar(data.columns, data.questions, data.edited);
             })
             .error(function(e){
@@ -52,20 +70,21 @@
             });
         }
 
-        function getSeleted() {
+        function getSelected() {
             var columns = $filter('filter')($scope.columns, {selected: true}).map(function(column) {
                 return column.id;
             });
             var questions = $filter('filter')($scope.questions, {selected: true}).map(function(question) {
                 return question.id;
             });
-            return {'columns': columns, 'questions': questions};
+            return {'columns': columns, 'questions': questions, 'conditionColumn': $scope.conditionColumn};
         }
 
         $scope.setApplicableOptions = function() {
-            var selected = getSeleted();
+            var selected = getSelected();
             $http({method: 'POST', url: 'setApplicableOptions', data:{selected: selected}})
             .success(function(data, status, headers, config) {
+                console.log(data);
                 $scope.setVar(data.columns, data.questions, data.edited);
             })
             .error(function(e){
@@ -87,6 +106,20 @@
             $scope.columns = columns;
             $scope.questions = questions;
             $scope.edited = edited
+        }
+
+        /*$scope.setConditionColumns = function() {
+            $http({method: 'POST', url: 'setConditionColumns', data:{conditionColumn: $scope.conditionColumn}})
+            .success(function(data, status, headers, config) {
+                console.log(data);
+            })
+            .error(function(e){
+                console.log(e);
+            });
+        }*/
+
+        $scope.conditionSelected = function(column) {
+            $scope.conditionColumn = column;
         }
 
         $scope.getApplicableOptions();

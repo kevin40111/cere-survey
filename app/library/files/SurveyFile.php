@@ -26,7 +26,7 @@ class SurveyFile extends CommFile {
 
     public function get_views()
     {
-        return ['open', 'demo', 'application','confirm', 'applicableList', 'browser'];
+        return ['open', 'demo', 'application','confirm', 'applicableList', 'browser', 'requirement'];
     }
 
     public static function tools()
@@ -35,6 +35,7 @@ class SurveyFile extends CommFile {
             ['name' => 'confirm', 'title' => '加掛審核', 'method' => 'confirm', 'icon' => 'list'],
             ['name' => 'applicableList', 'title' => '加掛項目', 'method' => 'applicableList', 'icon' => 'list'],
             ['name' => 'browser', 'title' => '題目瀏覽', 'method' => 'browser', 'icon' => 'list'],
+            ['name' => 'requirement', 'title' => '加掛題本條件', 'method' => 'requirement', 'icon' => 'list'],
         ];
     }
 
@@ -78,6 +79,12 @@ class SurveyFile extends CommFile {
     public function questionBrowser()
     {
         return  View::make('files.survey.template_question_browser');
+    }
+
+    public function requirement()
+    {
+        return 'files.survey.requirement-ng';
+
     }
 
     public function userApplication()
@@ -331,20 +338,21 @@ class SurveyFile extends CommFile {
         return $this->getAppliedOptions();
     }
 
-    private function createApplication()
+    public function createApplication()
     {
         $this->file->book->applications()->create(['book_id' => Input::get('book_id'), 'member_id' => Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->id]);
     }
 
-    private function deleteApplication()
+    public function deleteApplication()
     {
         $this->file->book->applications()->OfMe()->first()->delete();
     }
 
-    private function setApplicableOptions()
+    public function setApplicableOptions()
     {
         $this->file->book->optionColumns()->sync(Input::get('selected')['columns']);
         $this->file->book->optionQuestions()->sync(Input::get('selected')['questions']);
+        $this->setConditionColumns(Input::get('selected')['conditionColumn']);
         return $this->getApplicableOptions();
     }
 
@@ -364,7 +372,9 @@ class SurveyFile extends CommFile {
             }, []);
         }
 
-        return ['columns' => $columns, 'questions' => $questions, 'edited' => $edited];
+        $ConditionColumn = $this->getConditionColumns();
+
+        return ['columns' => $columns, 'questions' => $questions, 'edited' => $edited, 'ConditionColumn' => $ConditionColumn];
     }
 
     public function browserQuestion()
@@ -387,6 +397,7 @@ class SurveyFile extends CommFile {
     public function resetApplicableOptions()
     {
         $this->deleteApplicableOptions();
+        // $this->deleteConditionColumns();
         return $this->getApplicableOptions();
     }
 
@@ -470,6 +481,31 @@ class SurveyFile extends CommFile {
     public function deleteDoc($docId)
     {
         \ShareFile::find($docId)->delete();
+    }
+
+    public function getConditionColumns()
+    {
+        $ext_book_id = $this->file->book->applications()->OfMe()->withTrashed()->first()->ext_book_id;
+        return ['g' => SurveyORM\Book::find($ext_book_id)->rules()->first()];
+    }
+
+    public function setConditionColumns($conditionColumn)
+    {
+        $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
+        $ext_book_id = $application->ext_book_id;
+        $expression = ['type' => 'Row\Column', 'id' => $conditionColumn['id'], 'rule' => null];
+        $rule = SurveyORM\Rule::firstOrCreate(array('expression' => $expression));
+        SurveyORM\Book::find($ext_book_id)->rules()->attach($rule->id);
+    }
+
+    public function deleteConditionColumns()
+    {
+        $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
+        $book_id = $application->book_id;
+        $ext_book_id = $application->ext_book_id;
+        SurveyORM\Book::find($ext_book_id)->rules()->detach($book_id);
+        $expression = ['type' => 'Row\Column', 'id' => $conditionColumn['id'], 'rule' => null];
+        $rule = SurveyORM\Rule::firstOrCreate(array('expression' => $expression));
     }
 
 }
