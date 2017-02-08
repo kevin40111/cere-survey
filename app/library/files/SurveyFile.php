@@ -372,7 +372,7 @@ class SurveyFile extends CommFile {
             }, []);
         }
 
-        $ConditionColumn = $this->getConditionColumns();
+        $ConditionColumn = $this->getConditionColumn();
 
         return ['columns' => $columns, 'questions' => $questions, 'edited' => $edited, 'ConditionColumn' => $ConditionColumn];
     }
@@ -386,7 +386,7 @@ class SurveyFile extends CommFile {
     public function resetApplicableOptions()
     {
         $this->deleteApplicableOptions();
-        // $this->deleteConditionColumns();
+        $this->deleteConditionColumn();
         return $this->getApplicableOptions();
     }
 
@@ -472,29 +472,27 @@ class SurveyFile extends CommFile {
         \ShareFile::find($docId)->delete();
     }
 
-    public function getConditionColumns()
+    public function getConditionColumn()
     {
         $ext_book_id = $this->file->book->applications()->OfMe()->withTrashed()->first()->ext_book_id;
-        return ['g' => SurveyORM\Book::find($ext_book_id)->rules()->first()];
+        return SurveyORM\Book::find($ext_book_id)->rules()->first();
     }
 
     public function setConditionColumns($conditionColumn)
     {
         $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
         $ext_book_id = $application->ext_book_id;
-        $expression = ['type' => 'Row\Column', 'id' => $conditionColumn['id'], 'rule' => null];
+        $expression = ['conditions' => ['logic' => null, 'type' => 'Row\Column', 'id' => $conditionColumn['id'], 'value' => null]];
         $rule = SurveyORM\Rule::firstOrCreate(array('expression' => $expression));
         SurveyORM\Book::find($ext_book_id)->rules()->attach($rule->id);
     }
 
-    public function deleteConditionColumns()
+    public function deleteConditionColumn()
     {
-        $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
-        $book_id = $application->book_id;
-        $ext_book_id = $application->ext_book_id;
-        SurveyORM\Book::find($ext_book_id)->rules()->detach($book_id);
-        $expression = ['type' => 'Row\Column', 'id' => $conditionColumn['id'], 'rule' => null];
-        $rule = SurveyORM\Rule::firstOrCreate(array('expression' => $expression));
+        $ext_book_id = $this->file->book->applications()->OfMe()->withTrashed()->first()->ext_book_id;
+        $rule = SurveyORM\Book::find($ext_book_id)->rules();
+        $rule->first()->delete();
+        $rule->detach();
     }
 
     public function saveRules()

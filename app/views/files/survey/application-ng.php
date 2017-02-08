@@ -49,6 +49,7 @@
         $scope.getAppliedOptions = function() {
             $http({method: 'POST', url: 'getAppliedOptions', data:{}})
             .success(function(data, status, headers, config) {
+                console.log(data);
                 $scope.book = data.book;
                 $scope.setVar(data.columns, data.questions, data.edited, data.extBook);
             })

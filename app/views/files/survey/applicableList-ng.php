@@ -49,8 +49,8 @@
                 </md-list>
             </md-content>
         </md-card>
-        <md-button class="md-raised md-primary md-display-2" ng-click="setApplicableOptions()" style="width: 100%;height: 50px;font-size: 18px" ng-if="!edited">送出</md-button>
-        <md-button class="md-raised md-primary md-display-2" ng-click="resetApplicableOptions()" style="width: 100%;height: 50px;font-size: 18px" ng-if="edited">重新設定</md-button>
+        <md-button class="md-raised md-primary md-display-2" ng-click="setApplicableOptions()" style="width: 100%;height: 50px;font-size: 18px" ng-if="!edited" ng-disabled="disabled">送出</md-button>
+        <md-button class="md-raised md-primary md-display-2" ng-click="resetApplicableOptions()" style="width: 100%;height: 50px;font-size: 18px" ng-if="edited" ng-disabled="disabled">重新設定</md-button>
     </div>
 </md-content>
 <script>
@@ -59,6 +59,7 @@
         $scope.questions = [];
         $scope.edited = [];
         $scope.conditionColumn = {};
+        $scope.disabled = false;
         $scope.getApplicableOptions = function() {
             $http({method: 'POST', url: 'getApplicableOptions', data:{}})
             .success(function(data, status, headers, config) {
@@ -81,11 +82,13 @@
         }
 
         $scope.setApplicableOptions = function() {
+            $scope.disabled = true;
             var selected = getSelected();
             $http({method: 'POST', url: 'setApplicableOptions', data:{selected: selected}})
             .success(function(data, status, headers, config) {
                 console.log(data);
                 $scope.setVar(data.columns, data.questions, data.edited);
+                $scope.disabled = false;
             })
             .error(function(e){
                 console.log(e);
@@ -93,9 +96,12 @@
         }
 
         $scope.resetApplicableOptions = function() {
+            $scope.disabled = true;
             $http({method: 'POST', url: 'resetApplicableOptions', data:{}})
             .success(function(data, status, headers, config) {
+                console.log(data);
                 $scope.setVar(data.columns, data.questions, data.edited);
+                $scope.disabled = false;
             })
             .error(function(e){
                 console.log(e);
@@ -107,16 +113,6 @@
             $scope.questions = questions;
             $scope.edited = edited
         }
-
-        /*$scope.setConditionColumns = function() {
-            $http({method: 'POST', url: 'setConditionColumns', data:{conditionColumn: $scope.conditionColumn}})
-            .success(function(data, status, headers, config) {
-                console.log(data);
-            })
-            .error(function(e){
-                console.log(e);
-            });
-        }*/
 
         $scope.conditionSelected = function(column) {
             $scope.conditionColumn = column;
