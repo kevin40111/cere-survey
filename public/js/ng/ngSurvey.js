@@ -178,18 +178,19 @@ angular.module('ngSurvey.directives', [])
         controller: function($scope, $attrs) {
 
             $scope.saveAnswer = function(parent, value) {
-                console.log(parent);
                 surveyFactory.get('getChildren', {question: $scope.question, parent: parent, value: value}, $scope.node).then(function(response) {
                     $scope.question.childrens = response.nodes;
+                    surveyFactory.answers[$scope.question.id] = $scope.answer.value;
+                    //console.log(surveyFactory.answers)
                 });
             };
 
             var oldAnswer = surveyFactory.answers[$scope.question.id] ? surveyFactory.answers[$scope.question.id] : null;
 
             $scope.answer = $scope.node.answers.length > 0 ? $scope.node.answers.find(function(answer) {
-                return answer.id == oldAnswer;
+                return answer.value == oldAnswer;
             }) : oldAnswer;
-
+           
             var parent = $scope.$eval($attrs.parent);
 
             if (parent) {

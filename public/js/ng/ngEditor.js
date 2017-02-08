@@ -17,7 +17,7 @@ angular.module('ngEditor.factories', []).factory('editorFactory', function($http
             $http({method: 'POST', url: url, data: data, timeout: deferred.promise})
             .success(function(data) {
                 deferred.resolve(data);
-            }).error(function() {
+            }).error(function(e) {
                 deferred.reject();
             });
 
@@ -62,10 +62,23 @@ angular.module('ngEditor.directives', [])
                         <survey-node ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
                     </div>
                 </div>
+                <md-sidenav class="md-sidenav-right" md-is-open="skipSetting" md-disable-backdrop layout="column" style="min-width:40%">
+                    <md-toolbar>
+                        <div class="md-toolbar-tools">
+                            <h4>跳題設定</h4>
+                            <div flex></div>
+                            <md-button aria-label="關閉" ng-click="skipSetting=false">關閉</md-button>
+                        </div>
+                    </md-toolbar>
+                    <md-content  ng-if="skipSetting">
+                        <survey-skips skip-target="skipTarget"></survey-skips>
+                    </md-content>
+                </md-sidenav>
             </md-content>
         `,
         controller: function($scope, $filter) {
 
+            $scope.skipSetting = false;
             editorFactory.types = $scope.book.types;
             editorFactory.typesInPage = $filter('filter')(Object.values(editorFactory.types), {disabled: '!'})
 
@@ -115,11 +128,16 @@ angular.module('ngEditor.directives', [])
 
             $scope.createTable = function() {
                 editorFactory.ajax('createTable', {}, $scope.book).then(function(response) {
-                    console.log(response);
                     $scope.book.lock = response.lock;
                 });
-            }
-
+            };
+            
+            this.toggleSidenavRight = function(skipTarget) {
+                $scope.skipTarget = skipTarget;
+                $scope.skipSetting = true;
+                console.log($scope.skipSetting)
+            };
+        
         }
     };
 })
@@ -169,6 +187,7 @@ angular.module('ngEditor.directives', [])
             scope.getNodes = surveyBookCtrl.getNodes;
             scope.moveUp = surveyBookCtrl.moveUp;
             scope.moveDown = surveyBookCtrl.moveDown;
+            scope.toggleSidenavRight = surveyBookCtrl.toggleSidenavRight;
         },
         controller: function($scope) {
 
@@ -219,6 +238,9 @@ angular.module('ngEditor.directives', [])
                     </md-button>
                     <md-button class="md-icon-button" aria-label="刪除" ng-disabled="node.saving" ng-click="removeNode(node)">
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
+                    </md-button>
+                    <md-button class="md-icon-button" aria-label="跳題" ng-disabled="node.saving" ng-click="toggleSidenavRight(node)">
+                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="settings"></md-icon>
                     </md-button>
                 </div>
             </div>
@@ -285,7 +307,7 @@ angular.module('ngEditor.directives', [])
 
             $scope.removeAnswer = function(answer) {
                 editorFactory.ajax('removeAnswer', {answer: answer}, answer).then(function(response) {
-                    if (response.deleted) {
+                     if (response.deleted) {
                         $scope.node.answers = response.answers;
                     }
                 });
@@ -584,6 +606,233 @@ angular.module('ngEditor.directives', [])
                 question.importText = null;
                 question.is_import = false;
             };
+
+        }
+    };
+})
+
+.directive('surveySkips', function(editorFactory) {
+    return {
+        restrict: 'E',
+        replace: true,
+        transclude: false,
+        scope: {
+            skipTarget: '='
+        },
+        template: `
+            <div>
+                <div flex layout="row">
+                    <div flex></div>
+                    <md-button aria-label="儲存設定" md-colors="{background: 'blue'}" style="float:right" ng-click="saveRules()">
+                        儲存設定
+                    </md-button>
+                    <md-button aria-label="刪除設定" md-colors="{background: 'blue'}" style="float:right" ng-click="">
+                        刪除設定
+                    </md-button>
+                </div>
+                <div layout-align="start center" ng-repeat="(index,rule) in rules">
+                    <md-card>
+                        <md-card-header md-colors="{background: 'indigo'}">
+                            <div flex layout="row" layout-align="start center">
+                                <div  style="margin: 0 0 0 16px">
+                                    二階條件設定
+                                </div>
+                                <span flex></span>
+                                <div>
+                                    <md-button class="md-icon-button" aria-label="刪除" ng-click="removeRule(index)">
+                                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
+                                    </md-button>
+                                </div>
+                            </div>
+                        </md-card-header>
+                        <md-card-content>
+                            <survey-skip skip-target="skipTarget" rule="rule"></survey-skip>
+                        </md-card-content>
+                        <md-card-actions>
+                            
+                        </md-card-actions>
+                        <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
+                    </md-card>
+                    <div flex layout="row" >
+                        <md-fab-toolbar md-direction="right" style="width: 100%">
+                            <md-fab-trigger class="align-with-text">
+                                <md-button aria-label="menu" class="md-fab md-primary">
+                                    <md-icon md-svg-icon="list"></md-icon>
+                                </md-button>
+                            </md-fab-trigger>
+
+                            <md-toolbar style="width: 100%">
+                                <md-fab-actions class="md-toolbar-tools" >
+                                    <md-button aria-label="邏輯" ng-repeat="(logic,compareBoolean) in compareBooleans" ng-click="createRule(index,logic)">
+                                        {{compareBoolean}}
+                                    </md-button>
+                                </md-fab-actions>
+                            </md-toolbar>
+                        </md-fab-toolbar>
+                    </div>
+                </div>
+            </div>
+        `,
+        link: function(scope) {
+        },
+        controller: function($scope, $http) {
+            $scope.rules = [{'conditions':[]}];
+            
+            $scope.compareBooleans = {' != ':'不等於', ' && ':'而且', ' || ':'或者'};
+
+            
+            $scope.createRule = function(index,logic) {
+                $scope.rules.splice(index+1, 0,{'compareLogic':logic, 'conditions':[]});
+            };
+
+            $scope.removeRule = function(index) {
+                if (index == 0) {
+                    delete $scope.rules[1].compareLogic;
+                }
+                $scope.rules.splice(index, 1);
+            };
+
+            $scope.saveRules = function() {
+               // console.log($scope.rules)
+               $http({method: 'POST', url: 'saveRules', data:{rules: $scope.rules, skipTarget: $scope.skipTarget}})
+                .success(function(data) {
+                   console.log(data)
+                }).error(function() {
+
+                });
+
+
+            };
+            //console.log($scope.skipTarget)
+        }
+    };
+})
+
+.directive('surveySkip', function(editorFactory) {
+    return {
+        restrict: 'E',
+        replace: true,
+        transclude: false,
+        scope: {
+            rule: '='
+        },
+        template: `
+            <div layout-align="start center">
+                <md-card ng-repeat="(key,condition) in rule.conditions">
+                    <md-card-header md-colors="{background: 'indigo'}">
+                        <div flex layout="row" layout-align="start center">
+                            <div  style="margin: 0 0 0 16px">
+                                一階條件設定
+                            </div>
+                            <span flex></span>
+                            <div>
+                                <md-button class="md-icon-button" aria-label="刪除" ng-click="removeCondition(key)">
+                                    <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
+                                </md-button>
+                                <md-button class="md-icon-button" aria-label="新增" ng-disabled="" ng-click="createCondition(key)">
+                                    <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="add-circle-outline"></md-icon>
+                                </md-button>
+                            </div>
+                        </div>
+                    </md-card-header>
+                    <md-card-content>
+                        <div layout="row" ng-if="key">
+                            <md-input-container style="margin-right: 10px">
+                                <label>比較邏輯</label>
+                                <md-select ng-model="logic" ng-change="setCondition(key,logic,'l')">
+                                <md-option ng-repeat="(logic,compareBoolean) in compareBooleans" ng-value="logic">{{compareBoolean}}</md-option>
+                                </md-select>
+                            </md-input-container>
+                            <md-input-container style="margin-right: 10px">
+                                <label>比較對象</label>
+                                <md-select ng-model="type" ng-change="setCondition(key,type,'t')">
+                                <md-option ng-repeat="type in types" ng-value="type">{{type}}</md-option>
+                                </md-select>
+                            </md-input-container>
+                        </div>
+                        <div layout="row" ng-if="condition.compareType==0">
+                            <md-input-container>
+                                <label></label>
+                                <input ng-model="value" survey-input string-converter ng-change="setCondition(key,value,'v')" />
+                            </md-input-container>
+                        </div>
+                        <div layout="row" ng-if="condition.compareType==1">
+                            <md-input-container style="margin-right: 10px">
+                                <label>題目</label>
+                                <md-select ng-model="question" ng-change="setCondition(key,question,'q')">
+                                <md-option ng-repeat="question in questions" ng-value="question" >{{question.node.title}}-{{question.title}}</md-option>
+                                </md-select>
+                            </md-input-container>
+                            <md-input-container style="margin-right: 10px">
+                                <label>答案</label>
+                                <md-select ng-model="answer" ng-change="setCondition(key,answer,'a')">
+                                <md-option ng-repeat="answer in answers" ng-value="answer" >{{answer.title}}</md-option>
+                                </md-select>
+                            </md-input-container>
+                        </div>
+                       
+                    </md-card-content>
+                    <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
+                </md-card>
+            </div>
+        `,
+        link: function(scope) {
+        },
+        controller: function($scope, $http) {
+            $scope.rule.conditions.push({'compareType':'1'});
+            
+            $scope.createCondition = function(key) {
+                $scope.rule.conditions.splice(key+1, 0,{});
+            };
+            $scope.removeCondition = function(key) {
+                if (key == 0) {
+                    delete $scope.rule.conditions[1].logic;
+                }
+                $scope.rule.conditions.splice(key, 1);
+            };
+
+            $scope.types = ['數值', '其它答案'];
+            $scope.compareBooleans = {' > ':'大於', ' < ':'小於', ' == ':'等於', ' != ':'不等於', ' && ':'而且', ' || ':'或者'};
+
+            
+            $http({method: 'POST', url: 'getQuestion', data:{}})
+            .success(function(data, status, headers, config) {
+                $scope.questions = data.questions;
+                console.log($scope.questions)
+            })
+            .error(function(e){
+                console.log(e);
+            });
+            
+            $scope.setCondition = function(key,rule,type) {
+                if (type == 'l') {
+                    $scope.rule.conditions[key]['logic'] = rule;
+                }
+                if (type == 't') {
+                    $scope.rule.conditions[key]['compareType'] = (rule == '數值' ?  0 : 1);
+                    delete $scope.rule.conditions[key].value;
+                    delete $scope.rule.conditions[key].type;
+                    delete $scope.rule.conditions[key].id;
+                    delete $scope.rule.conditions[key].question;
+                    delete $scope.rule.conditions[key].answer;
+                }
+                if (type == 'q') {
+                    $scope.answers = rule.node.answers;
+                    $scope.rule.conditions[key]['type'] = rule.node.type;
+                    $scope.rule.conditions[key]['id'] = rule.id;
+                    $scope.rule.conditions[key]['question'] = rule;
+                }
+                if (type == 'a') {
+                    $scope.rule.conditions[key]['value'] = rule.value;
+                    $scope.rule.conditions[key]['answer'] = rule;
+                }
+                if (type == 'v') {
+                    $scope.rule.conditions[key]['value'] = rule;
+                }                
+            };
+            
+            
+            
 
         }
     };

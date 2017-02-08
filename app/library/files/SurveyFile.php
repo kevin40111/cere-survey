@@ -377,17 +377,6 @@ class SurveyFile extends CommFile {
         return ['columns' => $columns, 'questions' => $questions, 'edited' => $edited, 'ConditionColumn' => $ConditionColumn];
     }
 
-    public function browserQuestion()
-    {
-        $rowsFile_id = $this->configs['rows_file'];
-        $file = Files::find($rowsFile_id);
-        $columns = !is_null($file) ? $file->sheets->first()->tables->first()->columns : [];
-        $questions = $this->file->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
-            return array_merge($carry, $page->getQuestions());
-        }, []);
-        return ['columns' => $columns, 'questions' => $questions, 'edited' => $edited];
-    }
-
     public function getApplications()
     {
         $applications = $this->file->book->applications->load('members.organizations.now', 'members.user', 'members.contact');
@@ -506,6 +495,16 @@ class SurveyFile extends CommFile {
         SurveyORM\Book::find($ext_book_id)->rules()->detach($book_id);
         $expression = ['type' => 'Row\Column', 'id' => $conditionColumn['id'], 'rule' => null];
         $rule = SurveyORM\Rule::firstOrCreate(array('expression' => $expression));
+    }
+
+    public function saveRules()
+    {
+        $class = Input::get('skipTarget.class');
+        $root = $class::find(Input::get('skipTarget.id'));
+        $rules = Input::get('rules');
+        //$rule = SurveyORM\Rule::firstOrCreate(array('expression' => $rules));
+        //$root->byRules()->attach($rule->id);
+        return [SurveyORM\Rule::find()];
     }
 
 }
