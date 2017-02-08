@@ -86,8 +86,7 @@ trait Tree {
         $this->next->moveUp();
 
         return $this;
-    }
-
+    }        
     public function delete()
     {
         if ($this->next) {
@@ -97,7 +96,6 @@ trait Tree {
                 $this->next->after($this->previous->id);
             }
         }
-
         return parent::delete();
     }
 
