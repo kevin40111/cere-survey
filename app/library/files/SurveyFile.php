@@ -497,12 +497,12 @@ class SurveyFile extends CommFile {
 
     public function saveRules()
     {
-        $class = Input::get('skipTarget.class');
-        $root = $class::find(Input::get('skipTarget.id'));
-        $rules = Input::get('rules');
-        //$rule = SurveyORM\Rule::firstOrCreate(array('expression' => $rules));
-        //$root->byRules()->attach($rule->id);
-        return [SurveyORM\Rule::find()];
+        $class  = Input::get('skipTarget.class');
+        $root   = $class::find(Input::get('skipTarget.id'));
+        $rules  = Input::get('rules');
+        $rule   = SurveyORM\Rule::firstOrCreate(array('expression' => $rules));
+        $root->byRules()->attach($rule->id);
+        return [$root->byRules()->get()];
     }
 
 }

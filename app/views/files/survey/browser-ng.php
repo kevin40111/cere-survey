@@ -69,6 +69,39 @@
 
                 }
             }
+            // 子題用
+             scope.getParentNode = function(question,key){
+                var node={};
+                node.parent_id = question.node.parent_id;
+                var question_split = question.node.parent_type.split("\\");
+                node.parent_question_type = question_split[question_split.length-1];
+                
+                 switch(node.parent_question_type){
+                    case "Answer":
+                        for(var i=key;i>=0;--i){
+                           for(var j=0;j<this.questions[i].node.answers.length;j++){
+                                if(this.questions[i].node.answers[j].id == node.parent_id){
+                                    var txt = "子題(第"+this.questions[i].question_number+"題";
+                                    txt     += " 選項-" + this.questions[i].node.answers[j].title +")";
+                                    return txt;
+                                }
+                           }
+                        }
+                    break;
+                     case "Question":
+                        for(var i=key;i>=0;--i){
+                            console.log("hellow");
+                           for(var j=0;j<this.questions[i].length;j++){
+                                if(this.questions[i].id == node.parent_id){
+                                    var txt = "子題(第"+this.questions[i].question_number+"題";
+                                    txt     += " 選項-" + this.questions[i].title +")";
+                                    return txt;
+                                }
+                           }
+                        }
+                    break;
+                }
+            }
 
             scope.getQuestionTitle = function(question){
             this.question = question;
@@ -100,6 +133,7 @@
 
             scope.questionAnalysis = function(node){
             var browser_node = node;
+            var answer_number;
             var question_number=0;
             var deal_node_id=[];// 檢查重複出現的node_id
            
@@ -108,15 +142,18 @@
 
                 //檢查node_id是否為重複 
                 if(deal_node_id.indexOf(node[i].node_id) == -1){
+                    answer_number = 1;
                     deal_node_id.push(node[i].node_id);
                     browser_node[i].question_number = ++question_number;
+                    browser_node[i].answer_number = answer_number;
 
                 }else if(node[i].node.type == "scale" ){
                     deal_node_id.push(node[i].node_id);
                     browser_node[i].question_number = question_number;
 
                 }else{
-                     browser_node[i].rowspan = 0;
+                    browser_node[i].answer_number = ++answer_number;
+                    browser_node[i].rowspan = 0;
                     continue;
                 }
                 //計算rowspan的長度
@@ -135,7 +172,8 @@
                 }
             }  
             console.log(browser_node);
-            return browser_node;
+            this.questions=browser_node;
+            return this.questions;
             }
 
             }
