@@ -135,7 +135,6 @@ angular.module('ngEditor.directives', [])
             this.toggleSidenavRight = function(skipTarget) {
                 $scope.skipTarget = skipTarget;
                 $scope.skipSetting = true;
-                console.log($scope.skipSetting)
             };
         
         }
@@ -626,7 +625,7 @@ angular.module('ngEditor.directives', [])
                     <md-button aria-label="儲存設定" md-colors="{background: 'blue'}" style="float:right" ng-click="saveRules()">
                         儲存設定
                     </md-button>
-                    <md-button aria-label="刪除設定" md-colors="{background: 'blue'}" style="float:right" ng-click="">
+                    <md-button aria-label="刪除設定" md-colors="{background: 'blue'}" style="float:right" ng-click="deleteRules()">
                         刪除設定
                     </md-button>
                 </div>
@@ -635,7 +634,7 @@ angular.module('ngEditor.directives', [])
                         <md-card-header md-colors="{background: 'indigo'}">
                             <div flex layout="row" layout-align="start center">
                                 <div  style="margin: 0 0 0 16px">
-                                    二階條件設定
+                                    二階條件設定:{{compareBooleans[rules[index].compareLogic]}}
                                 </div>
                                 <span flex></span>
                                 <div>
@@ -646,7 +645,7 @@ angular.module('ngEditor.directives', [])
                             </div>
                         </md-card-header>
                         <md-card-content>
-                            <survey-skip skip-target="skipTarget" rule="rule"></survey-skip>
+                            <survey-skip skip-target="skipTarget" rule="rule" rule-setted="ruleSetted" key="key" condition="condition" ng-repeat="(key,condition) in rule.conditions"></survey-skip>
                         </md-card-content>
                         <md-card-actions>
                             
@@ -676,13 +675,28 @@ angular.module('ngEditor.directives', [])
         link: function(scope) {
         },
         controller: function($scope, $http) {
-            $scope.rules = [{'conditions':[]}];
+            $scope.ruleSetted = false;
+            
+            $scope.getRules = function() {
+                $http({method: 'POST', url: 'getRules', data:{skipTarget: $scope.skipTarget}})
+                .success(function(data) {
+                    if (data.rules == null) {
+                        $scope.rules = [{'conditions':[{'compareType':'1'}]}];
+                    } else {
+                        $scope.rules = data.rules;
+                        $scope.ruleSetted = true;
+                    }
+                }).error(function(e) {
+                    console.log(e)
+                });
+            };
+            $scope.getRules();
             
             $scope.compareBooleans = {' != ':'不等於', ' && ':'而且', ' || ':'或者'};
 
             
             $scope.createRule = function(index,logic) {
-                $scope.rules.splice(index+1, 0,{'compareLogic':logic, 'conditions':[]});
+                $scope.rules.splice(index+1, 0,{'compareLogic':logic, 'conditions':[{'compareType':'1'}]});
             };
 
             $scope.removeRule = function(index) {
@@ -693,17 +707,22 @@ angular.module('ngEditor.directives', [])
             };
 
             $scope.saveRules = function() {
-               // console.log($scope.rules)
                $http({method: 'POST', url: 'saveRules', data:{rules: $scope.rules, skipTarget: $scope.skipTarget}})
                 .success(function(data) {
-                   console.log(data)
-                }).error(function() {
-
+                   
+                }).error(function(e) {
+                   console.log(e)
                 });
-
-
             };
-            //console.log($scope.skipTarget)
+
+            $scope.deleteRules = function() {
+               $http({method: 'POST', url: 'deleteRules', data:{skipTarget: $scope.skipTarget}})
+                .success(function(data) {
+                     $scope.getRules();
+                }).error(function(e) {
+                   console.log(e)
+                });
+            };
         }
     };
 })
@@ -714,11 +733,14 @@ angular.module('ngEditor.directives', [])
         replace: true,
         transclude: false,
         scope: {
-            rule: '='
+            rule: '=',
+            ruleSetted: '=',
+            key: '=',
+            condition: '='
         },
         template: `
             <div layout-align="start center">
-                <md-card ng-repeat="(key,condition) in rule.conditions">
+                <md-card>
                     <md-card-header md-colors="{background: 'indigo'}">
                         <div flex layout="row" layout-align="start center">
                             <div  style="margin: 0 0 0 16px">
@@ -729,7 +751,7 @@ angular.module('ngEditor.directives', [])
                                 <md-button class="md-icon-button" aria-label="刪除" ng-click="removeCondition(key)">
                                     <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
                                 </md-button>
-                                <md-button class="md-icon-button" aria-label="新增" ng-disabled="" ng-click="createCondition(key)">
+                                <md-button class="md-icon-button" aria-label="新增" ng-click="createCondition(key)">
                                     <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="add-circle-outline"></md-icon>
                                 </md-button>
                             </div>
@@ -739,13 +761,13 @@ angular.module('ngEditor.directives', [])
                         <div layout="row" ng-if="key">
                             <md-input-container style="margin-right: 10px">
                                 <label>比較邏輯</label>
-                                <md-select ng-model="logic" ng-change="setCondition(key,logic,'l')">
+                                <md-select ng-model="logic" ng-change="setCondition(key,logic,'l')" placeholder="{{compareBooleans[condition.logic]}}">
                                 <md-option ng-repeat="(logic,compareBoolean) in compareBooleans" ng-value="logic">{{compareBoolean}}</md-option>
                                 </md-select>
                             </md-input-container>
                             <md-input-container style="margin-right: 10px">
                                 <label>比較對象</label>
-                                <md-select ng-model="type" ng-change="setCondition(key,type,'t')">
+                                <md-select ng-model="type" ng-change="setCondition(key,type,'t')"  placeholder="{{types[condition.compareType]}}">
                                 <md-option ng-repeat="type in types" ng-value="type">{{type}}</md-option>
                                 </md-select>
                             </md-input-container>
@@ -753,19 +775,19 @@ angular.module('ngEditor.directives', [])
                         <div layout="row" ng-if="condition.compareType==0">
                             <md-input-container>
                                 <label></label>
-                                <input ng-model="value" survey-input string-converter ng-change="setCondition(key,value,'v')" />
+                                <input ng-model="value" survey-input string-converter ng-change="setCondition(key,value,'v')" placeholder="{{condition.value}}"/>
                             </md-input-container>
                         </div>
                         <div layout="row" ng-if="condition.compareType==1">
                             <md-input-container style="margin-right: 10px">
                                 <label>題目</label>
-                                <md-select ng-model="question" ng-change="setCondition(key,question,'q')">
+                                <md-select ng-model="question" ng-change="setCondition(key,question,'q')" placeholder="{{condition.question.node.title}}{{condition.question.title}}">
                                 <md-option ng-repeat="question in questions" ng-value="question" >{{question.node.title}}-{{question.title}}</md-option>
                                 </md-select>
                             </md-input-container>
-                            <md-input-container style="margin-right: 10px">
+                            <md-input-container style="margin-right: 10px" ng-if="!answers==null">
                                 <label>答案</label>
-                                <md-select ng-model="answer" ng-change="setCondition(key,answer,'a')">
+                                <md-select ng-model="answer" ng-change="setCondition(key,answer,'a')" placeholder="{{condition.answer.title}}">
                                 <md-option ng-repeat="answer in answers" ng-value="answer" >{{answer.title}}</md-option>
                                 </md-select>
                             </md-input-container>
@@ -779,7 +801,8 @@ angular.module('ngEditor.directives', [])
         link: function(scope) {
         },
         controller: function($scope, $http) {
-            $scope.rule.conditions.push({'compareType':'1'});
+            
+            
             
             $scope.createCondition = function(key) {
                 $scope.rule.conditions.splice(key+1, 0,{});
@@ -798,7 +821,6 @@ angular.module('ngEditor.directives', [])
             $http({method: 'POST', url: 'getQuestion', data:{}})
             .success(function(data, status, headers, config) {
                 $scope.questions = data.questions;
-                console.log($scope.questions)
             })
             .error(function(e){
                 console.log(e);
@@ -830,10 +852,6 @@ angular.module('ngEditor.directives', [])
                     $scope.rule.conditions[key]['value'] = rule;
                 }                
             };
-            
-            
-            
-
-        }
+         }
     };
 });

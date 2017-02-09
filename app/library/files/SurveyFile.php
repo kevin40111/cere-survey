@@ -497,12 +497,44 @@ class SurveyFile extends CommFile {
 
     public function saveRules()
     {
-        $class  = Input::get('skipTarget.class');
-        $root   = $class::find(Input::get('skipTarget.id'));
-        $rules  = Input::get('rules');
-        $rule   = SurveyORM\Rule::firstOrCreate(array('expression' => $rules));
-        $root->byRules()->attach($rule->id);
-        return [$root->byRules()->get()];
+        $class = Input::get('skipTarget.class');
+        $root = $class::find(Input::get('skipTarget.id'));
+        $rules = Input::get('rules');
+        if ($root->rules()->first() == null) {
+            $rule = SurveyORM\Rule::create(array('expression' => $rules));
+            $root->rules()->attach($rule->id);
+        } else {
+            $root->rules()->first()->update(['expression' => $rules]);
+        }
+
+        return 'save rules successed';
+    }
+
+    public function deleteRules()
+    {
+        $class = Input::get('skipTarget.class');
+        $root = $class::find(Input::get('skipTarget.id'));
+        if (!$root->rules()->first() == null) {
+            $ruleId = $root->rules()->first()->id;
+            $root->rules()->detach($ruleId);
+            SurveyORM\Rule::find($ruleId)->delete();
+        }
+
+        return 'delete rules successed';
+    }
+
+    public function getRules()
+    {
+        $class = Input::get('skipTarget.class');
+        $root = $class::find(Input::get('skipTarget.id'));
+        
+        if (!$root->rules()->first() == null) {
+            $rules = $root->rules()->first()->expression;
+        } else {
+            $rules = null;
+        }
+                
+        return ['rules' => $rules];
     }
 
 }

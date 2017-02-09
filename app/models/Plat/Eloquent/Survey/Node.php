@@ -125,4 +125,9 @@ class Node extends Eloquent {
         });
     }
 
+    public function rules()
+    {
+        return $this->morphToMany('Plat\Eloquent\Survey\Rule', 'survey_rule_effect');
+    }
+
 }
