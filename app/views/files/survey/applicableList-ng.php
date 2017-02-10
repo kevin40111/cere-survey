@@ -30,11 +30,7 @@
                 <md-list flex ng-if="edited">
                     <md-subheader class="md-no-sticky"><h4>主題本進入加掛題本條件設定</h4></md-subheader>
                     <md-list-item>
-                        <md-input-container>
-                            <md-select placeholder="請選擇" ng-model="selected" style="min-width: 200px;">
-                              <md-option ng-value="column.id" ng-repeat="column in columns">{{column.title}}</md-option>
-                            </md-select>
-                        </md-input-container>
+                        <p>{{conditionColumn.title}}</p>
                     </md-list-item>
                     <md-divider ></md-divider>
                     <md-subheader class="md-no-sticky"><h4>變向選擇</h4></md-subheader>
@@ -64,7 +60,7 @@
             $http({method: 'POST', url: 'getApplicableOptions', data:{}})
             .success(function(data, status, headers, config) {
                 console.log(data);
-                $scope.setVar(data.columns, data.questions, data.edited);
+                $scope.setVar(data.columns, data.questions, data.conditionColumn, data.edited);
             })
             .error(function(e){
                 console.log(e);
@@ -87,7 +83,7 @@
             $http({method: 'POST', url: 'setApplicableOptions', data:{selected: selected}})
             .success(function(data, status, headers, config) {
                 console.log(data);
-                $scope.setVar(data.columns, data.questions, data.edited);
+                $scope.setVar(data.columns, data.questions, data.conditionColumn, data.edited);
                 $scope.disabled = false;
             })
             .error(function(e){
@@ -100,7 +96,7 @@
             $http({method: 'POST', url: 'resetApplicableOptions', data:{}})
             .success(function(data, status, headers, config) {
                 console.log(data);
-                $scope.setVar(data.columns, data.questions, data.edited);
+                $scope.setVar(data.columns, data.questions, data.conditionColumn, data.edited);
                 $scope.disabled = false;
             })
             .error(function(e){
@@ -108,9 +104,10 @@
             });
         }
 
-        $scope.setVar = function(columns, questions, edited) {
+        $scope.setVar = function(columns, questions, conditionColumn, edited) {
             $scope.columns = columns;
             $scope.questions = questions;
+            $scope.conditionColumn = conditionColumn;
             $scope.edited = edited
         }
 

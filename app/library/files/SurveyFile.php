@@ -298,6 +298,7 @@ class SurveyFile extends CommFile {
 
     public function setAppliedOptions()
     {
+        return Input::get('selected');
         $application = $this->file->book->applications()->OfMe()->withTrashed();
         if ($application->exists()) {
             $this->file->book->applications()->OfMe()->withTrashed()->first()->restore();
@@ -305,7 +306,7 @@ class SurveyFile extends CommFile {
         } else {
             $this->createApplication();
         }
-        $application->first()->appliedOptions()->sync(Input::get('selected'));
+        $application->first()->appliedOptions()->sync(Input::get('selected.checked'));
         return $this->getAppliedOptions();
     }
 
@@ -325,8 +326,11 @@ class SurveyFile extends CommFile {
         $columns = isset($options['applicableColumns']) ? $options['applicableColumns'] : [];
         $questions = isset($options['applicableQuestions']) ? $options['applicableQuestions'] : [];
         $extBook = !empty($application->ext_book_id) ? $this->getExtBook($application->ext_book_id) : [];
+        $schools = Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->organizations->map(function($organization){
+            return $organization->now;
+        })->toArray();
 
-        return ['book' => $this->file->book, 'columns' => $columns, 'questions' => $questions, 'edited' => $edited, 'extBook' => $extBook];
+        return ['book' => $this->file->book, 'columns' => $columns, 'questions' => $questions, 'edited' => $edited, 'extBook' => $extBook, 'schools' => $schools];
     }
 
     public function resetApplication()
@@ -350,19 +354,20 @@ class SurveyFile extends CommFile {
 
     public function setApplicableOptions()
     {
-        $this->file->book->optionColumns()->sync(Input::get('selected')['columns']);
-        $this->file->book->optionQuestions()->sync(Input::get('selected')['questions']);
-        $this->setConditionColumns(Input::get('selected')['conditionColumn']);
+        $this->file->book->optionColumns()->sync(Input::get('selected.columns'));
+        $this->file->book->optionQuestions()->sync(Input::get('selected.questions'));
+        $this->setConditionColumns(Input::get('selected.conditionColumn'));
         return $this->getApplicableOptions();
     }
 
     public function getApplicableOptions()
     {
+        $conditionColumn = [];
         $edited = !$this->file->book->optionColumns->isEmpty() || !$this->file->book->optionQuestions->isEmpty();
-
         if ($edited) {
             $columns = $this->file->book->optionColumns;
             $questions = $this->file->book->optionQuestions;
+            $conditionColumn = $this->getConditionColumn();
         } else {
             $rowsFile_id = $this->configs['rows_file'];
             $file = Files::find($rowsFile_id);
@@ -372,9 +377,7 @@ class SurveyFile extends CommFile {
             }, []);
         }
 
-        $ConditionColumn = $this->getConditionColumn();
-
-        return ['columns' => $columns, 'questions' => $questions, 'edited' => $edited, 'ConditionColumn' => $ConditionColumn];
+        return ['columns' => $columns, 'questions' => $questions, 'edited' => $edited, 'conditionColumn' => $conditionColumn];
     }
 
     public function getApplications()
@@ -474,25 +477,23 @@ class SurveyFile extends CommFile {
 
     public function getConditionColumn()
     {
-        $ext_book_id = $this->file->book->applications()->OfMe()->withTrashed()->first()->ext_book_id;
-        return SurveyORM\Book::find($ext_book_id)->rules()->first();
+        $column_id = $this->file->book->column_id;
+        return \Row\Column::find($column_id);
+
     }
 
     public function setConditionColumns($conditionColumn)
     {
-        $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
-        $ext_book_id = $application->ext_book_id;
-        $expression = ['conditions' => ['logic' => null, 'type' => 'Row\Column', 'id' => $conditionColumn['id'], 'value' => null]];
-        $rule = SurveyORM\Rule::firstOrCreate(array('expression' => $expression));
-        SurveyORM\Book::find($ext_book_id)->rules()->attach($rule->id);
+        $book = $this->file->book;
+        $book->column_id = $conditionColumn['id'];
+        $book->save();
     }
 
     public function deleteConditionColumn()
     {
-        $ext_book_id = $this->file->book->applications()->OfMe()->withTrashed()->first()->ext_book_id;
-        $rule = SurveyORM\Book::find($ext_book_id)->rules();
-        $rule->first()->delete();
-        $rule->detach();
+        $book = $this->file->book;
+        $book->column_id = NULL;
+        $book->save();
     }
 
     public function saveRules()
@@ -527,13 +528,13 @@ class SurveyFile extends CommFile {
     {
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
-        
+
         if (!$root->rules()->first() == null) {
             $rules = $root->rules()->first()->expression;
         } else {
             $rules = null;
         }
-                
+
         return ['rules' => $rules];
     }
 

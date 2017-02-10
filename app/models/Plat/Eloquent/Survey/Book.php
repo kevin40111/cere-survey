@@ -12,7 +12,7 @@ class Book extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = array('file_id', 'title', 'lock');
+    protected $fillable = array('file_id', 'title', 'lock', 'column_id');
 
     protected $attributes = ['lock' => false];
 
