@@ -118,7 +118,7 @@ class SurveyFile extends CommFile {
             $root->load('childrenNodes');
         }
 
-        $nodes = $root->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions', 'answers', 'byRules'])->each(function($node) {
+        $nodes = $root->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.node', 'answers', 'byRules'])->each(function($node) {
             $node->sortByPrevious(['questions', 'answers']);
         });
 

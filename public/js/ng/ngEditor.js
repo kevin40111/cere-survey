@@ -235,11 +235,11 @@ angular.module('ngEditor.directives', [])
                         <md-tooltip md-direction="bottom">下移</md-tooltip>
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
-                    <md-button class="md-icon-button" aria-label="刪除" ng-disabled="node.saving" ng-click="removeNode(node)">
-                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
-                    </md-button>
                     <md-button class="md-icon-button" aria-label="跳題" ng-disabled="node.saving" ng-click="toggleSidenavRight(node)">
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="settings"></md-icon>
+                    </md-button>
+                    <md-button class="md-icon-button" aria-label="刪除" ng-disabled="node.saving" ng-click="removeNode(node)">
+                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
                     </md-button>
                 </div>
             </div>
@@ -275,6 +275,10 @@ angular.module('ngEditor.directives', [])
                         <md-tooltip md-direction="left">下移</md-tooltip>
                         <md-icon md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
+                    <md-button class="md-secondary md-icon-button" ng-click="toggleSidenavRight(answer)" aria-label="設定限制">
+                        <md-tooltip>設定限制</md-tooltip>
+                        <md-icon md-svg-icon="settings"></md-icon>
+                    </md-button>
                     <md-icon class="md-secondary" aria-label="刪除選項" md-svg-icon="delete" ng-click="removeAnswer(answer)"></md-icon>
                 </md-list-item>
                 <md-list-item ng-if="node.answers.length < types[node.type].editor.answers" ng-click="createAnswer(answers[answers.length-1])">
@@ -286,6 +290,7 @@ angular.module('ngEditor.directives', [])
         require: '^surveyBook',
         link: function(scope, iElement, iAttrs, surveyBookCtrl) {
             scope.getNodes = surveyBookCtrl.getNodes;
+            scope.toggleSidenavRight = surveyBookCtrl.toggleSidenavRight;
         },
         controller: function($scope) {
 
@@ -354,6 +359,10 @@ angular.module('ngEditor.directives', [])
                         <md-tooltip md-direction="left">下移</md-tooltip>
                         <md-icon md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
+                    <md-button class="md-secondary md-icon-button" ng-click="toggleSidenavRight(question)" aria-label="設定限制" ng-if="(question.node.type == 'scale') || (question.node.type == 'checkbox')">
+                        <md-tooltip>設定限制</md-tooltip>
+                        <md-icon md-svg-icon="settings"></md-icon>
+                    </md-button>
                     <md-icon class="md-secondary" aria-label="刪除子題" md-svg-icon="delete" ng-click="removeQuestion(question)"></md-icon>
                 </md-list-item>
                 <md-list-item ng-if="node.questions.length < types[node.type].editor.questions.amount" ng-click="createQuestion(node.questions[node.questions.length-1])">
@@ -365,6 +374,7 @@ angular.module('ngEditor.directives', [])
         require: '^surveyBook',
         link: function(scope, iElement, iAttrs, surveyBookCtrl) {
             scope.getNodes = surveyBookCtrl.getNodes;
+            scope.toggleSidenavRight = surveyBookCtrl.toggleSidenavRight;
         },
         controller: function($scope, $http, $filter) {
 
@@ -785,7 +795,7 @@ angular.module('ngEditor.directives', [])
                                 <md-option ng-repeat="question in questions" ng-value="question" >{{question.node.title}}-{{question.title}}</md-option>
                                 </md-select>
                             </md-input-container>
-                            <md-input-container style="margin-right: 10px" ng-if="!answers==null">
+                            <md-input-container style="margin-right: 10px" ng-if="answers.length || condition.answer">
                                 <label>答案</label>
                                 <md-select ng-model="answer" ng-change="setCondition(key,answer,'a')" placeholder="{{condition.answer.title}}">
                                 <md-option ng-repeat="answer in answers" ng-value="answer" >{{answer.title}}</md-option>
