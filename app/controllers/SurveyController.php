@@ -39,7 +39,8 @@ class SurveyController extends \BaseController {
 
         if (!$answers) {
             $page = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
-            DB::table($book_id)->insert(['page_id' => $page->id, 'created_by' => 2038]);
+            $answers = ['page_id' => $page->id, 'created_by' => Auth::user()->id];
+            DB::table($book_id)->insert($answers);
         } else {
             $previous = SurveyORM\Node::find($answers->page_id);
             $page = Input::get('next') ? $previous->next : $previous;
@@ -78,7 +79,7 @@ class SurveyController extends \BaseController {
             $nodes = [];
         }
 
-        Input::has('value') && DB::table('47')->update([Input::get('question.id') => Input::get('value')]);sleep(1);
+        Input::has('value') && DB::table('204')->update([Input::get('question.id') => Input::get('value')]);sleep(1);
 
         return ['nodes' => $nodes];
     }
