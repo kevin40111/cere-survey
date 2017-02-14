@@ -298,7 +298,6 @@ class SurveyFile extends CommFile {
 
     public function setAppliedOptions()
     {
-        return Input::get('selected');
         $application = $this->file->book->applications()->OfMe()->withTrashed();
         if ($application->exists()) {
             $this->file->book->applications()->OfMe()->withTrashed()->first()->restore();
@@ -306,7 +305,7 @@ class SurveyFile extends CommFile {
         } else {
             $this->createApplication();
         }
-        $application->first()->appliedOptions()->sync(Input::get('selected.checked'));
+        $application->first()->appliedOptions()->sync(Input::get('columns'));
         return $this->getAppliedOptions();
     }
 
@@ -326,11 +325,12 @@ class SurveyFile extends CommFile {
         $columns = isset($options['applicableColumns']) ? $options['applicableColumns'] : [];
         $questions = isset($options['applicableQuestions']) ? $options['applicableQuestions'] : [];
         $extBook = !empty($application->ext_book_id) ? $this->getExtBook($application->ext_book_id) : [];
-        $schools = Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->organizations->map(function($organization){
+        $extColumn = \Row\Column::find($this->file->book->column_id);
+        $organizations = Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->organizations->map(function($organization){
             return $organization->now;
         })->toArray();
 
-        return ['book' => $this->file->book, 'columns' => $columns, 'questions' => $questions, 'edited' => $edited, 'extBook' => $extBook, 'schools' => $schools];
+        return ['book' => $this->file->book, 'columns' => $columns, 'questions' => $questions, 'edited' => $edited, 'extBook' => $extBook, 'extColumn' => $extColumn, 'organizations' => $organizations];
     }
 
     public function resetApplication()
@@ -467,6 +467,7 @@ class SurveyFile extends CommFile {
             'title' => $title,
             'link'  => '/doc/' . $doc->id . '/open',
             'applied' => $applied,
+            'id' => $book_id,
         ];
     }
 
@@ -536,6 +537,15 @@ class SurveyFile extends CommFile {
         }
 
         return ['rules' => $rules];
+    }
+
+    public function getRuleOrganizations()
+    {
+        $rules = $this->getRules()['rules'];
+        $organizations = array_map(function($rule){
+            return \Plat\Project\OrganizationDetail::find($rule['value']);
+        }, $rules[0]['conditions']);
+        return ['organizations' => $organizations];
     }
 
 }

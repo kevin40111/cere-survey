@@ -8,37 +8,37 @@
             </md-card-header>
             <md-content>
                 <md-list flex ng-if="!edited">
-                    <md-subheader class="md-no-sticky"><h4>主題本進入加掛題本條件設定</h4></md-subheader>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>主題本進入加掛題本條件設定</h4></md-subheader>
                     <md-list-item>
                             <md-select placeholder="請選擇" ng-model="column" ng-change="conditionSelected(column)" style="width: 920px">
                                 <md-option ng-value="column" ng-repeat="column in columns">{{column.title}}</md-option>
                             </md-select>
                     </md-list-item>
                     <md-divider ></md-divider>
-                    <md-subheader class="md-no-sticky"><h4>變向選擇</h4></md-subheader>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>變向選擇</h4></md-subheader>
                     <md-list-item ng-repeat="column in columns">
                         <p>{{column.title}}</p>
                         <md-checkbox class="md-secondary" ng-model="column.selected" ng-true-value="true" ng-false-value="" aria-label="{}"></md-checkbox>
                     </md-list-item>
                     <md-divider ></md-divider>
-                    <md-subheader class="md-no-sticky"><h4>使用主題本題目</h4></md-subheader>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>使用主題本題目</h4></md-subheader>
                     <md-list-item ng-repeat="question in questions">
                         <p>{{question.title}}</p>
                         <md-checkbox class="md-secondary" ng-model="question.selected" ng-true-value="true" ng-false-value="" aria-label="{}"></md-checkbox>
                     </md-list-item>
                 </md-list>
                 <md-list flex ng-if="edited">
-                    <md-subheader class="md-no-sticky"><h4>主題本進入加掛題本條件設定</h4></md-subheader>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>主題本進入加掛題本條件設定</h4></md-subheader>
                     <md-list-item>
                         <p>{{conditionColumn.title}}</p>
                     </md-list-item>
                     <md-divider ></md-divider>
-                    <md-subheader class="md-no-sticky"><h4>變向選擇</h4></md-subheader>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>變向選擇</h4></md-subheader>
                     <md-list-item ng-repeat="column in columns">
                         <p>{{column.title}}</p>
                     </md-list-item>
                     <md-divider ></md-divider>
-                    <md-subheader class="md-no-sticky"><h4>使用主題本題目</h4></md-subheader>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>使用主題本題目</h4></md-subheader>
                     <md-list-item ng-repeat="question in questions">
                         <p>{{question.title}}</p>
                     </md-list-item>
@@ -59,7 +59,6 @@
         $scope.getApplicableOptions = function() {
             $http({method: 'POST', url: 'getApplicableOptions', data:{}})
             .success(function(data, status, headers, config) {
-                console.log(data);
                 $scope.setVar(data.columns, data.questions, data.conditionColumn, data.edited);
             })
             .error(function(e){
@@ -82,7 +81,6 @@
             var selected = getSelected();
             $http({method: 'POST', url: 'setApplicableOptions', data:{selected: selected}})
             .success(function(data, status, headers, config) {
-                console.log(data);
                 $scope.setVar(data.columns, data.questions, data.conditionColumn, data.edited);
                 $scope.disabled = false;
             })
@@ -95,7 +93,6 @@
             $scope.disabled = true;
             $http({method: 'POST', url: 'resetApplicableOptions', data:{}})
             .success(function(data, status, headers, config) {
-                console.log(data);
                 $scope.setVar(data.columns, data.questions, data.conditionColumn, data.edited);
                 $scope.disabled = false;
             })
