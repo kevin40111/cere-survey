@@ -1,6 +1,14 @@
 <md-content ng-cloak layout="column" ng-controller="browser" layout-align="start center">
     <div node-browser ></div>
 </md-content>
+<style type="text/css">
+    .Dialog tr{
+        text-align: center;
+    }
+    .td-two-logic{
+        background-color: seagreen; 
+    }
+</style>
 <script>
     app.controller('browser', function (){})
     .directive("nodeBrowser",function($http,$mdDialog){
@@ -9,16 +17,85 @@
             templateUrl : "questionBrowser",
             scope:{},
             link: function(scope, element, attrs) {
-
-            scope.showPassQuestion = function(node) {
-                if(node.rules.length<=0)return;
+            scope.showPassQuestion = function(rule) {
+                var txt = "<table class='ui celled structured table Dialog'>";
+                    txt += "<tr><td>邏輯運算</td><td>題目</td><td>選項</td></tr>";
+                for(var i=0;i<rule[0].expression.length;i++){
+                    txt += "<tr>";
+                    txt += scope.analyRule(rule[0].expression[i]);
+                    txt += "</tr>";
+                }
+                    txt +="</table>" 
                 $mdDialog.show(
                 $mdDialog.alert()
                 .parent(angular.element(document.querySelector('#popupContainer')))
                 .clickOutsideToClose(true)
-                .textContent('跳題條件')
+                .htmlContent(txt)
                 .ok('確認')
                 );
+            };
+
+            scope.analyRule = function(expression){
+                var txt="";
+                if(scope.analyLogic(expression.compareLogic) != ""){
+                    txt = "<tr><td colspan='3' class = 'td-two-logic'>"+scope.analyLogic(expression.compareLogic)+"</td>";
+                }
+
+                for(var i=0;i<expression.conditions.length;i++){
+                    txt += "<tr>";
+                    txt += "<td>"+scope.analyLogic(expression.conditions[i].logic)+"</td>";
+                    try{
+                        if(expression.conditions[i].answer != null){
+                            txt += "<td>"+expression.conditions[i].question.title+"</td>";
+                            txt += "<td>"+expression.conditions[i].answer.title+"</td>";
+                        }else{
+                            if(expression.conditions[i].value != null)txt += "<td>"+expression.conditions[i].value+"</td>";
+                            txt += "<td>"+expression.conditions[i].question.node.title+"</td>"; 
+                            txt += "<td>"+expression.conditions[i].question.title+"</td>";
+                        }
+                    }catch(err){}
+                    txt += "</tr>";
+                }
+                txt += "</tr>";
+                return txt;
+            }
+
+            scope.analyLogic = function(logic){
+
+                switch(logic){
+                    case ' || ':
+                        return " 或者 ";
+
+                    case " > ":
+                        return " 大於 ";
+
+
+                    case " < ":
+                        return " 小於 ";
+
+
+                    case " == ":
+                        return " 等於 ";
+
+
+                    case " && ":
+                        return " 而且 ";
+                }
+                return "";
+            }
+
+
+            scope.checkPageRule = function(page_node_id){
+                var temp = [];
+                skipTarget = {'class': "Plat\\Eloquent\\Survey\\Node", 'id': page_node_id};
+                $http({method: 'POST', url: 'getRules', data:{skipTarget: skipTarget}})
+                .success(function(data, status, headers, config) {
+                temp[0] = {};
+                temp[0].expression = data.rules;
+                }).error(function(e){
+                console.log(e);
+                });
+                return  temp;
             };
 
             scope.browserQuestion = function() {
@@ -148,7 +225,11 @@
                 browser_node[i] = scope.getQuestionTitle(browser_node[i]);
                 if(page_record.indexOf(browser_node[i].node.parent_id) == -1 && scope.checkParentNodeType(browser_node[i]) == "Node"){
                     page_record.push(browser_node[i].node.parent_id);
-                    browser_node[i].page = page;
+                    browser_node[i].page = {};
+                    browser_node[i].page.number = page;
+                    browser_node[i].page.node_id = browser_node[i].node.parent_id; 
+                    console.log(browser_node[i].node.parent_id)
+                    browser_node[i].page.rule =  scope.checkPageRule(browser_node[i].node.parent_id);
                     page++;
                 }
                 //檢查node_id是否為重複 
