@@ -52,7 +52,7 @@
              <td ng-if="question.page.number > 0" ng-click="checkPageRule(question.node.parent_id)">
                 <b>第{{question.page.number}}頁</b>
                 <span ng-if="question.page.rule[0].expression.length > 0" ng-click="showPassQuestion(question.page.rule)" class="ui left pointing red basic label">
-                        {{question.page.rule[0].expression.length}}個跳答條件
+                        {{question.page.rule[0].expression.length}}個跳頁條件
                 </span>
              </td>
              <td ng-if="!(question.page.number > 0)"></td>
