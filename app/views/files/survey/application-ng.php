@@ -78,13 +78,14 @@
         $scope.questions = [];
         $scope.edited = [];
         $scope.book = [];
-        $scope.extBook = {applied: false};
+        $scope.extBook = {};
         $scope.extColumn = {};
-        $scope.newDoc = {title: "加掛題本", type: 6};
+        // $scope.newDoc = {title: "加掛題本", type: 6};
         $scope.selected = {'organizations': []};
         $scope.organizations = {'lists': [], 'selected': []};
-        $scope.skipTarget = {class: null, id: null};
+        // $scope.skipTarget = {class: null, id: null};
         $scope.disabled = false;
+        $scope.empty = {'organizations': false, 'questions': false, 'columns': false};
 
         $scope.setOrganization = function(organization) {
             $scope.selected.organizations = organization;
@@ -93,11 +94,12 @@
         $scope.getAppliedOptions = function() {
             $http({method: 'POST', url: 'getAppliedOptions', data:{}})
             .success(function(data, status, headers, config) {
+                console.log(data);
                 $scope.book = data.book;
-                $scope.setVar(data.columns, data.questions, data.edited, data.extBook, data.organizations, data.extColumn);
-                if (data.edited == true) {
+                $scope.setVar(data.columns, data.questions, data.edited, data.extBook, data.organizations, data.extColumn, data.organizationsSelected);
+                /*if (data.edited == true) {
                     $scope.getRuleOrganizations();
-                }
+                }*/
             })
             .error(function(e){
                 console.log(e);
@@ -127,10 +129,12 @@
             $scope.disabled = true;
             $scope.organizations.selected = null;
             var selected = getSelected();
-            $http({method: 'POST', url: 'setAppliedOptions', data:{columns: selected.columns, book_id: $scope.columns[0].book_id}})
+            $http({method: 'POST', url: 'setAppliedOptions', data:{selected: selected, book_id: $scope.columns[0].book_id, }})
             .success(function(data, status, headers, config) {
-                $scope.setVar(data.columns, data.questions, data.edited, data.extBook, data.organizations, data.extColumn);
-                $scope.saveRules(selected.rules);
+                console.log(data);
+                $scope.setVar(data.columns, data.questions, data.edited, data.extBook, data.organizations, data.extColumn, data.organizationsSelected);
+                $scope.extBook = data.extBook;
+                $scope.disabled = false;
             })
             .error(function(e){
                 console.log(e);
@@ -139,27 +143,32 @@
 
         $scope.resetApplication = function() {
             $scope.disabled = true;
-            $http({method: 'POST', url: 'resetApplication', data:{extBook: $scope.extBook}})
+            $http({method: 'POST', url: 'resetApplication', data:{}})
             .success(function(data, status, headers, config) {
-                $scope.deleteRules(data.columns, data.questions, data.edited, data.extBook, data.organizations, data.extColumn);
+                console.log(data);
+                $scope.setVar(data.columns, data.questions, data.edited, data.extBook, data.organizations, data.extColumn);
+                // $scope.extBook.applied = false;
+                $scope.disabled = false;
+                // $scope.deleteRules(data.columns, data.questions, data.edited, data.extBook, data.organizations, data.extColumn, data.organizationsSelected);
             })
             .error(function(e){
                 console.log(e);
             });
         }
 
-        $scope.setVar = function(columns, questions, edited, extBook, organizations, extColumn) {
+        $scope.setVar = function(columns, questions, edited, extBook, organizations, extColumn, organizationsSelected) {
             $scope.columns = columns;
             $scope.questions = questions;
             $scope.edited = edited;
             $scope.extBook = extBook;
             $scope.extColumn = extColumn;
             $scope.organizations.lists = organizations;
-            $scope.skipTarget.class = $scope.book.class;
-            $scope.skipTarget.id = extBook.id;
+            $scope.organizations.selected = organizationsSelected;
+            /*$scope.skipTarget.class = $scope.book.class;
+            $scope.skipTarget.id = extBook.id;*/
         }
 
-        $scope.createExtBook = function() {
+        /*$scope.createExtBook = function() {
             $scope.newDoc.title = $scope.book.title + '(' + $scope.newDoc.title + ')';
             $http({method: 'POST', url: '/file/create', data:{fileInfo: $scope.newDoc}})
             .success(function(data, status, headers, config) {
@@ -167,35 +176,32 @@
             }).error(function(e){
                 console.log(e);
             });
-        };
+        };*/
 
-        $scope.setExtBook = function(doc_id) {
+        /*$scope.setExtBook = function(doc_id) {
             $http({method: 'POST', url: 'setExtBook', data:{doc_id: doc_id}})
             .success(function(data, status, headers, config) {
                 $scope.extBook = data;
             }).error(function(e){
                 console.log(e);
             });
+        };*/
+
+        $scope.toExtBook = function(event) {
+            open($scope.extBook.link, '_blank');
         };
 
-        $scope.toExtBook = function() {
-            location.href = $scope.extBook.link;
-        };
-
-        $scope.saveRules = function(rules) {
+        /*$scope.saveRules = function(rules) {
             $http({method: 'POST', url: 'saveRules', data:{skipTarget: $scope.skipTarget, rules: rules}})
             .success(function(data, status, headers, config) {
-                $scope.getRuleOrganizations();
-                if ($scope.extBook.length == 0) {
-                    $scope.createExtBook();
-                }
-                $scope.disabled = false;
+                // $scope.getRuleOrganizations();
+                // $scope.disabled = false;
             }).error(function(e){
                 console.log(e);
             });
-        };
+        };*/
 
-        $scope.deleteRules = function(columns, questions, edited, extBook, organizations, extColumn) {
+        /*$scope.deleteRules = function(columns, questions, edited, extBook, organizations, extColumn) {
             $http({method: 'POST', url: 'deleteRules', data:{skipTarget: $scope.skipTarget}})
             .success(function(data, status, headers, config) {
                 $scope.setVar(columns, questions, edited, extBook, organizations, extColumn);
@@ -204,16 +210,16 @@
             }).error(function(e){
                 console.log(e);
             });
-        };
+        };*/
 
-        $scope.getRuleOrganizations = function() {
+        /*$scope.getRuleOrganizations = function() {
             $http({method: 'POST', url: 'getRuleOrganizations', data:{skipTarget: $scope.skipTarget}})
             .success(function(data, status, headers, config) {
                 $scope.organizations.selected = data.organizations;
             }).error(function(e){
                 console.log(e);
             });
-        };
+        };*/
 
         $scope.getAppliedOptions();
     });

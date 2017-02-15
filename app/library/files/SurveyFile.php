@@ -298,53 +298,94 @@ class SurveyFile extends CommFile {
 
     public function setAppliedOptions()
     {
-        $application = $this->file->book->applications()->OfMe()->withTrashed();
-        if ($application->exists()) {
-            $this->file->book->applications()->OfMe()->withTrashed()->first()->restore();
-            SurveyORM\Book::find($application->first()->ext_book_id)->file->docs()->OfMe()->withTrashed()->first()->restore();
+        $selected = Input::get('selected');
+        $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
+        if ($application) {
+            $application->restore();
         } else {
-            $this->createApplication();
+            $application = $this->createApplication();
+            $extDoc = $this->createExtBook();
+            $extBook = $this->setExtBook($application, $extDoc['id']);
         }
-        $application->first()->appliedOptions()->sync(Input::get('columns'));
-        return $this->getAppliedOptions();
+        Input::replace(['skipTarget' => ['class' => $this->file->book->class, 'id' => $application->ext_book_id], 'rules' => $selected['rules']]);
+        $this->saveRules();
+        $application->appliedOptions()->sync($selected['columns']);
+        $appliedOptions = $this->getAppliedOptions();
+        return $appliedOptions;
+    }
+
+    public function createExtBook()
+    {
+        $newDoc = ['title' => $this->file->book->title .'(加掛題本)', 'type' => 6];
+
+        Input::replace(['fileInfo' => $newDoc]);
+
+        $user = Auth::user();
+
+        $doc = $this->getPaths()->first();
+
+        $folderComponent = new \Plat\Files\FolderComponent($doc->is_file, $user);
+
+        $folderComponent->setDoc($doc);
+
+        return $folderComponent->createComponent()['doc'];
     }
 
     public function getAppliedOptions()
     {
-        $applicableOption = $this->file->book->applicableOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
-            return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
-        });
         $member_id = Input::get('member_id');
         $application = isset($member_id) ? $this->file->book->applications()->where('member_id', Input::get('member_id'))->first() : $this->file->book->applications()->OfMe()->first();
-        $appliedOptions = is_null($application) ? \Illuminate\Database\Eloquent\Collection::make([]) : $application->appliedOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
-            return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
-        });
+        if ($application) {
+            $appliedOptions =  $application->appliedOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
+                return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
+            });
+            $edited = true;
+            $options = $appliedOptions;
+            $extBook = $this->getExtBook($application->ext_book_id);
+            Input::replace(['skipTarget' => ['class' => $this->file->book->class, 'id' => $application->ext_book_id]]);
+            $rules = $this->getRules();
+            $organizationsSelected = array_map(function($rule){
+                return \Plat\Project\OrganizationDetail::find($rule['value']);
+            }, $rules[0]['conditions']);
+        } else {
+            $applicableOption = $this->file->book->applicableOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
+                return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
+            });
+            $appliedOptions = \Illuminate\Database\Eloquent\Collection::make([]);
+            $edited = false;
+            $options = $applicableOption;
+            $extBook = [];
+            $organizationsSelected = [];
+        }
 
-        $edited = !$appliedOptions->isEmpty();
-        $options = !empty($edited) ? $appliedOptions : $applicableOption;
         $columns = isset($options['applicableColumns']) ? $options['applicableColumns'] : [];
         $questions = isset($options['applicableQuestions']) ? $options['applicableQuestions'] : [];
-        $extBook = !empty($application->ext_book_id) ? $this->getExtBook($application->ext_book_id) : [];
         $extColumn = \Row\Column::find($this->file->book->column_id);
         $organizations = Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->organizations->map(function($organization){
             return $organization->now;
         })->toArray();
 
-        return ['book' => $this->file->book, 'columns' => $columns, 'questions' => $questions, 'edited' => $edited, 'extBook' => $extBook, 'extColumn' => $extColumn, 'organizations' => $organizations];
+        return ['book' => $this->file->book, 'columns' => $columns, 'questions' => $questions, 'edited' => $edited, 'extBook' => $extBook, 'extColumn' => $extColumn, 'organizations' => $organizations, 'organizationsSelected' => $organizationsSelected];
     }
 
     public function resetApplication()
     {
+
         $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
-        $doc = SurveyORM\Book::find($application->ext_book_id)->file->docs()->OfMe()->withTrashed()->first();
-        $this->deleteDoc($doc->id);
+        Input::replace(['skipTarget' => ['class' => $this->file->book->class, 'id' => $application->ext_book_id]]);
+        // $doc = SurveyORM\Book::find($application->ext_book_id)->file->docs()->OfMe()->withTrashed()->first();
+        // $this->deleteDoc($doc->id);
         $this->deleteApplication();
+        $this->deleteRules();
         return $this->getAppliedOptions();
     }
 
     public function createApplication()
     {
-        $this->file->book->applications()->create(['book_id' => Input::get('book_id'), 'member_id' => Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->id]);
+        return $this->file->book->applications()->create([
+            'book_id' => Input::get('book_id'),
+            'member_id' => Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->id,
+        ]);
     }
 
     public function deleteApplication()
@@ -448,27 +489,30 @@ class SurveyFile extends CommFile {
         return ['currentPage' => $members->getCurrentPage(), 'lastPage' => $members->getLastPage()];
     }
 
-    public function setExtBook()
+    public function setExtBook(&$application, $doc_id)
     {
-        $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
-        $application->ext_book_id = \ShareFile::find(Input::get('doc_id'))->isFile->book()->first()->id;
+        $application->ext_book_id = \ShareFile::find($doc_id)->isFile->book->id;
         $application->save();
-        return $this->getExtBook($application->ext_book_id);
+        // return $this->getExtBook($application->ext_book_id);
     }
 
     public function getExtBook($book_id)
     {
-        $file = SurveyORM\Book::find($book_id)->file;
-        $title = $file->title;
-        $doc = $file->docs()->OfMe()->withTrashed()->first();
-        $applied = !empty($book_id) ? true : false;
+        $doc = SurveyORM\Book::find($book_id)->file->docs()->OfMe()->first();
+        return  \Struct_file::open($doc);
+        /*try {
+            $file = SurveyORM\Book::find($book_id)->file;
+        } catch (\Exception $e){
+            return [];
+        }*/
+        /*$file = SurveyORM\Book::find($book_id)->file;
         return [
-            'doc_id' => $doc->id,
-            'title' => $title,
+            'doc_id' => $file->docs()->OfMe()->withTrashed()->first()->id,
+            'title' => $file->title,
             'link'  => '/doc/' . $doc->id . '/open',
-            'applied' => $applied,
+            'applied' => !empty($book_id) ? true : false,
             'id' => $book_id,
-        ];
+        ];*/
     }
 
     public function deleteDoc($docId)
@@ -536,16 +580,16 @@ class SurveyFile extends CommFile {
             $rules = null;
         }
 
-        return ['rules' => $rules];
+        return $rules;
     }
 
-    public function getRuleOrganizations()
+    /*public function getRuleOrganizations()
     {
         $rules = $this->getRules()['rules'];
         $organizations = array_map(function($rule){
             return \Plat\Project\OrganizationDetail::find($rule['value']);
         }, $rules[0]['conditions']);
         return ['organizations' => $organizations];
-    }
+    }*/
 
 }
