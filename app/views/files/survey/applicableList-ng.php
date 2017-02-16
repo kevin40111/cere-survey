@@ -7,12 +7,17 @@
                 </md-card-header-text>
             </md-card-header>
             <md-content>
-                <md-list flex ng-if="edited">
-                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>母體名單設定</h4></md-subheader> 
+                <md-list flex ng-if="!edited">
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>母體名單設定</h4></md-subheader>
                     <md-list-item>
-                        <md-select placeholder="請選擇" ng-model="ParentList.id" ng-change="setParentList(ParentList.id)" style="width: 920px" >
-                            <md-option ng-value="ParentList.id"  ng-repeat="ParentList in ParentLists">{{ParentList.title}}</md-option>
+                        <md-select placeholder="請選擇" ng-model="table.id" ng-change="setParentList(table.id)" style="width: 920px" >
+                            <md-option ng-value="table.id"  ng-repeat="table in tableList">{{table.title}}</md-option>
                         </md-select>
+                    </md-list-item>
+                    <md-list-item ng-if="empty.table">
+                        <div class="ui negative message" flex>
+                            <div class="header">請選擇母體名單</div>
+                        </div>
                     </md-list-item>
                     <md-divider ></md-divider>
                     <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>主題本進入加掛題本條件設定</h4></md-subheader>
@@ -21,17 +26,53 @@
                             <md-option ng-value="column" ng-repeat="column in columns">{{column.title}}</md-option>
                         </md-select>
                     </md-list-item>
+                    <md-list-item ng-if="empty.conditionColumn">
+                        <div class="ui negative message" flex>
+                            <div class="header">請選擇欄位</div>
+                        </div>
+                    </md-list-item>
                     <md-divider ></md-divider>
-                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>變向選擇</h4></md-subheader>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>變項選擇</h4></md-subheader>
                     <md-list-item ng-repeat="column in columns">
                         <p>{{column.title}}</p>
                         <md-checkbox class="md-secondary" ng-model="column.selected" ng-true-value="true" ng-false-value="" aria-label="{}"></md-checkbox>
+                    </md-list-item>
+                    <md-list-item ng-if="empty.column">
+                        <div class="ui negative message" flex>
+                            <div class="header">請選擇變項</div>
+                        </div>
                     </md-list-item>
                     <md-divider ></md-divider>
                     <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>使用主題本題目</h4></md-subheader>
                     <md-list-item ng-repeat="question in questions">
                         <p>{{question.title}}</p>
                         <md-checkbox class="md-secondary" ng-model="question.selected" ng-true-value="true" ng-false-value="" aria-label="{}"></md-checkbox>
+                    </md-list-item>
+                    <md-list-item ng-if="empty.questions">
+                        <div class="ui negative message" flex>
+                            <div class="header">請選擇主題本題目</div>
+                        </div>
+                    </md-list-item>
+                </md-list>
+                <md-list flex ng-if="edited">
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>母體名單設定</h4></md-subheader>
+                    <md-list-item>
+                        <p>{{tables.selected.title}}</p>
+                    </md-list-item>
+                    <md-divider ></md-divider>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>主題本進入加掛題本條件設定</h4></md-subheader>
+                    <md-list-item>
+                        <p>{{conditionColumn.title}}</p>
+                    </md-list-item>
+                    <md-divider ></md-divider>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>變向選擇</h4></md-subheader>
+                    <md-list-item ng-repeat="column in columns">
+                        <p>{{column.title}}</p>
+                    </md-list-item>
+                    <md-divider ></md-divider>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>使用主題本題目</h4></md-subheader>
+                    <md-list-item ng-repeat="question in questions">
+                        <p>{{question.title}}</p>
                     </md-list-item>
                 </md-list>
             </md-content>
@@ -44,15 +85,21 @@
     app.controller('application', function ($scope, $http, $filter){
         $scope.columns = [];
         $scope.questions = [];
-        $scope.edited = [];
-        $scope.conditionColumn = {};
+        $scope.edited = false;
+        $scope.conditionColumn = [];
+        $scope.tablesSelected = null;
+        $scope.tables = {'list': [], 'selected': []};
+        $scope.tableList = [];
         $scope.disabled = false;
+        $scope.empty = {'conditionColumn': false, 'questions': false, 'table': false, 'column': false};
 
         $scope.getApplicableOptions = function() {
-            $http({method: 'POST', url: 'getApplicableOptions', data:{}})
+            $http({method: 'POST', url: 'getApplicableOptions', data:{rowsFileId: $scope.tablesSelected}})
             .success(function(data, status, headers, config) {
-                ;
-                $scope.setVar(data.columns, data.questions, data.conditionColumn, data.edited);
+                angular.extend($scope, data);
+                if ($scope.tableList.length <= 0) {
+                    $scope.tableList = $scope.tables.list;
+                }
             })
             .error(function(e){
                 console.log(e);
@@ -66,52 +113,45 @@
             var questions = $filter('filter')($scope.questions, {selected: true}).map(function(question) {
                 return question.id;
             });
-            return {'columns': columns, 'questions': questions, 'conditionColumn': $scope.conditionColumn};
+            $scope.empty.table = $scope.tablesSelected == null ? true : false;
+            $scope.empty.column = columns.length <= 0 ? true : false;
+            $scope.empty.questions = questions.length <= 0 ? true : false;
+            $scope.empty.conditionColumn = $scope.conditionColumn.length <= 0 ? true : false;
+            var sent = !$scope.empty.table && !$scope.empty.column && !$scope.empty.questions && !$scope.empty.conditionColumn ? true : false;
+
+            return {'columns': columns, 'questions': questions, 'conditionColumn': $scope.conditionColumn, 'tablesSelected': $scope.tablesSelected, 'sent': sent};
         }
 
         $scope.setParentList = function(mother_list_id){
-            $http({method: 'POST', url: 'setRowsFile', data:{rowsFileId: mother_list_id}})
-            .success(function(data, status, headers, config) {
-                $scope.getApplicableOptions();
-            })
-            .error(function(e){
-                console.log(e);
-            });
+            $scope.tablesSelected = mother_list_id;
+            $scope.getApplicableOptions();
         }
-
-        $scope.getParentList = function(){
-            $scope.disabled = false;
-            var selected = getSelected();
-            $http({method: 'POST', url: 'getParentList', data:{selected: selected}})
-            .success(function(data, status, headers, config) {
-                $scope.ParentLists = data.ParentList;
-                $scope.disabled = false;
-            })
-            .error(function(e){
-                console.log(e);
-            });
-        }
-
-        $scope.getParentList();
 
         $scope.setApplicableOptions = function() {
-            $scope.disabled = true;
             var selected = getSelected();
-            $http({method: 'POST', url: 'setApplicableOptions', data:{selected: selected}})
-            .success(function(data, status, headers, config) {
-                $scope.setVar(data.columns, data.questions, data.conditionColumn, data.edited);
-                $scope.disabled = false;
-            })
-            .error(function(e){
-                console.log(e);
-            });
+            if (selected.sent) {
+                $scope.disabled = true;
+                $http({method: 'POST', url: 'setApplicableOptions', data:{selected: selected}})
+                .success(function(data, status, headers, config) {
+                    angular.extend($scope, data);
+                    $scope.disabled = false;
+                })
+                .error(function(e){
+                    console.log(e);
+                });
+            } else {
+                return 0;
+            }
         }
 
         $scope.resetApplicableOptions = function() {
             $scope.disabled = true;
             $http({method: 'POST', url: 'resetApplicableOptions', data:{}})
             .success(function(data, status, headers, config) {
-                $scope.setVar(data.columns, data.questions, data.conditionColumn, data.edited);
+                angular.extend($scope, data);
+                if ($scope.tableList.length <= 0) {
+                    $scope.tableList = $scope.tables.list;
+                }
                 $scope.disabled = false;
             })
             .error(function(e){
@@ -119,17 +159,10 @@
             });
         }
 
-        $scope.setVar = function(columns, questions, conditionColumn, edited) {
-            $scope.columns = columns;
-            $scope.questions = questions;
-            $scope.conditionColumn = conditionColumn;
-            // $scope.edited = edited
-        }
-
         $scope.conditionSelected = function(column) {
             $scope.conditionColumn = column;
         }
 
-         //$scope.getApplicableOptions();
+         $scope.getApplicableOptions();
     });
 </script>

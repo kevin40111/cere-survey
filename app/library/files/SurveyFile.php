@@ -278,7 +278,7 @@ class SurveyFile extends CommFile {
     }
 
     public function getBooks()
-    {   
+    {
         return ['books' => Set\Book::all()];
     }
 
@@ -394,11 +394,18 @@ class SurveyFile extends CommFile {
         $this->file->book->applications()->OfMe()->first()->delete();
     }
 
-    public function setRowsFile()
-    {        
-        $rows_file_id = Input::get('rowsFileId');
+
+    public function setRowsFile($rows_file_id)
+    {
         $this->file->book->update(['rowsFile_id' => $rows_file_id]);
-        return $rows_file_id;
+    }
+
+    public function deleteRelatedApplications()
+    {
+        $this->file->book->applications->each(function($application){
+            $application->delete();
+        });
+
     }
 
     public function setApplicableOptions()
@@ -406,13 +413,19 @@ class SurveyFile extends CommFile {
         $this->file->book->optionColumns()->sync(Input::get('selected.columns'));
         $this->file->book->optionQuestions()->sync(Input::get('selected.questions'));
         $this->setConditionColumns(Input::get('selected.conditionColumn'));
+        $this->setRowsFile(Input::get('selected.tablesSelected'));
         return $this->getApplicableOptions();
     }
 
     public function getParentList()
-    {  
-        $ParentList = $this->file->select('id', 'title')->where('created_by', '=', Auth::user()->id)->where('type','=','5')->get();
-        return ['ParentList' =>  $ParentList];
+    {
+        return $this->file->select('id', 'title')->where('created_by', '=', Auth::user()->id)->where('type','=','5')->get();
+    }
+
+    public function getMotherList()
+    {
+        $motherList = $this->file->select('id', 'title')->where('created_by', '=', Auth::user()->id)->where('type','=','5')->get();
+        return ['motherList' =>  $motherList];
     }
 
     public function getApplicableOptions()
@@ -423,16 +436,29 @@ class SurveyFile extends CommFile {
             $columns = $this->file->book->optionColumns;
             $questions = $this->file->book->optionQuestions;
             $conditionColumn = $this->getConditionColumn();
-        } else {
             $rowsFile_id = $this->file->book->rowsFile_id;
-            $file = Files::find($rowsFile_id);
+            $parentSelected = Files::find($rowsFile_id);
+            $parentList = [];
+        } else {
+            $file = Files::find(Input::get('rowsFileId'));
             $columns = !is_null($file) ? $file->sheets->first()->tables->first()->columns : [];
             $questions = $this->file->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
                 return array_merge($carry, $page->getQuestions());
             }, []);
+            $parentSelected = [];
+            $parentList = $this->getParentList();
         }
 
-        return ['columns' => $columns, 'questions' => $questions, 'edited' => $edited, 'conditionColumn' => $conditionColumn];
+        return [
+            'columns' => $columns,
+            'questions' => $questions,
+            'edited' => $edited,
+            'conditionColumn' => $conditionColumn,
+            'tables' => [
+                'list' => $parentList,
+                'selected' => $parentSelected,
+            ],
+        ];
     }
 
     public function getApplications()
@@ -443,8 +469,9 @@ class SurveyFile extends CommFile {
 
     public function resetApplicableOptions()
     {
+        $this->deleteRelatedApplications();
         $this->deleteApplicableOptions();
-        $this->deleteConditionColumn();
+        $this->deleteCondition();
         return $this->getApplicableOptions();
     }
 
@@ -534,10 +561,11 @@ class SurveyFile extends CommFile {
         $book->save();
     }
 
-    public function deleteConditionColumn()
+    public function deleteCondition()
     {
         $book = $this->file->book;
         $book->column_id = NULL;
+        $book->rowsFile_id = NULL;
         $book->save();
     }
 
