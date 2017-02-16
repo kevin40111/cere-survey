@@ -36,14 +36,14 @@
             };
 
             scope.analyRule = function(expression){
+                var analyLogic = {" || ":"或者"," && ":"而且"," > ":"大於"," < ":"小於"," == ":"等於","undefined":""}
                 var txt="";
-                if(scope.analyLogic(expression.compareLogic) != ""){
-                    txt = "<tr><td colspan='3' class = 'td-two-logic'>"+scope.analyLogic(expression.compareLogic)+"</td>";
+                if(analyLogic[expression.compareLogic] != ""){
+                    txt = "<tr><td colspan='3' class = 'td-two-logic'>"+analyLogic[expression.compareLogic]+"</td>";
                 }
-
                 for(var i=0;i<expression.conditions.length;i++){
                     txt += "<tr>";
-                    txt += "<td>"+scope.analyLogic(expression.conditions[i].logic)+"</td>";
+                    txt += "<td>"+analyLogic[expression.conditions[i].logic]+"</td>";
                     try{
                         if(expression.conditions[i].answer != null){
                             txt += "<td>"+expression.conditions[i].question.title+"</td>";
@@ -59,31 +59,6 @@
                 txt += "</tr>";
                 return txt;
             }
-
-            scope.analyLogic = function(logic){
-
-                switch(logic){
-                    case ' || ':
-                        return " 或者 ";
-
-                    case " > ":
-                        return " 大於 ";
-
-
-                    case " < ":
-                        return " 小於 ";
-
-
-                    case " == ":
-                        return " 等於 ";
-
-
-                    case " && ":
-                        return " 而且 ";
-                }
-                return "";
-            }
-
 
             scope.checkPageRule = function(page_node_id){
                 var temp = [];
