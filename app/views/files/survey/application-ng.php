@@ -15,19 +15,32 @@
                             <md-select ng-model="organization" ng-change="setOrganization(organization)" data-md-container-class="selectdemoSelectHeader" multiple>
                                 <md-option ng-value="organization" ng-repeat="organization in organizations.lists">{{organization.name}}</md-option>
                             </md-select>
+                            <div class="ui negative message" ng-if="empty.organizations">
+                                <div class="header">請選擇{{extColumn.title}}</div>
+                            </div>
                         </md-input-container>
                     </md-list-item>
                     <md-divider ></md-divider>
-                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>變向選擇</h4></md-subheader>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>變項選擇</h4></md-subheader>
                     <md-list-item ng-repeat="column in columns">
                         <p>{{column.survey_applicable_option.title}}</p>
                         <md-checkbox class="md-secondary" ng-model="column.selected" ng-true-value="true" ng-false-value="false" aria-label="{}"></md-checkbox>
+                    </md-list-item>
+                    <md-list-item ng-if="empty.columns">
+                        <div class="ui negative message" flex>
+                            <div class="header" >請選擇變項</div>
+                        </div>
                     </md-list-item>
                     <md-divider ></md-divider>
                     <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>使用主題本題目</h4></md-subheader>
                     <md-list-item ng-repeat="question in questions">
                         <p>{{question.survey_applicable_option.title}}</p>
                         <md-checkbox class="md-secondary" ng-model="question.selected" ng-true-value="true" ng-false-value="false" aria-label="{}"></md-checkbox>
+                    </md-list-item>
+                    <md-list-item ng-if="empty.questions">
+                        <div class="ui negative message" flex>
+                            <div class="header" >請選擇主題本題目</div>
+                        </div>
                     </md-list-item>
                 </md-list>
                 <md-list flex ng-if="edited">
@@ -36,7 +49,7 @@
                         <p>{{organization.name}}</p>
                     </md-list-item>
                     <md-divider ></md-divider>
-                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>變向選擇</h4></md-subheader>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>變項選擇</h4></md-subheader>
                     <md-list-item ng-repeat="column in columns">
                         <p>{{column.survey_applicable_option.title}}</p>
                     </md-list-item>
@@ -80,10 +93,8 @@
         $scope.book = [];
         $scope.extBook = {};
         $scope.extColumn = {};
-        // $scope.newDoc = {title: "加掛題本", type: 6};
         $scope.selected = {'organizations': []};
         $scope.organizations = {'lists': [], 'selected': []};
-        // $scope.skipTarget = {class: null, id: null};
         $scope.disabled = false;
         $scope.empty = {'organizations': false, 'questions': false, 'columns': false};
 
@@ -94,12 +105,8 @@
         $scope.getAppliedOptions = function() {
             $http({method: 'POST', url: 'getAppliedOptions', data:{}})
             .success(function(data, status, headers, config) {
-                console.log(data);
                 $scope.book = data.book;
                 angular.extend($scope, data);
-                /*if (data.edited == true) {
-                    $scope.getRuleOrganizations();
-                }*/
             })
             .error(function(e){
                 console.log(e);
@@ -110,6 +117,7 @@
             var columns = $filter('filter')($scope.columns, {selected: true}).map(function(column) {
                 return column.id;
             });
+
             var questions = $filter('filter')($scope.questions, {selected: true}).map(function(question) {
                 return question.id;
             });
@@ -122,92 +130,48 @@
                 }
                 rules[0].conditions.push(condition);
             }
-            return {'columns': columns.concat(questions), 'rules': rules};
+            $scope.empty.columns = columns.length <= 0 ? true : false;
+            $scope.empty.questions = questions.length <= 0 ? true : false;
+            $scope.empty.organizations = rules[0].conditions.length <= 0 ? true : false;
+            var sent = !$scope.empty.columns && !$scope.empty.questions && !$scope.empty.organizations ? true : false;
+
+            return {'columns': columns.concat(questions), 'rules': rules, 'sent': sent};
         }
 
         $scope.setAppliedOptions = function() {
-            $scope.disabled = true;
             $scope.organizations.selected = null;
             var selected = getSelected();
-            $http({method: 'POST', url: 'setAppliedOptions', data:{selected: selected, book_id: $scope.columns[0].book_id, }})
-            .success(function(data, status, headers, config) {
-                console.log(data);
-                angular.extend($scope, data);
-                //$scope.extBook = data.extBook;
-                $scope.disabled = false;
-            })
-            .error(function(e){
-                console.log(e);
-            });
+            if (selected.sent) {
+                $scope.disabled = true;
+                $http({method: 'POST', url: 'setAppliedOptions', data:{selected: selected}})
+                .success(function(data, status, headers, config) {
+                    angular.extend($scope, data);
+                    $scope.disabled = false;
+                })
+                .error(function(e){
+                    console.log(e);
+                });
+            } else {
+                return 0;
+            }
         }
 
         $scope.resetApplication = function() {
             $scope.disabled = true;
             $http({method: 'POST', url: 'resetApplication', data:{}})
             .success(function(data, status, headers, config) {
-                console.log(data);
                 angular.extend($scope, data);
-                // $scope.extBook.applied = false;
+                $scope.selected.organizations = [];
                 $scope.disabled = false;
-                // $scope.deleteRules(data.columns, data.questions, data.edited, data.extBook, data.organizations, data.extColumn, data.organizationsSelected);
             })
             .error(function(e){
                 console.log(e);
             });
         }
 
-        /*$scope.createExtBook = function() {
-            $scope.newDoc.title = $scope.book.title + '(' + $scope.newDoc.title + ')';
-            $http({method: 'POST', url: '/file/create', data:{fileInfo: $scope.newDoc}})
-            .success(function(data, status, headers, config) {
-                $scope.setExtBook(data.doc.id);
-            }).error(function(e){
-                console.log(e);
-            });
-        };*/
-
-        /*$scope.setExtBook = function(doc_id) {
-            $http({method: 'POST', url: 'setExtBook', data:{doc_id: doc_id}})
-            .success(function(data, status, headers, config) {
-                $scope.extBook = data;
-            }).error(function(e){
-                console.log(e);
-            });
-        };*/
-
         $scope.toExtBook = function(event) {
             open($scope.extBook.link, '_blank');
         };
-
-        /*$scope.saveRules = function(rules) {
-            $http({method: 'POST', url: 'saveRules', data:{skipTarget: $scope.skipTarget, rules: rules}})
-            .success(function(data, status, headers, config) {
-                // $scope.getRuleOrganizations();
-                // $scope.disabled = false;
-            }).error(function(e){
-                console.log(e);
-            });
-        };*/
-
-        /*$scope.deleteRules = function(columns, questions, edited, extBook, organizations, extColumn) {
-            $http({method: 'POST', url: 'deleteRules', data:{skipTarget: $scope.skipTarget}})
-            .success(function(data, status, headers, config) {
-                $scope.setVar(columns, questions, edited, extBook, organizations, extColumn);
-                $scope.extBook.applied = false;
-                $scope.disabled = false;
-            }).error(function(e){
-                console.log(e);
-            });
-        };*/
-
-        /*$scope.getRuleOrganizations = function() {
-            $http({method: 'POST', url: 'getRuleOrganizations', data:{skipTarget: $scope.skipTarget}})
-            .success(function(data, status, headers, config) {
-                $scope.organizations.selected = data.organizations;
-            }).error(function(e){
-                console.log(e);
-            });
-        };*/
 
         $scope.getAppliedOptions();
     });

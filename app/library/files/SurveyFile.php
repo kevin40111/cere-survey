@@ -26,7 +26,7 @@ class SurveyFile extends CommFile {
 
     public function get_views()
     {
-        return ['open', 'demo', 'application','confirm', 'applicableList', 'browser', 'requirement'];
+        return ['open', 'demo', 'application','confirm', 'applicableList', 'browser'];
     }
 
     public static function tools()
@@ -35,7 +35,6 @@ class SurveyFile extends CommFile {
             ['name' => 'confirm', 'title' => '加掛審核', 'method' => 'confirm', 'icon' => 'list'],
             ['name' => 'applicableList', 'title' => '加掛項目', 'method' => 'applicableList', 'icon' => 'list'],
             ['name' => 'browser', 'title' => '題目瀏覽', 'method' => 'browser', 'icon' => 'list'],
-            ['name' => 'requirement', 'title' => '加掛題本條件', 'method' => 'requirement', 'icon' => 'list'],
         ];
     }
 
@@ -79,12 +78,6 @@ class SurveyFile extends CommFile {
     public function questionBrowser()
     {
         return  View::make('files.survey.template_question_browser');
-    }
-
-    public function requirement()
-    {
-        return 'files.survey.requirement-ng';
-
     }
 
     public function userApplication()
@@ -383,8 +376,6 @@ class SurveyFile extends CommFile {
 
         $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
         Input::replace(['skipTarget' => ['class' => $this->file->book->class, 'id' => $application->ext_book_id]]);
-        // $doc = SurveyORM\Book::find($application->ext_book_id)->file->docs()->OfMe()->withTrashed()->first();
-        // $this->deleteDoc($doc->id);
         $this->deleteApplication();
         $this->deleteRules();
         return $this->getAppliedOptions();
@@ -503,32 +494,18 @@ class SurveyFile extends CommFile {
     {
         $application->ext_book_id = \ShareFile::find($doc_id)->isFile->book->id;
         $application->save();
-        // return $this->getExtBook($application->ext_book_id);
     }
 
     public function getExtBook($book_id)
     {
         $doc = SurveyORM\Book::find($book_id)->file->docs()->OfMe()->first();
         return  \Struct_file::open($doc);
-        /*try {
-            $file = SurveyORM\Book::find($book_id)->file;
-        } catch (\Exception $e){
-            return [];
-        }*/
-        /*$file = SurveyORM\Book::find($book_id)->file;
-        return [
-            'doc_id' => $file->docs()->OfMe()->withTrashed()->first()->id,
-            'title' => $file->title,
-            'link'  => '/doc/' . $doc->id . '/open',
-            'applied' => !empty($book_id) ? true : false,
-            'id' => $book_id,
-        ];*/
     }
 
-    public function deleteDoc($docId)
+    /*public function deleteDoc($docId)
     {
         \ShareFile::find($docId)->delete();
-    }
+    }*/
 
     public function getConditionColumn()
     {
@@ -592,14 +569,5 @@ class SurveyFile extends CommFile {
 
         return $rules;
     }
-
-    /*public function getRuleOrganizations()
-    {
-        $rules = $this->getRules()['rules'];
-        $organizations = array_map(function($rule){
-            return \Plat\Project\OrganizationDetail::find($rule['value']);
-        }, $rules[0]['conditions']);
-        return ['organizations' => $organizations];
-    }*/
 
 }
