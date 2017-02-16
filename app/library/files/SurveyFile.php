@@ -87,7 +87,7 @@ class SurveyFile extends CommFile {
 
     public function getBook()
     {
-        return ['book' => $this->file->book];
+            return ['book' => $this->file->book];
     }
 
     public function getQuestion()
@@ -278,7 +278,7 @@ class SurveyFile extends CommFile {
     }
 
     public function getBooks()
-    {
+    {   
         return ['books' => Set\Book::all()];
     }
 
@@ -394,12 +394,25 @@ class SurveyFile extends CommFile {
         $this->file->book->applications()->OfMe()->first()->delete();
     }
 
+    public function setRowsFile()
+    {        
+        $rows_file_id = Input::get('rowsFileId');
+        $this->file->book->update(['rowsFile_id' => $rows_file_id]);
+        return $rows_file_id;
+    }
+
     public function setApplicableOptions()
     {
         $this->file->book->optionColumns()->sync(Input::get('selected.columns'));
         $this->file->book->optionQuestions()->sync(Input::get('selected.questions'));
         $this->setConditionColumns(Input::get('selected.conditionColumn'));
         return $this->getApplicableOptions();
+    }
+
+    public function getParentList()
+    {  
+        $ParentList = $this->file->select('id', 'title')->where('created_by', '=', Auth::user()->id)->where('type','=','5')->get();
+        return ['ParentList' =>  $ParentList];
     }
 
     public function getApplicableOptions()
@@ -411,7 +424,7 @@ class SurveyFile extends CommFile {
             $questions = $this->file->book->optionQuestions;
             $conditionColumn = $this->getConditionColumn();
         } else {
-            $rowsFile_id = $this->configs['rows_file'];
+            $rowsFile_id = $this->file->book->rowsFile_id;
             $file = Files::find($rowsFile_id);
             $columns = !is_null($file) ? $file->sheets->first()->tables->first()->columns : [];
             $questions = $this->file->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {

@@ -12,7 +12,7 @@ class Book extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = array('file_id', 'title', 'lock', 'column_id');
+    protected $fillable = array('file_id', 'title', 'lock', 'column_id', 'rowsFile_id');
 
     protected $attributes = ['lock' => false];
 
@@ -74,7 +74,7 @@ class Book extends Eloquent {
     }
 
     public function file()
-    {
+    {   
         return $this->belongsTo('Files', 'file_id', 'id');
     }
 

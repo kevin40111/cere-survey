@@ -214,6 +214,7 @@ angular.module('ngSurvey.directives', [])
         controller: function($scope, $attrs) {
 
             $scope.saveAnswer = function(parent, value) {
+                $scope.question.childrens = "";
                 surveyFactory.get('getChildren', {question: $scope.question, parent: parent, value: value}, $scope.node).then(function(response) {
                     $scope.question.childrens = response.nodes;
                     surveyFactory.answers[$scope.question.id] = $scope.answer.value;

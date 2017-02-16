@@ -14,6 +14,7 @@
             <td  ng-if="question.rowspan>=1"  rowspan="{{question.rowspan}}" style="text-align: center">
                 {{question.question_number}}
             </td>
+
             <!-- 題目 -->
             <td ng-if="question.rowspan>=1" rowspan="{{question.rowspan}}">
                 {{getParentNode(question,key)}}
@@ -56,6 +57,5 @@
                 </span>
              </td>
              <td ng-if="!(question.page.number > 0)"></td>
-             
         </tr>
 </table>

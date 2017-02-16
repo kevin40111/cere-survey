@@ -49,7 +49,7 @@
                             txt += "<td>"+expression.conditions[i].question.title+"</td>";
                             txt += "<td>"+expression.conditions[i].answer.title+"</td>";
                         }else{
-                            if(expression.conditions[i].value != null)txt += "<td>"+expression.conditions[i].value+"</td>";
+                            if(expression.conditions[i].value != null)txt += "<td>"+expression.conditions[i].value+"--(值)</td>";
                             txt += "<td>"+expression.conditions[i].question.node.title+"</td>"; 
                             txt += "<td>"+expression.conditions[i].question.title+"</td>";
                         }
@@ -143,7 +143,6 @@
                     case "explain":
                     return "說明文字";
                     break;
-
                 }
             }
 
@@ -228,7 +227,6 @@
                     browser_node[i].page = {};
                     browser_node[i].page.number = page;
                     browser_node[i].page.node_id = browser_node[i].node.parent_id; 
-                    console.log(browser_node[i].node.parent_id)
                     browser_node[i].page.rule =  scope.checkPageRule(browser_node[i].node.parent_id);
                     page++;
                 }
