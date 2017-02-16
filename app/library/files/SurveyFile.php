@@ -351,7 +351,6 @@ class SurveyFile extends CommFile {
             $applicableOption = $this->file->book->applicableOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
                 return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
             });
-            $appliedOptions = \Illuminate\Database\Eloquent\Collection::make([]);
             $edited = false;
             $options = $applicableOption;
             $extBook = [];
@@ -365,7 +364,18 @@ class SurveyFile extends CommFile {
             return $organization->now;
         })->toArray();
 
-        return ['book' => $this->file->book, 'columns' => $columns, 'questions' => $questions, 'edited' => $edited, 'extBook' => $extBook, 'extColumn' => $extColumn, 'organizations' => $organizations, 'organizationsSelected' => $organizationsSelected];
+        return [
+            'book' => $this->file->book,
+            'columns' => $columns,
+            'questions' => $questions,
+            'edited' => $edited,
+            'extBook' => $extBook,
+            'extColumn' => $extColumn,
+            'organizations' => [
+                'lists' => $organizations,
+                'selected' => $organizationsSelected,
+            ],
+        ];
     }
 
     public function resetApplication()
