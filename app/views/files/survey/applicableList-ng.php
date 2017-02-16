@@ -60,12 +60,12 @@
                         <p>{{tables.selected.title}}</p>
                     </md-list-item>
                     <md-divider ></md-divider>
-                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>主題本進入加掛題本條件設定</h4></md-subheader>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>主題本進入加掛題本條件欄位設定</h4></md-subheader>
                     <md-list-item>
                         <p>{{conditionColumn.title}}</p>
                     </md-list-item>
                     <md-divider ></md-divider>
-                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>變向選擇</h4></md-subheader>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>變項選擇</h4></md-subheader>
                     <md-list-item ng-repeat="column in columns">
                         <p>{{column.title}}</p>
                     </md-list-item>
