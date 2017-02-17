@@ -189,6 +189,8 @@ class SurveyFile extends CommFile {
         $answer = SurveyORM\Answer::find(Input::get('answer.id'));
 
         $answer->update(['title' => Input::get('answer.title')]);
+        
+        $this->updateAnswerValue(SurveyORM\Node::find($answer->node_id));
 
         return ['answer' => $answer];
     }
@@ -230,7 +232,7 @@ class SurveyFile extends CommFile {
             $subNode->deleteNode();
         });
 
-        return ['deleted' => $answer->delete(), 'answers' => $answer->node->answers];
+        return ['deleted' => $answer->delete(), 'answers' => $answer->node->answers, 'update' => $this->updateAnswerValue($answer->node)];
     }
 
     public function moveUp()
@@ -240,6 +242,10 @@ class SurveyFile extends CommFile {
         $relation = Input::get('item.relation');
 
         $item = $class::find(Input::get('item.id'))->moveUp();
+
+        if ($class == '\\Plat\Eloquent\Survey\Answer') {
+            $this->updateAnswerValue($item->node);
+        }
 
         return ['items' => $item->node->sortByPrevious([$relation])->$relation];
     }
@@ -251,6 +257,9 @@ class SurveyFile extends CommFile {
         $relation = Input::get('item.relation');
 
         $item = $class::find(Input::get('item.id'))->moveDown();
+        if ($class == '\\Plat\Eloquent\Survey\Answer') {
+            $this->updateAnswerValue($item->node);
+        }
 
         return ['items' => $item->node->sortByPrevious([$relation])->$relation];
     }
@@ -611,4 +620,14 @@ class SurveyFile extends CommFile {
         return $rules;
     }
 
+    public function updateAnswerValue($node)
+    {
+        $answersInNode = $node->sortByPrevious(['answers'])->answers;
+        
+        foreach ($answersInNode as $key => $answerInNode) {
+            $answerInNode->update(['value' =>$key]);
+        }
+
+        return true;
+    }
 }
