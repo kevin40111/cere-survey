@@ -212,12 +212,19 @@ angular.module('ngSurvey.directives', [])
         restrict: 'A',
         require: 'ngModel',
         controller: function($scope, $attrs) {
-
+            var previous_select_answer="";  
             $scope.saveAnswer = function(parent, value) {
-                $scope.question.childrens = "";
-                surveyFactory.get('getChildren', {question: $scope.question, parent: parent, value: value}, $scope.node).then(function(response) {
+                $scope.question.childrens = {};
+                surveyFactory.get('getChildren', {question: $scope.question, parent: parent, value: value , previous:previous_select_answer}, $scope.node).then(function(response) {
+                    // console.log(response)
                     $scope.question.childrens = response.nodes;
+                    try{
+                        previous_select_answer =  response.nodes[0].questions[0].id;
+                    }catch(err){
+                        previous_select_answer = null;
+                    }
                     surveyFactory.answers[$scope.question.id] = $scope.answer.value;
+                    surveyFactory.answers[previous_select_answer]=null;
                 });
             };
 

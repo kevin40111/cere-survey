@@ -81,7 +81,7 @@ class SurveyController extends \BaseController {
             $nodes = [];
         }
 
-
+        Input::has('previous') && DB::table('91')->update([Input::get('previous')=>null]);
         Input::has('value') && DB::table('91')->update([Input::get('question.id') => Input::get('value')]);sleep(1);
 
 
