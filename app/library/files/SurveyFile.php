@@ -614,7 +614,7 @@ class SurveyFile extends CommFile {
         if (!$root->rules()->first() == null) {
             $rules = $root->rules()->first()->expression;
         } else {
-            $rules = null;
+            $rules = 'null';
         }
 
         return $rules;

@@ -690,8 +690,9 @@ angular.module('ngEditor.directives', [])
             $scope.getRules = function() {
                 $http({method: 'POST', url: 'getRules', data:{skipTarget: $scope.skipTarget}})
                 .success(function(data) {
-                    if (data == null) {
+                    if (data == 'null') {
                         $scope.rules = [{'conditions':[{'compareType':'1'}]}];
+                        $scope.ruleSetted = false;
                     } else {
                         $scope.rules = data;
                         $scope.ruleSetted = true;
@@ -728,9 +729,9 @@ angular.module('ngEditor.directives', [])
             $scope.deleteRules = function() {
                $http({method: 'POST', url: 'deleteRules', data:{skipTarget: $scope.skipTarget}})
                 .success(function(data) {
-                     $scope.getRules();
+                    $scope.getRules();
                 }).error(function(e) {
-                   console.log(e)
+                    console.log(e)
                 });
             };
         }
@@ -791,14 +792,20 @@ angular.module('ngEditor.directives', [])
                         <div layout="row" ng-if="condition.compareType==1">
                             <md-input-container style="margin-right: 10px">
                                 <label>題目</label>
-                                <md-select ng-model="question" ng-change="setCondition(key,question,'q')" placeholder="{{condition.question.node.title}}-{{condition.question.title}}">
-                                <md-option ng-repeat="question in questions" ng-value="question" >{{question.node.title}}-{{question.title}}</md-option>
+                                <md-select ng-model="question" ng-change="setCondition(key,question,'q')" ng-if="!ruleSetted" placeholder="題目">
+                                    <md-option ng-repeat="question in questions" ng-value="question" >{{question.node.title}}-{{question.title}}</md-option>
+                                </md-select>
+                                <md-select ng-model="question" ng-change="setCondition(key,question,'q')" ng-if="ruleSetted" placeholder="{{condition.question.node.title}}-{{condition.question.title}}">
+                                    <md-option ng-repeat="question in questions" ng-value="question" >{{question.node.title}}-{{question.title}}</md-option>
                                 </md-select>
                             </md-input-container>
                             <md-input-container style="margin-right: 10px" ng-if="answers.length || condition.answer">
                                 <label>答案</label>
-                                <md-select ng-model="answer" ng-change="setCondition(key,answer,'a')" placeholder="{{condition.answer.title}}">
-                                <md-option ng-repeat="answer in answers" ng-value="answer" >{{answer.title}}</md-option>
+                                <md-select ng-model="answer" ng-change="setCondition(key,answer,'a')" ng-if="!ruleSetted" placeholder="答案">
+                                    <md-option ng-repeat="answer in answers" ng-value="answer" >{{answer.title}}</md-option>
+                                </md-select>
+                                <md-select ng-model="answer" ng-change="setCondition(key,answer,'a')" ng-if="ruleSetted" placeholder="{{condition.answer.title}}">
+                                    <md-option ng-repeat="answer in answers" ng-value="answer" >{{answer.title}}</md-option>
                                 </md-select>
                             </md-input-container>
                         </div>
