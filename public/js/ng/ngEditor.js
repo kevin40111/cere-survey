@@ -690,10 +690,10 @@ angular.module('ngEditor.directives', [])
             $scope.getRules = function() {
                 $http({method: 'POST', url: 'getRules', data:{skipTarget: $scope.skipTarget}})
                 .success(function(data) {
-                    if (data.rules == null) {
+                    if (data == null) {
                         $scope.rules = [{'conditions':[{'compareType':'1'}]}];
                     } else {
-                        $scope.rules = data.rules;
+                        $scope.rules = data;
                         $scope.ruleSetted = true;
                     }
                 }).error(function(e) {
@@ -791,7 +791,7 @@ angular.module('ngEditor.directives', [])
                         <div layout="row" ng-if="condition.compareType==1">
                             <md-input-container style="margin-right: 10px">
                                 <label>題目</label>
-                                <md-select ng-model="question" ng-change="setCondition(key,question,'q')" placeholder="{{condition.question.node.title}}{{condition.question.title}}">
+                                <md-select ng-model="question" ng-change="setCondition(key,question,'q')" placeholder="{{condition.question.node.title}}-{{condition.question.title}}">
                                 <md-option ng-repeat="question in questions" ng-value="question" >{{question.node.title}}-{{question.title}}</md-option>
                                 </md-select>
                             </md-input-container>
@@ -811,8 +811,6 @@ angular.module('ngEditor.directives', [])
         link: function(scope) {
         },
         controller: function($scope, $http) {
-            
-            
             
             $scope.createCondition = function(key) {
                 $scope.rule.conditions.splice(key+1, 0,{});

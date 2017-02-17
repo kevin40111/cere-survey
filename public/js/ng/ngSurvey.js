@@ -216,7 +216,6 @@ angular.module('ngSurvey.directives', [])
             $scope.saveAnswer = function(parent, value) {
                 $scope.question.childrens = {};
                 surveyFactory.get('getChildren', {question: $scope.question, parent: parent, value: value , previous:previous_select_answer}, $scope.node).then(function(response) {
-                    // console.log(response)
                     $scope.question.childrens = response.nodes;
                     try{
                         previous_select_answer =  response.nodes[0].questions[0].id;

@@ -71,7 +71,7 @@ class SurveyController extends \BaseController {
      *
      * @return Response
      */
-    public function getChildren()
+    public function getChildren($book_id)
     {
         if (Input::has('parent')) {
             $class = Input::get('parent.class');
@@ -81,9 +81,8 @@ class SurveyController extends \BaseController {
             $nodes = [];
         }
 
-        Input::has('previous') && DB::table('91')->update([Input::get('previous')=>null]);
-        Input::has('value') && DB::table('91')->update([Input::get('question.id') => Input::get('value')]);sleep(1);
-
+        Input::has('previous') && DB::table($book_id)->update([Input::get('previous')=>null]);
+        Input::has('value') && DB::table($book_id)->update([Input::get('question.id') => Input::get('value')]);sleep(1);
 
         return ['nodes' => $nodes];
     }
