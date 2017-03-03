@@ -3,6 +3,9 @@ angular.module('ngBrowser', [])
         return {
             restrict : "E",
             templateUrl : "questionBrowser",
+            scope: {
+                book: '='
+            },
             link: function(scope, element, attrs, $event) {
             scope.showPassQuestion = function(item) {
                 $mdDialog.show({

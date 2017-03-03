@@ -16,10 +16,10 @@ class SurveyController extends \BaseController {
     function __construct()
     {
         $this->beforeFilter(function ($route) {
-            $type = $route->getParameter('type');
+            $this->type = $route->getParameter('type');
             $book_id = $route->getParameter('book_id');
 
-            if ($type == 'demo') {
+            if ($this->type == 'demo') {
                 $this->user_id = Auth::user()->id;
                 $this->repository = new DemoRepository($book_id);
                 if (!$this->repository->exist('answers')) {
@@ -36,7 +36,7 @@ class SurveyController extends \BaseController {
                 }
             }
 
-            if ($type == 'survey') {
+            if ($this->type == 'survey') {
                 $this->user_id = SurveySession::getHashId();
                 $this->repository = new SurveyRepository($book_id);
             }
@@ -119,9 +119,52 @@ class SurveyController extends \BaseController {
         $answers = (object)$this->repository->all($this->user_id);
         $previous = SurveyORM\Node::find($answers->page_id);
         $page = Input::get('next') ? $previous->next : $previous;
-        $this->repository->put($this->user_id, 'page_id', $page->id);
+        $extBook_id = null;        
+        if ($page != null) {
+            $this->repository->put($this->user_id, 'page_id', $page->id);
+        } else {
+            if (count($this->getExtBook($book_id))) {
+                $lastPage = true;
+            } else {
+                if ($this->type == 'survey') {
+                    $book = SurveyORM\Book::find($book_id);
+                    if (!is_null($book->rowsFile_id)) {
+                        $rowsFile = Files::find($book->rowsFile_id)->sheets()->first()->tables()->first();
+                        return ($this->repository->all($this->user_id));
+                        /*$userOrganization = DB::table('rows.dbo.'.$rowsFile->name)->where('C'.$book->loginRow_id, $user_id)->select('C'.$book->column_id.' AS value')->first();
+                        $extBook = $this->getExtBook($book_id)->filter(function($extBook) use($userOrganization){
+                            $values = array_fetch($extBook->rules->first()->expression['rules'][0]['conditions'], 'value');
+                            return in_array($userOrganization->value, $values);
+                        })->first();
 
-        return ['node' => $page->load(['rule']), 'answers' => $this->repository->all($this->user_id)];
+                        $extBook_id = $extBook->id;*/
+                    }
+                }
+
+                if ($this->type == 'demo') {
+
+                }
+            }
+            
+        }
+        
+
+        /*$user_id = 'P224406821'; //測試user帳號
+        $book = SurveyORM\Book::find($book_id);
+        if (!is_null($book->rowsFile_id)) {
+            $rowsFile = Files::find($book->rowsFile_id)->sheets()->first()->tables()->first();
+            $userOrganization = DB::table('rows.dbo.'.$rowsFile->name)->where('C'.$book->loginRow_id, $user_id)->select('C'.$book->column_id.' AS value')->first();
+            $extBook = $this->getExtBook($book_id)->filter(function($extBook) use($userOrganization){
+                $values = array_fetch($extBook->rules->first()->expression['rules'][0]['conditions'], 'value');
+                return in_array($userOrganization->value, $values);
+            })->first();
+
+            $extBook_id = $extBook->id;
+        }*/
+
+        $lastPage = is_null($page) ? true : false;
+
+        return ['node' => $page->load(['rules']), 'answers' => $this->repository->all($this->user_id), 'extBook_id' => $extBook_id, 'lastPage' => $lastPage];
     }
 
     /**
@@ -179,5 +222,14 @@ class SurveyController extends \BaseController {
         $this->repository->decrement($this->user_id);
 
         return Redirect::to('surveyDemo/'.$book_id.'/demo/page');
+    }
+
+    public function getExtBook($book_id)
+    {
+        return SurveyORM\Book::find($book_id)->applications->filter(function($application){
+            return SurveyORM\Book::find($application->ext_book_id)->rules()->exists();
+        })->map(function($application){
+            return SurveyORM\Book::find($application->ext_book_id)->load('rules');
+        });
     }
 }

@@ -124,6 +124,9 @@ angular.module('ngSurvey.directives', [])
                 surveyFactory.get('getNextNode', {next: next, book: $scope.book}, $scope.book).then(function(response) {
                     $scope.node = response.node;
                     surveyFactory.answers = response.answers;
+                    if (response.lastPage) {
+                        location.href = '/survey/'+response.extBook_id+'/page';
+                    }
                 });
             };
 
