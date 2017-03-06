@@ -1,7 +1,7 @@
 <?php
 
 use Plat\Eloquent\Survey as SurveyORM;
-
+use Plat\Surveys\SurveySession as SurveySession;
 
 class SurveyController extends \BaseController {
 
@@ -11,40 +11,63 @@ class SurveyController extends \BaseController {
      * @return Response
      */
     public function page()
-    {   
+    {
         return View::make('layout-survey')->nest('context', 'files.survey.demo-ng');
     }
 
     public function surveyLogin()
     {   
-        Session::forget('id');
+        Session::forget('survey_login_id');
 
         return View::make('layout-survey')->nest('context', 'files.survey.surveylogin-ng');
     }
 
     public function getSurveyQuesion($book_id)
-    {   
-        $input_value     = Input::get('id');
-        $file_book       = DB::table('file_book')->where('id', $book_id)->first();
-        $row_sheets      = DB::table('row_sheets')->where('file_id', $file_book->rowsFile_id)->first();
-        $row_tables      = DB::table('row_tables')->where('sheet_id', $row_sheets->id)->first();
-        $has_value       = DB::table('rows.dbo.'.$row_tables->name)->where('C'.$file_book->loginRow_id, $input_value)->first();
-        $answerer_repeat = DB::table($book_id)->where('created_by', $input_value)->first();
+    {
+        Session::forget('survey_login_id');
 
-        if(!empty($answerer_repeat)){
-            Session::put('id', $input_value);
+        $survey_login  = new SurveyORM\SurveyBookLogin($book_id);
+        $session       = new SurveySession;
+        $login_id      = Input::get('id') ;
+        
+        try{
+            
+            $file_book = DB::table('file_book')->where('id', $book_id)->first();
+            
+            $table     = Files::find($file_book->rowsFile_id)->sheets->first()->tables->first();
+            
+            $has_answerer  = DB::table('rows.dbo.'.$table->name)->where('C'.$file_book->loginRow_id, $login_id)->first();
 
-            return Redirect::to('survey/'.$book_id.'/page');
-        }else if(!empty($has_value)){
+        }catch(Exception $e){
 
-            Session::put('id', $input_value);
+             return Redirect::to('survey/'.$book_id.'/surveyLogin');
+
+        }
+        
+       if(!empty($has_answerer)){
+
             $page = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
-            DB::table($book_id)->insert(['created_by' => $input_value, 'page_id' => $page->id]);
+
+            $survey_login->checkForInsert($login_id);
+
+            if(empty(DB::table($book_id)->where('created_by', $survey_login->getBookTester($login_id))->first()) ){
+
+                DB::table($book_id)->insert(['created_by' => $survey_login->getBookTester($login_id), 'page_id' => $page->id]);
+
+                $session->setSession($book_id, $login_id);
+
+            }else{
+
+                $session->setSession($book_id, $login_id);
+
+            }
 
             return Redirect::to('survey/'.$book_id.'/page');
+
         }else{
 
             return Redirect::to('survey/'.$book_id.'/surveyLogin');
+
         }
     }
 
@@ -69,7 +92,7 @@ class SurveyController extends \BaseController {
     public function getNextNode($book_id)
     {   
 
-        $answers = DB::table($book_id)->where('created_by',Session::get('id',Auth::user()->id))->first();
+        $answers = DB::table($book_id)->where('created_by',Session::get('survey_login_id', Auth::user()->id))->first();
 
         if (!$answers) {
             $page = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->load(['rules'])->first();
@@ -107,7 +130,7 @@ class SurveyController extends \BaseController {
      * @return Response
      */
     public function getChildren($book_id)
-    {   
+    {
         if (Input::has('parent')) {
             $class = Input::get('parent.class');
             $nodes = $class::find(Input::get('parent.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.rules', 'answers.rules','rules']);
@@ -115,8 +138,7 @@ class SurveyController extends \BaseController {
             $nodes = [];
         }
 
-        Input::has('previous') && DB::table($book_id)->where('created_by', Session::get('id',Auth::user()->id))->update([Input::get('previous')=>null]);
-        Input::has('value') && DB::table($book_id)->where('created_by', Session::get('id',Auth::user()->id))->update([Input::get('question.id') => Input::get('value')]);sleep(1);
+        Input::has('value') && DB::table($book_id)->where('created_by', Session::get('survey_login_id', Auth::user()->id))->update([Input::get('question.id') => Input::get('value')]);sleep(1);
 
 
         return ['nodes' => $nodes];

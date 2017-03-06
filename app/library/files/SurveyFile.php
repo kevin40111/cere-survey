@@ -89,7 +89,7 @@ class SurveyFile extends CommFile
 
     public function getBook()
     {
-            return ['book' => $this->file->book];
+        return ['book' => $this->file->book];
     }
 
     public function getQuestion()
@@ -125,7 +125,7 @@ class SurveyFile extends CommFile
             }
 
             $table->integer('page_id');
-            $table->string('created_by',50);
+            $table->string('created_by',255);
         });
 
         $this->file->book->update(['lock' => true]);
@@ -415,7 +415,7 @@ class SurveyFile extends CommFile
         $this->file->book->optionQuestions()->sync(Input::get('selected.questions'));
         $this->setConditionColumns(Input::get('selected.conditionColumn'));
         $this->setRowsFile(Input::get('selected.tablesSelected'));
-        $this->setLoginFile(Input::get('selected.loginSelect.id'));
+        $this->setLoginFile(Input::get('selected.loginSelected.id'));
         return $this->getApplicableOptions();
     }
 
@@ -439,7 +439,7 @@ class SurveyFile extends CommFile
             $questions = $this->file->book->optionQuestions;
             $conditionColumn = $this->getConditionColumn();
             $rowsFile_id = $this->file->book->rowsFile_id;
-            $logincolum = DB::table('row_columns')->where('id', $this->file->book->loginRow_id)->first();
+            $loginConditionColumn = DB::table('row_columns')->where('id', $this->file->book->loginRow_id)->first();
             $parentSelected = Files::find($rowsFile_id);
             $parentList = [];
         } else {
@@ -448,6 +448,7 @@ class SurveyFile extends CommFile
             $questions = $this->file->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
                 return array_merge($carry, $page->getQuestions());
             }, []);
+            $loginConditionColumn = DB::table('row_columns')->where('id', $this->file->book->loginRow_id)->first();
             $parentSelected = [];
             $parentList = $this->getParentList();
         }
@@ -457,10 +458,10 @@ class SurveyFile extends CommFile
             'questions' => $questions,
             'edited' => $edited,
             'conditionColumn' => $conditionColumn,
-            'logincolum' => $logincolum,
+            'loginConditionColumn' => $loginConditionColumn,
             'tables' => [
-            'list' => $parentList,
-            'selected' => $parentSelected,
+                'list' => $parentList,
+                'selected' => $parentSelected,
             ]
         ];
     }
