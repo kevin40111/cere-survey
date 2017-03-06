@@ -16,59 +16,49 @@ class SurveyController extends \BaseController {
     }
 
     public function surveyLogin()
-    {   
-        Session::forget('survey_login_id');
+    {
+        SurveySession::logout();
 
         return View::make('layout-survey')->nest('context', 'files.survey.surveylogin-ng');
     }
 
     public function getSurveyQuesion($book_id)
     {
-        Session::forget('survey_login_id');
+        SurveySession::logout();
 
-        $survey_login  = new SurveyORM\SurveyBookLogin($book_id);
-        $session       = new SurveySession;
-        $login_id      = Input::get('id') ;
-        
+        $login_id = Input::get('id') ;
+
         try{
-            
-            $file_book = DB::table('file_book')->where('id', $book_id)->first();
-            
-            $table     = Files::find($file_book->rowsFile_id)->sheets->first()->tables->first();
-            
-            $has_answerer  = DB::table('rows.dbo.'.$table->name)->where('C'.$file_book->loginRow_id, $login_id)->first();
 
-        }catch(Exception $e){
+            $file_book = DB::table('file_book')->where('id', $book_id)->first();
+
+            $table     = Files::find($file_book->rowsFile_id)->sheets->first()->tables->first();
+
+            $has_answerer  = DB::table('rows.dbo.'.$table->name)->where('C'.$file_book->loginRow_id, $login_id)->exist();
+
+        } catch (Exception $e){
 
              return Redirect::to('survey/'.$book_id.'/surveyLogin');
 
         }
-        
-       if(!empty($has_answerer)){
 
-            $page = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
-
-            $survey_login->checkForInsert($login_id);
-
-            if(empty(DB::table($book_id)->where('created_by', $survey_login->getBookTester($login_id))->first()) ){
-
-                DB::table($book_id)->insert(['created_by' => $survey_login->getBookTester($login_id), 'page_id' => $page->id]);
-
-                $session->setSession($book_id, $login_id);
-
-            }else{
-
-                $session->setSession($book_id, $login_id);
-
-            }
-
-            return Redirect::to('survey/'.$book_id.'/page');
-
-        }else{
+        if ($has_answerer) {
 
             return Redirect::to('survey/'.$book_id.'/surveyLogin');
+        }
+
+        $page = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
+
+        $hash_id = SurveySession::login($book_id, $login_id);
+
+        if (DB::table($book_id)->where('created_by', $hash_id)->exist()) {
+
+            DB::table($book_id)->insert(['created_by' => $hash_id, 'page_id' => $page->id]);
 
         }
+
+        return Redirect::to('survey/'.$book_id.'/page');
+
     }
 
     /**
@@ -90,7 +80,7 @@ class SurveyController extends \BaseController {
      * @return Response
      */
     public function getNextNode($book_id)
-    {   
+    {
 
         $answers = DB::table($book_id)->where('created_by',Session::get('survey_login_id', Auth::user()->id))->first();
 
