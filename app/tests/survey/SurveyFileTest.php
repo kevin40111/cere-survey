@@ -5,9 +5,23 @@ use Plat\Eloquent\Survey as SurveyORM;
 
 class NodeTest extends TestCase {
 
-    public function testSurveyFile()
+    public function setUp()
     {
-        return new SurveyFile(Files::find(17879), User::find(1));
+        parent::setUp();
+        $this->app->make('artisan')->call('migrate');
+        $this->file = Files::create(['id' => 1, 'type' => 6, 'title' => '', 'created_by' => 1]);
+        $book = SurveyORM\Book::create(['file_id' => $this->file->id, 'title' => '', 'lock' => false]);        
+        $this->user = new User;
+        $this->user->username = 'gg';
+        $this->user->email    = 'tim72117@gmail.com';
+        $this->user->actived = false;
+        $this->user->disabled = false;
+        $this->user->save();   
+    }
+
+    public function testSurveyFile()
+    {    
+        return new SurveyFile($this->file, $this->user);
     }
 
     /**
@@ -16,7 +30,7 @@ class NodeTest extends TestCase {
     public function testGetNodes($surveyFile)
     {
         Input::replace([
-            'parent' => $surveyFile->file->book->toArray(),
+            'root' => $surveyFile->file->book->toArray(),
         ]);
 
         $nodes = $surveyFile->getNodes()['nodes'];
