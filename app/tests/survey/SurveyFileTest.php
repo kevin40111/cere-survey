@@ -3,163 +3,207 @@
 use Plat\Files\SurveyFile;
 use Plat\Eloquent\Survey as SurveyORM;
 
-class NodeTest extends TestCase {
+class SurveyFileTest extends TestCase {
 
     public function setUp()
     {
         parent::setUp();
         $this->app->make('artisan')->call('migrate');
-        $this->file = Files::create(['id' => 1, 'type' => 6, 'title' => '', 'created_by' => 1]);
-        $book = SurveyORM\Book::create(['file_id' => $this->file->id, 'title' => '', 'lock' => false]);        
+        $file = Files::create(['id' => 1, 'type' => 6, 'title' => '', 'created_by' => 1]);
+        $book = SurveyORM\Book::create(['file_id' => $file->id, 'title' => '', 'lock' => false]);
+
         $this->user = new User;
         $this->user->username = 'gg';
         $this->user->email    = 'tim72117@gmail.com';
         $this->user->actived = false;
         $this->user->disabled = false;
-        $this->user->save();   
+        $this->user->save();
+
+        $this->surveyFile = new SurveyFile($file, $this->user);
+
+        Input::replace([
+            'parent' => $this->surveyFile->file->book->toArray(),
+            'node' => ['type' => 'select'],
+            'previous' => NULL,
+        ]);
+        $this->node = $this->surveyFile->createNode()['node'];
+
+        Input::replace([
+            'node' => $this->node->toArray(),
+            'previous' => NULL,
+        ]);
+        $this->question = $this->surveyFile->createQuestion()['question'];
+
+        Input::replace([
+            'node' => $this->node->toArray(),
+            'previous' => NULL,
+        ]);
+        $this->answer = $this->surveyFile->createAnswer()['answer'];
     }
 
-    public function testSurveyFile()
-    {    
-        return new SurveyFile($this->file, $this->user);
+    public function testCreate()
+    {
+        $amount_books = SurveyORM\Book::all()->count();
+
+        $this->surveyFile->create();
+
+        $this->assertCount($amount_books+1, SurveyORM\Book::all());
     }
 
-    /**
-     * @depends testSurveyFile
-     */
-    public function testGetNodes($surveyFile)
+    public function testGetQuestions()
     {
         Input::replace([
-            'root' => $surveyFile->file->book->toArray(),
+            'book_id' => $this->surveyFile->file->book->id,
         ]);
 
-        $nodes = $surveyFile->getNodes()['nodes'];
+        $amount_questions = SurveyORM\question::all()->count();
 
-        $this->assertInstanceOf(Illuminate\Database\Eloquent\Collection::class, $nodes);
+        $questions = $this->surveyFile->getQuestion()['questions'];
 
-        return $nodes;
+        $this->assertCount(0, $questions);
     }
 
-    /**
-     * @depends testSurveyFile
-     * @depends testGetNodes
-     */
-	public function testCreateNode($surveyFile, $nodes)
-	{
+    public function testGetNodes()
+    {
         Input::replace([
-            'parent' => $surveyFile->file->book->toArray(),
-            'node' => ['type' => 'select'],
-            'previous' => $nodes->first()->toArray(),
+            'root' => $this->surveyFile->file->book->toArray(),
         ]);
 
-        $node = $surveyFile->createNode()['node'];
+        $nodes = $this->surveyFile->getNodes()['nodes'];
+
+        $this->assertInstanceOf(Illuminate\Database\Eloquent\Collection::class, $nodes);
+    }
+
+	public function testCreateNode()
+	{
+        Input::replace([
+            'parent' => $this->surveyFile->file->book->toArray(),
+            'node' => ['type' => 'select'],
+            'previous' => NULL,
+        ]);
+
+        $amount = SurveyORM\Node::all()->count();
+
+        $node = $this->surveyFile->createNode()['node'];
 
         $this->assertInstanceOf(SurveyORM\Node::class, $node);
 
-        $this->assertCount($nodes->count()+1, $surveyFile->getNodes()['nodes']);
-
-        //ddd(SurveyORM\Node::find($node->id)->questions);
-
-        //$this->assertCount(1, $node->questions);
-
-        return $node;
+        $this->assertCount($amount+1, SurveyORM\Node::all());
     }
 
-    /**
-     * @depends testSurveyFile
-     * @depends testCreateNode
-     */
-    public function testSaveNodeTitle($surveyFile, $node)
+    public function testCreateQuestion()
     {
-        $title = (string)rand(5, 15);
         Input::replace([
-            'node' => [
-                'id' => $node->id,
-                'title' => $title,
-            ],
+            'node' => $this->node->toArray(),
+            'previous' => NULL,
         ]);
 
-        $surveyFile->saveNodeTitle()['title'];
+        $amount = SurveyORM\Question::all()->count();
 
-        $this->assertSame($title, SurveyORM\Node::find($node->id)->title);
+        $question = $this->surveyFile->createQuestion()['question'];
+
+        $this->assertInstanceOf(SurveyORM\Question::class, $question);
+
+        $this->assertCount($amount+1, SurveyORM\Question::all());
     }
 
-    /**
-     * @depends testSurveyFile
-     * @depends testCreateNode
-     */
-    public function testCreateAnswer($surveyFile, $node)
+    public function testCreateAnswer()
     {
         Input::replace([
-            'node' => $node->toArray(),
-            'previous' => $node->answers->first() ? $node->answers->first()->toArray() : NULL,
+            'node' => $this->node->toArray(),
+            'previous' => NULL,
         ]);
 
-        $answer = $surveyFile->createAnswer()['answer'];
+        $amount = SurveyORM\Answer::all()->count();
+
+        $answer = $this->surveyFile->createAnswer()['answer'];
 
         $this->assertInstanceOf(SurveyORM\Answer::class, $answer);
 
-        return $answer;
+        $this->assertCount($amount+1, SurveyORM\Answer::all());
     }
 
-    /**
-     * @depends testSurveyFile
-     * @depends testCreateAnswer
-     */
-    public function testGetNodesInAnswer($surveyFile, $answer)
+    public function testSaveNodeTitle()
+    {
+        $title = (string)rand(5, 15);
+        $this->node->title = $title;
+
+        Input::replace(['node' => $this->node->toArray()]);
+
+        $this->surveyFile->saveNodeTitle();
+
+        $this->assertSame($title, SurveyORM\Node::find($this->node->id)->title);
+    }
+
+    public function testSaveQuestionTitle()
+    {
+        $title = (string)rand(5, 15);
+        $this->question->title = $title;
+
+        Input::replace(['question' => $this->question->toArray()]);
+
+        $this->surveyFile->saveQuestionTitle();
+
+        $this->assertSame($title, SurveyORM\Question::find($this->question->id)->title);
+    }
+
+    public function testSaveAnswerTitle()
+    {
+        $title = (string)rand(5, 15);
+        $this->answer->title = $title;
+
+        Input::replace(['answer' => $this->answer->toArray()]);
+
+        $this->surveyFile->saveAnswerTitle();
+
+        $this->assertSame($title, SurveyORM\Answer::find($this->answer->id)->title);
+    }
+
+    public function testGetNodesInAnswer()
     {
         Input::replace([
-            'parent' => $answer->toArray(),
+            'root' => $this->answer->toArray(),
         ]);
 
-        $nodes = $surveyFile->getNodes()['nodes'];
+        $amount = SurveyORM\Node::all()->count();
+
+        $nodes = $this->surveyFile->getNodes()['nodes'];
 
         $this->assertInstanceOf(Illuminate\Database\Eloquent\Collection::class, $nodes);
 
-        return $nodes;
+        $this->assertCount($amount, $nodes);
     }
 
-    /**
-     * @depends testSurveyFile
-     * @depends testGetNodesInAnswer
-     * @depends testCreateAnswer
-     */
-    public function testCreateNodeInAnswer($surveyFile, $nodes, $answer)
+    public function testCreateNodeInAnswer()
     {
+        $nodes = SurveyORM\Node::all();
+
         Input::replace([
-            'parent' => $answer->toArray(),
+            'parent' => $this->answer->toArray(),
             'node' => ['type' => 'select'],
             'previous' => $nodes->first()->toArray(),
         ]);
 
-        $node = $surveyFile->createNode()['node'];
+        $amount = SurveyORM\Node::all()->count();
+
+        $node = $this->surveyFile->createNode()['node'];
 
         $this->assertInstanceOf(SurveyORM\Node::class, $node);
 
-        $this->assertCount($nodes->count()+1, $surveyFile->getNodes()['nodes']);
-
-        return $node;
+        $this->assertCount($amount+1, SurveyORM\Node::all());
     }
 
-    /**
-     * @depends testSurveyFile
-     * @depends testCreateNode
-     */
-    public function testRemoveNode($surveyFile, $node)
+    public function testRemoveNode()
     {
         Input::replace([
-            'parent' => $surveyFile->file->book->toArray(),
-            'node' => $node->toArray(),
+            'node' => $this->node->toArray(),
         ]);
 
-        $nodes = $surveyFile->getNodes()['nodes'];
+        $amount = SurveyORM\Node::all()->count();
 
-        $questions_id = $node->questions->fetch('id');
+        $this->surveyFile->removeNode();
 
-        $surveyFile->removeNode();
-
-        $this->assertCount($nodes->count()-1, $surveyFile->getNodes()['nodes']);
-
+        $this->assertCount($amount-1, SurveyORM\Node::all());
     }
 
 }

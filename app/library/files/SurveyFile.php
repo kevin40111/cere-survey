@@ -10,13 +10,15 @@ use Auth;
 use Plat\Survey;
 use Plat\Eloquent\Survey as SurveyORM;
 
-class SurveyFile extends CommFile {
-
+class SurveyFile extends CommFile
+{
     function __construct(Files $file, User $user)
     {
         parent::__construct($file, $user);
 
         $this->configs = $this->file->configs->lists('value', 'name');
+
+        $this->editorRepository = new Survey\EditorRepository();
     }
 
     public function is_full()
@@ -42,7 +44,7 @@ class SurveyFile extends CommFile {
     {
         $commFile = parent::create();
 
-        $book = $this->file->book()->create(['title' => $this->file->title]);
+        $book = $this->file->book()->create(['title' => $this->file->title, 'lock' => false]);
     }
 
     public function open()
@@ -92,9 +94,8 @@ class SurveyFile extends CommFile {
 
     public function getQuestion()
     {
-        $questions = $this->file->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
-            return array_merge($carry, $page->getQuestions());
-        }, []);
+        $questions = $this->editorRepository->getQuestion($this->file->book->id);
+
         return ['questions' => $questions];
     }
 
@@ -104,16 +105,7 @@ class SurveyFile extends CommFile {
 
         $root = $class::find(Input::get('root.id'));
 
-        if ($root->childrenNodes->isEmpty()) {
-            $type = get_class($root) == 'Plat\Eloquent\Survey\Book' ? 'page' : 'explain';
-            $node = $root->childrenNodes()->save(new SurveyORM\Node(['type' => $type]));
-
-            $root->load('childrenNodes');
-        }
-
-        $nodes = $root->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.node', 'answers', 'byRules'])->each(function($node) {
-            $node->sortByPrevious(['questions', 'answers']);
-        });
+        $nodes = $this->editorRepository->getNodes($root);
 
         return ['nodes' => $nodes, 'paths' => $root->getPaths()];
     }
@@ -147,50 +139,44 @@ class SurveyFile extends CommFile {
 
         $parent = $class::find(Input::get('parent.id'));
 
-        $node = $parent->childrenNodes()->save(new SurveyORM\Node(Input::get('node')))->after(Input::get('previous.id'));
+        $node = $this->editorRepository->createNode($parent, Input::get('node'), Input::get('previous.id'));
 
-        return ['node' => $node->load(['questions', 'answers']), 'next' => $node->next];
+        return ['node' => $node, 'next' => $node->next];
     }
 
     public function createQuestion()
     {
-        $question = SurveyORM\Node::find(Input::get('node.id'))->questions()->save(new SurveyORM\Question([]))->after(Input::get('previous.id'));
+        $question = $this->editorRepository->createQuestion(Input::get('node.id'), Input::get('previous.id'));
 
         return ['question' => $question];
     }
 
     public function createAnswer()
     {
-        $answer = SurveyORM\Node::find(Input::get('node.id'))->answers()->save(new SurveyORM\Answer([]))->after(Input::get('previous.id'));
+        $answer = $this->editorRepository->createAnswer(Input::get('node.id'), Input::get('previous.id'));
 
         return ['answer' => $answer];
     }
 
     public function saveNodeTitle()
     {
-        $node = SurveyORM\Node::find(Input::get('node.id'));
+        $node = $this->editorRepository->saveTitle(Input::get('node.class'), Input::get('node.id'), Input::get('node.title'));
 
-        $node->update(['title' => Input::get('node.title')]);
-
-        return ['title' => $node->title];
+        return ['node' => $node];
     }
 
     public function saveQuestionTitle()
     {
-        $question = SurveyORM\Question::find(Input::get('question.id'));
-
-        $question->update(['title' => Input::get('question.title')]);
+        $question = $this->editorRepository->saveTitle(Input::get('question.class'), Input::get('question.id'), Input::get('question.title'));
 
         return ['question' => $question];
     }
 
     public function saveAnswerTitle()
     {
-        $answer = SurveyORM\Answer::find(Input::get('answer.id'));
+        $answer = $this->editorRepository->saveTitle(Input::get('answer.class'), Input::get('answer.id'), Input::get('answer.title'));
 
-        $answer->update(['title' => Input::get('answer.title')]);
-        
-        $this->updateAnswerValue(SurveyORM\Node::find($answer->node_id));
+        $this->editorRepository->updateAnswerValue($answer->node);
 
         return ['answer' => $answer];
     }
@@ -232,7 +218,7 @@ class SurveyFile extends CommFile {
             $subNode->deleteNode();
         });
 
-        return ['deleted' => $answer->delete(), 'answers' => $answer->node->answers, 'update' => $this->updateAnswerValue($answer->node)];
+        return ['deleted' => $answer->delete(), 'answers' => $answer->node->answers, 'update' => $this->editorRepository->updateAnswerValue($answer->node)];
     }
 
     public function moveUp()
@@ -244,7 +230,7 @@ class SurveyFile extends CommFile {
         $item = $class::find(Input::get('item.id'))->moveUp();
 
         if ($class == '\\Plat\Eloquent\Survey\Answer') {
-            $this->updateAnswerValue($item->node);
+            $this->editorRepository->updateAnswerValue($item->node);
         }
 
         return ['items' => $item->node->sortByPrevious([$relation])->$relation];
@@ -258,7 +244,7 @@ class SurveyFile extends CommFile {
 
         $item = $class::find(Input::get('item.id'))->moveDown();
         if ($class == '\\Plat\Eloquent\Survey\Answer') {
-            $this->updateAnswerValue($item->node);
+            $this->editorRepository->updateAnswerValue($item->node);
         }
 
         return ['items' => $item->node->sortByPrevious([$relation])->$relation];
@@ -618,16 +604,5 @@ class SurveyFile extends CommFile {
         }
 
         return $rules;
-    }
-
-    public function updateAnswerValue($node)
-    {
-        $answersInNode = $node->sortByPrevious(['answers'])->answers;
-        
-        foreach ($answersInNode as $key => $answerInNode) {
-            $answerInNode->update(['value' =>$key]);
-        }
-
-        return true;
     }
 }

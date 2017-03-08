@@ -131,12 +131,12 @@ angular.module('ngEditor.directives', [])
                     $scope.book.lock = response.lock;
                 });
             };
-            
+
             this.toggleSidenavRight = function(skipTarget) {
                 $scope.skipTarget = skipTarget;
                 $scope.skipSetting = true;
             };
-        
+
         }
     };
 })
@@ -198,7 +198,7 @@ angular.module('ngEditor.directives', [])
 
             $scope.saveNodeTitle = function(node) {
                 editorFactory.ajax('saveNodeTitle', {node: node}, node).then(function(response) {
-                    node.title = response.title;
+                    angular.extend(node, response.node);
                 });
             };
 
@@ -658,7 +658,7 @@ angular.module('ngEditor.directives', [])
                             <survey-skip skip-target="skipTarget" rule="rule" rule-setted="ruleSetted" key="key" condition="condition" ng-repeat="(key,condition) in rule.conditions"></survey-skip>
                         </md-card-content>
                         <md-card-actions>
-                            
+
                         </md-card-actions>
                         <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
                     </md-card>
@@ -686,7 +686,7 @@ angular.module('ngEditor.directives', [])
         },
         controller: function($scope, $http) {
             $scope.ruleSetted = false;
-            
+
             $scope.getRules = function() {
                 $http({method: 'POST', url: 'getRules', data:{skipTarget: $scope.skipTarget}})
                 .success(function(data) {
@@ -702,10 +702,10 @@ angular.module('ngEditor.directives', [])
                 });
             };
             $scope.getRules();
-            
+
             $scope.compareBooleans = {' != ':'不等於', ' && ':'而且', ' || ':'或者'};
 
-            
+
             $scope.createRule = function(index,logic) {
                 $scope.rules.splice(index+1, 0,{'compareLogic':logic, 'conditions':[{'compareType':'1'}]});
             };
@@ -720,7 +720,7 @@ angular.module('ngEditor.directives', [])
             $scope.saveRules = function() {
                $http({method: 'POST', url: 'saveRules', data:{rules: $scope.rules, skipTarget: $scope.skipTarget}})
                 .success(function(data) {
-                   
+
                 }).error(function(e) {
                    console.log(e)
                 });
@@ -809,7 +809,7 @@ angular.module('ngEditor.directives', [])
                                 </md-select>
                             </md-input-container>
                         </div>
-                       
+
                     </md-card-content>
                     <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
                 </md-card>
@@ -818,7 +818,7 @@ angular.module('ngEditor.directives', [])
         link: function(scope) {
         },
         controller: function($scope, $http) {
-            
+
             $scope.createCondition = function(key) {
                 $scope.rule.conditions.splice(key+1, 0,{});
             };
@@ -832,7 +832,7 @@ angular.module('ngEditor.directives', [])
             $scope.types = ['數值', '其它答案'];
             $scope.compareBooleans = {' > ':'大於', ' < ':'小於', ' == ':'等於', ' != ':'不等於', ' && ':'而且', ' || ':'或者'};
 
-            
+
             $http({method: 'POST', url: 'getQuestion', data:{}})
             .success(function(data, status, headers, config) {
                 $scope.questions = data.questions;
@@ -840,7 +840,7 @@ angular.module('ngEditor.directives', [])
             .error(function(e){
                 console.log(e);
             });
-            
+
             $scope.setCondition = function(key,rule,type) {
                 if (type == 'l') {
                     $scope.rule.conditions[key]['logic'] = rule;
@@ -865,7 +865,7 @@ angular.module('ngEditor.directives', [])
                 }
                 if (type == 'v') {
                     $scope.rule.conditions[key]['value'] = rule;
-                }                
+                }
             };
          }
     };
