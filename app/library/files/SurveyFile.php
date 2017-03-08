@@ -360,8 +360,8 @@ class SurveyFile extends CommFile
             'extBook' => $extBook,
             'extColumn' => $extColumn,
             'organizations' => [
-            'lists' => $organizations,
-            'selected' => $organizationsSelected,
+                'lists' => $organizations,
+                'selected' => $organizationsSelected,
             ],
         ];
     }
@@ -410,7 +410,7 @@ class SurveyFile extends CommFile
     }
 
     public function setApplicableOptions()
-    {   
+    {
         $this->file->book->optionColumns()->sync(Input::get('selected.columns'));
         $this->file->book->optionQuestions()->sync(Input::get('selected.questions'));
         $this->setConditionColumns(Input::get('selected.conditionColumn'));

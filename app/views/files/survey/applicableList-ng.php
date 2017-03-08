@@ -128,7 +128,6 @@
             var columns = $filter('filter')($scope.columns, {selected: true}).map(function(column) {
                 return column.id;
             });
-
             var questions = $filter('filter')($scope.questions, {selected: true}).map(function(question) {
                 return question.id;
             });
@@ -185,8 +184,7 @@
          $scope.loginSelected = function(loginConditionColumn) {
             $scope.loginConditionColumn = loginConditionColumn;
         }
-
-
+        
          $scope.getApplicableOptions();
     });
 </script>

@@ -1,8 +1,11 @@
-<?
+<?php
 
 namespace Plat\Eloquent\Survey;
+
 use Eloquent;
+use DB;
 use Crypt;
+use Plat\Eloquent\Survey as SurveyORM;
 
 class SurveyBookLogin extends Eloquent {
 
@@ -24,18 +27,25 @@ class SurveyBookLogin extends Eloquent {
     }
 
 
-    public function checkForInsert($login_id)
+    public function checkHasInsert($login_id)
     {   
-        if(empty($this->where('file_id', $this->book_id)->where('login_id', $login_id)->first())){
-
-            $crypt_id = Crypt::encrypt($login_id);
-
-            $this->insert(['file_id' => $this->book_id, 'login_id' => $login_id, 'new_login_id' => $crypt_id]);
+        if ($this->where('file_id', $this->book_id)->where('login_id', $login_id)->exists()) {
+            return true;
         }
+
+        $crypt_id = Crypt::encrypt($login_id);
+
+        $page = SurveyORM\Book::find($this->book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
+
+        $this->insert(['file_id' => $this->book_id, 'login_id' => $login_id, 'new_login_id' => $crypt_id]);
+
+        DB::table($this->book_id)->insert(['created_by' => $crypt_id, 'page_id' => $page->id]);
+
+        return false;
     }
 
     public function getBookTester($login_id)
     {
-        return json_encode($this->where('file_id', $this->book_id)->where('login_id', $login_id)->select(['file_id', 'new_login_id'])->first());
+        return $this->where('file_id', $this->book_id)->where('login_id', $login_id)->select(['file_id', 'new_login_id'])->first();
     }
 }
