@@ -6,21 +6,18 @@ use Plat\Eloquent\Survey\SurveyBookLogin as SurveyBookLogin;
 use Session;
 use DB;
 
-class SurveySession {
-
+class SurveySession
+{
     public static function check($book_id)
     {
-        if (Session::has('survey_login_data')) {
-
-            $session_data    = Session::get('survey_login_data');
-
-            return $book_id == $session_data['login_book'];
-
+        if (!Session::has('survey_login_data')) {
+            return false;
         }
 
-        return false;
-    }
+        $session_data    = Session::get('survey_login_data');
 
+        return $book_id == $session_data['login_book'];
+    }
 
     public static function login($book_id, $login_id)
     {
@@ -28,27 +25,22 @@ class SurveySession {
 
         $login_data   = $survey_login_table->getBookTester($login_id);
 
-        $session_put  = array(
-
+        $session_put  = [
             'login_book' => $login_data['file_id'],
-
-            'login_id'   => $login_data['new_login_id']
-
-            );
+            'login_id'   => $login_data['new_login_id'],
+        ];
 
         Session::put('survey_login_data', $session_put);
 
         return self::getHashId($login_id);
     }
 
-
     public static function getHashId()
-    {   
+    {
         $session_data = Session::get('survey_login_data');
 
-        return $session_data['login_id']; 
+        return $session_data['login_id'];
     }
-
 
     public static function logout()
     {

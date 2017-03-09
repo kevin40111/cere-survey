@@ -24,7 +24,6 @@ class SurveyController extends \BaseController {
 
     public function getSurveyQuesion($book_id)
     {
-
         SurveySession::logout();
 
         $login_id      = Input::get('id') ;
@@ -34,16 +33,16 @@ class SurveyController extends \BaseController {
         $table         = Files::find($file_book->rowsFile_id)->sheets->first()->tables->first();
 
         $has_answerer  = DB::table('rows.dbo.'.$table->name)->where('C'.$file_book->loginRow_id, $login_id)->exists();
-       
+
         if (!$has_answerer) {
              return Redirect::to('survey/'.$book_id.'/surveyLogin');
-        } 
-      
+        }
+
         $survey_login_table  = new SurveyORM\SurveyBookLogin($book_id);
 
-        $survey_login_table->checkHasInsert($login_id); 
+        $survey_login_table->checkHasInsert($login_id);
 
-        SurveySession::login($book_id, $login_id); 
+        SurveySession::login($book_id, $login_id);
 
         return Redirect::to('survey/'.$book_id.'/page');
     }

@@ -400,7 +400,6 @@ class SurveyFile extends CommFile
         $this->file->book->update(['loginRow_id' => $login_row_id]);
     }
 
-
     public function deleteRelatedApplications()
     {
         $this->file->book->applications->each(function($application){
@@ -462,7 +461,7 @@ class SurveyFile extends CommFile
             'tables' => [
                 'list' => $parentList,
                 'selected' => $parentSelected,
-            ]
+            ],
         ];
     }
 

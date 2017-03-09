@@ -7,8 +7,8 @@ use DB;
 use Crypt;
 use Plat\Eloquent\Survey as SurveyORM;
 
-class SurveyBookLogin extends Eloquent {
-
+class SurveyBookLogin extends Eloquent
+{
     protected $table = 'plat_survey.dbo.file_book_login';
 
     public $timestamps = false;
@@ -19,16 +19,13 @@ class SurveyBookLogin extends Eloquent {
 
     public function __construct($book_id = null, array $attributes = array())
     {
+        $this->book_id = $book_id;
 
-    $this->book_id = $book_id;
-
-    parent::__construct($attributes);
-
+        parent::__construct($attributes);
     }
 
-
     public function checkHasInsert($login_id)
-    {   
+    {
         if ($this->where('file_id', $this->book_id)->where('login_id', $login_id)->exists()) {
             return true;
         }
