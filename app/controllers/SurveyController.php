@@ -1,7 +1,8 @@
 <?php
 
 use Plat\Eloquent\Survey as SurveyORM;
-use Plat\Surveys\SurveySession as SurveySession;
+use Plat\Survey\SurveySession;
+use Plat\Survey\SurveyRepository;
 
 class SurveyController extends \BaseController {
 
@@ -26,11 +27,11 @@ class SurveyController extends \BaseController {
     {
         SurveySession::logout();
 
-        $login_id      = Input::get('id') ;
+        $login_id = Input::get('id') ;
 
-        $file_book     = DB::table('file_book')->where('id', $book_id)->first();
+        $file_book = SurveyORM\Book::find($book_id);
 
-        $table         = Files::find($file_book->rowsFile_id)->sheets->first()->tables->first();
+        $table = Files::find($file_book->rowsFile_id)->sheets->first()->tables->first();
 
         $has_answerer  = DB::table('rows.dbo.'.$table->name)->where('C'.$file_book->loginRow_id, $login_id)->exists();
 
@@ -38,11 +39,12 @@ class SurveyController extends \BaseController {
              return Redirect::to('survey/'.$book_id.'/surveyLogin');
         }
 
-        $survey_login_table  = new SurveyORM\SurveyBookLogin($book_id);
+        $encrypt_id = SurveySession::login($book_id, $login_id);
+        $page = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
 
-        $survey_login_table->checkHasInsert($login_id);
-
-        SurveySession::login($book_id, $login_id);
+        if (!SurveyRepository::create($book_id)->exist($encrypt_id)) {
+            SurveyRepository::create($book_id)->increment($encrypt_id, ['page_id' => $page->id]);
+        }
 
         return Redirect::to('survey/'.$book_id.'/page');
     }

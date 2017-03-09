@@ -1,49 +1,54 @@
 <?php
 
-namespace Plat\Surveys;
+namespace Plat\Survey;
 
-use Plat\Eloquent\Survey\SurveyBookLogin as SurveyBookLogin;
+use Plat\Eloquent\Survey\SurveyBookLogin;
 use Session;
-use DB;
+use Crypt;
 
 class SurveySession
 {
     public static function check($book_id)
     {
-        if (!Session::has('survey_login_data')) {
+        if (!Session::has('survey_login')) {
             return false;
         }
 
-        $session_data    = Session::get('survey_login_data');
-
-        return $book_id == $session_data['login_book'];
+        return $book_id == Session::get('survey_login.book_id');
     }
 
     public static function login($book_id, $login_id)
     {
-        $survey_login_table = new SurveyBookLogin($book_id);
+        $surveyBookLogin = static::getSurveyBookLogin([
+            'book_id' => $book_id,
+            'login_id' => $login_id,
+        ]);
 
-        $login_data   = $survey_login_table->getBookTester($login_id);
+        Session::put('survey_login', $surveyBookLogin->toArray());
 
-        $session_put  = [
-            'login_book' => $login_data['file_id'],
-            'login_id'   => $login_data['new_login_id'],
-        ];
+        return self::getHashId();
+    }
 
-        Session::put('survey_login_data', $session_put);
+    public static function getSurveyBookLogin($attributes)
+    {
+        if (!is_null($instance = SurveyBookLogin::where($attributes)->first())) {
+            return $instance;
+        }
 
-        return self::getHashId($login_id);
+        $attributes['encrypt_id'] = Crypt::encrypt($attributes['login_id']);
+
+        return SurveyBookLogin::create($attributes);
     }
 
     public static function getHashId()
     {
-        $session_data = Session::get('survey_login_data');
+        $survey_login = Session::get('survey_login');
 
-        return $session_data['login_id'];
+        return $survey_login['encrypt_id'];
     }
 
     public static function logout()
     {
-        Session::forget('survey_login_data');
+        Session::forget('survey_login');
     }
 }
