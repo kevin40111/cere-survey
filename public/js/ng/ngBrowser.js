@@ -3,75 +3,104 @@ angular.module('ngBrowser', [])
         return {
             restrict : "E",
             templateUrl : "questionBrowser",
-            scope:{
-                book: '=',
-                reOpen: '&'
-            },
-            link: function(scope, element, attrs) {
+            link: function(scope, element, attrs, $event) {
             scope.showPassQuestion = function(rule) {
-                var txt = "<table class='ui celled structured table Dialog'>";
-                    txt += "<tr><td>邏輯運算</td><td>題目</td><td>選項</td></tr>";
-                for(var i=0;i<rule[0].expression.length;i++){
-                    txt += "<tr>";
-                    txt += scope.analyRule(rule[0].expression[i]);
-                    txt += "</tr>";
-                }
-                txt +="</table>"
-                $mdDialog.show(
-                    $mdDialog.alert()
-                    .parent(angular.element(element))
-                    .clickOutsideToClose(true)
-                    .htmlContent(txt)
-                    .ok('確認')
-                ).then(function() {
-                    scope.reOpen();
+                $mdDialog.show({
+                parent: angular.element(document.querySelector('#popupContainer')),
+                targetEvent: $event,
+                template:
+                   `<md-dialog aria-label="List dialog"> 
+                     <md-dialog-content>
+                        <table class='ui celled structured table Dialog'>
+                        <tr><td>邏輯運算</td><td>題目</td><td>選項</td></tr>
+                            <tr ng-repeat = "object in expression_array">
+                                <td class = "{{object.secondLogic ? 'td-two-logic' : ''}}" colspan = "{{object.secondLogic ? '3' : '1'}}">
+                                    {{object.logic}}
+                                </td>
+                                <td ng-if = "!object.secondLogic">{{object.title}}</td>
+                                <td ng-if = "!object.secondLogic">{{object.answer}}</td>
+                            </tr>
+                        </table>
+                     </md-dialog-content> 
+                     <md-dialog-actions> 
+                       <md-button ng-click="closeDialog()" class="md-primary"> 
+                        確認
+                       </md-button> 
+                     </md-dialog-actions> 
+                   </md-dialog>`,
+                locals: {
+                    scope_out: scope,
+                    expression: rule[0].expression,
+                },
+                controller: DialogController 
                 });
-            };
+                function DialogController($scope, scope_out, expression) {
 
-            scope.analyRule = function(expression){
-                var analyLogic = {" || ":"或者"," && ":"而且"," > ":"大於"," < ":"小於"," == ":"等於","undefined":""}
-                var txt="";
-                if(analyLogic[expression.compareLogic] != ""){
-                    txt = "<tr><td colspan='3' class = 'td-two-logic'>"+analyLogic[expression.compareLogic]+"</td>";
-                }
-                for(var i=0;i<expression.conditions.length;i++){
-                    txt += "<tr>";
-                    txt += "<td>"+analyLogic[expression.conditions[i].logic]+"</td>";
-                    try{
-                        if(expression.conditions[i].answer != null){
-                            txt += "<td>"+expression.conditions[i].question.title+"</td>";
-                            txt += "<td>"+expression.conditions[i].answer.title+"</td>";
-                        }else{
-                            if(expression.conditions[i].value != null)txt += "<td>"+expression.conditions[i].value+"--(值)</td>";
-                            txt += "<td>"+expression.conditions[i].question.node.title+"</td>";
-                            txt += "<td>"+expression.conditions[i].question.title+"</td>";
+                    $scope.analyRule = function(expression){
+                        var analyLogic = {" || ":"或者", " && ":"而且", " > ":"大於", " < ":"小於", " == ":"等於", "undefined":""}
+                        var expression_array = [];
+
+                        for(var i=0 ; i < expression.length ; i++){
+                            var expression_object = {secondLogic:false};
+                            if (expression[i].compareLogic) {
+                                expression_object.secondLogic = true;
+                                expression_object.logic = analyLogic[expression[i].compareLogic];
+                                expression_array.push(expression_object);
+                            }
+                            
+                            for(var j=0 ; j < expression[i].conditions.length ; j++){
+                                var expression_object = {secondLogic:false};
+                                if (expression[i].conditions[j].type == "text") {
+                                    expression_object.logic = analyLogic[expression[i].conditions[j+1].logic];
+                                    expression_object.answer = expression[i].conditions[j+1].value+"(值)";
+                                    expression_object.title = expression[i].conditions[j].question.title;
+                                    j++;
+                                }
+                                else if (expression[i].conditions[j].type == "checkbox") {
+                                    expression_object.logic = analyLogic[expression[i].conditions[j].logic];
+                                    expression_object.title = expression[i].conditions[j].question.node.title;
+                                    expression_object.answer = expression[i].conditions[j].question.title;
+                                }
+                                else {
+                                    expression_object.logic = analyLogic[expression[i].conditions[j].logic];
+                                    expression_object.answer = expression[i].conditions[j].answer.title;
+                                    expression_object.title = expression[i].conditions[j].question.title;
+                                }
+
+                                expression_array.push(expression_object);
+                            }
                         }
-                    }catch(err){}
-                    txt += "</tr>";
-                }
-                txt += "</tr>";
-                return txt;
-            }
+
+                        return expression_array;
+                    }
+
+                    $scope.closeDialog = function() {
+                        $mdDialog.hide();
+                    }
+
+                    $scope.expression_array = $scope.analyRule(expression);
+                } 
+            };
+            
 
             scope.checkPageRule = function(page_node_id){
                 var temp = [];
-                skipTarget = {'class': "Plat\\Eloquent\\Survey\\Node", 'id': page_node_id};
+                var skipTarget = {'class': "Plat\\Eloquent\\Survey\\Node", 'id': page_node_id};
                 $http({method: 'POST', url: 'getRules', data:{skipTarget: skipTarget}})
                 .success(function(data, status, headers, config) {
-                    if (data != 'null') {
-                        temp[0] = {};
-                        temp[0].expression = data;
-                    }
+                    temp[0] = {};
+                    data[0].conditions[0].id ? temp[0].expression = data : "";
                 }).error(function(e){
-                    console.log(e);
+                    console.log(e)
                 });
+
                 return  temp;
             };
 
             scope.browserQuestion = function() {
                 $http({method: 'POST', url: 'getQuestion', data:{book_id: scope.book}})
                 .success(function(data, status, headers, config) {
-                    scope.questions=scope.questionAnalysis(data.questions);
+                    scope.questionAnalysis(data.questions);
                 }).error(function(e){
                     console.log(e);
                 });
@@ -232,7 +261,6 @@ angular.module('ngBrowser', [])
                 }
             }
             this.questions=browser_node;
-            return this.questions;
             }
 
             }
