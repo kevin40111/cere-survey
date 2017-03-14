@@ -206,4 +206,30 @@ class SurveyFileTest extends TestCase {
         $this->assertCount($amount-1, SurveyORM\Node::all());
     }
 
+    public function testRemoveQuestion()
+    {
+        Input::replace([
+            'question' => $this->question->toArray(),
+        ]);
+
+        $amount = SurveyORM\Question::all()->count();
+
+        $this->surveyFile->removeQuestion();
+
+        $this->assertCount($amount-1, SurveyORM\Question::all());
+    }
+
+    public function testRemoveAnswer()
+    {
+        Input::replace([
+            'answer' => $this->answer->toArray(),
+        ]);
+
+        $amount = SurveyORM\Answer::all()->count();
+
+        $this->surveyFile->removeAnswer();
+
+        $this->assertCount($amount-1, SurveyORM\Answer::all());
+    }
+
 }

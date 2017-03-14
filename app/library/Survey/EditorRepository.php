@@ -15,7 +15,7 @@ class EditorRepository
             $root->load('childrenNodes');
         }
 
-        $nodes = $root->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.node', 'answers', 'byRules'])->each(function($node) {
+        $nodes = $root->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.node', 'answers', 'byRules'])->each(function ($node) {
             $node->sortByPrevious(['questions', 'answers']);
         });
 
@@ -59,6 +59,54 @@ class EditorRepository
         $item->update(['title' => $title]);
 
         return $item;
+    }
+
+    public function removeNode($node_id)
+    {
+        $node = SurveyORM\Node::find($node_id);
+
+        if ($node->next) {
+            $previous_id = $node->previous ? $node->previous->id : NULL;
+            $node->next->update(['previous_id' => $previous_id]);
+        }
+
+        return $node->deleteNode();
+    }
+
+    public function removeQuestion($question_id)
+    {
+        $question = SurveyORM\Question::find($question_id);
+
+        $node = $question->node;
+
+        if ($question->next) {
+            $previous_id = $question->previous ? $question->previous->id : NULL;
+            $question->next->update(['previous_id' => $previous_id]);
+        }
+
+        $question->childrenNodes->each(function ($subNode) {
+            $subNode->deleteNode();
+        });
+
+        return [$question->delete(), $node->questions];
+    }
+
+    public function removeAnswer($answer_id)
+    {
+        $answer = SurveyORM\Answer::find($answer_id);
+
+        $node = $answer->node;
+
+        if ($answer->next) {
+            $previous_id = $answer->previous ? $answer->previous->id : NULL;
+            $answer->next->update(['previous_id' => $previous_id]);
+        }
+
+        $answer->childrenNodes->each(function($subNode) {
+            $subNode->deleteNode();
+        });
+
+        return [$answer->delete(), $node->answers, $node];
     }
 
     public function updateAnswerValue($node)
