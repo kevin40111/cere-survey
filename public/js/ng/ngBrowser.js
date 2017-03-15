@@ -1,9 +1,12 @@
-app.controller('browser', function (){})
-    .directive("nodeBrowser",function($http,$mdDialog){
+angular.module('ngBrowser', [])
+    .directive("nodeBrowser",function($http, $mdDialog){
         return {
-            restrict : "A",
+            restrict : "E",
             templateUrl : "questionBrowser",
-            scope:{},
+            scope:{
+                book: '=',
+                reOpen: '&'
+            },
             link: function(scope, element, attrs) {
             scope.showPassQuestion = function(rule) {
                 var txt = "<table class='ui celled structured table Dialog'>";
@@ -13,14 +16,16 @@ app.controller('browser', function (){})
                     txt += scope.analyRule(rule[0].expression[i]);
                     txt += "</tr>";
                 }
-                    txt +="</table>" 
+                txt +="</table>"
                 $mdDialog.show(
-                $mdDialog.alert()
-                .parent(angular.element(document.querySelector('#popupContainer')))
-                .clickOutsideToClose(true)
-                .htmlContent(txt)
-                .ok('確認')
-                );
+                    $mdDialog.alert()
+                    .parent(angular.element(element))
+                    .clickOutsideToClose(true)
+                    .htmlContent(txt)
+                    .ok('確認')
+                ).then(function() {
+                    scope.reOpen();
+                });
             };
 
             scope.analyRule = function(expression){
@@ -38,7 +43,7 @@ app.controller('browser', function (){})
                             txt += "<td>"+expression.conditions[i].answer.title+"</td>";
                         }else{
                             if(expression.conditions[i].value != null)txt += "<td>"+expression.conditions[i].value+"--(值)</td>";
-                            txt += "<td>"+expression.conditions[i].question.node.title+"</td>"; 
+                            txt += "<td>"+expression.conditions[i].question.node.title+"</td>";
                             txt += "<td>"+expression.conditions[i].question.title+"</td>";
                         }
                     }catch(err){}
@@ -53,21 +58,23 @@ app.controller('browser', function (){})
                 skipTarget = {'class': "Plat\\Eloquent\\Survey\\Node", 'id': page_node_id};
                 $http({method: 'POST', url: 'getRules', data:{skipTarget: skipTarget}})
                 .success(function(data, status, headers, config) {
-                temp[0] = {};
-                temp[0].expression = data.rules;
+                    if (data != 'null') {
+                        temp[0] = {};
+                        temp[0].expression = data;
+                    }
                 }).error(function(e){
-                console.log(e);
+                    console.log(e);
                 });
                 return  temp;
             };
 
             scope.browserQuestion = function() {
-                $http({method: 'POST', url: 'getQuestion', data:{}})
+                $http({method: 'POST', url: 'getQuestion', data:{book_id: scope.book}})
                 .success(function(data, status, headers, config) {
-                scope.questions=scope.questionAnalysis(data.questions);
-            }).error(function(e){
-                console.log(e);
-            });
+                    scope.questions=scope.questionAnalysis(data.questions);
+                }).error(function(e){
+                    console.log(e);
+                });
             };
             scope.browserQuestion();
 
@@ -78,7 +85,7 @@ app.controller('browser', function (){})
                 case "text":
                 return false;
             }
-            return true; 
+            return true;
             }
 
             scope.translateQustionType = function(question_type){
@@ -111,7 +118,7 @@ app.controller('browser', function (){})
 
             scope.checkParentNodeType = function(question){
                  var question_split = question.node.parent_type.split("\\");
-                 return  question_split[question_split.length-1];  
+                 return  question_split[question_split.length-1];
             }
 
             // 子題用
@@ -151,24 +158,24 @@ app.controller('browser', function (){})
             this.question = question;
             question.question_title = [];
             switch(question.node.type)
-            {   
+            {
                 case "radio":
-                   question.question_title["title"] = question.title; 
+                   question.question_title["title"] = question.title;
                 break;
                 case "checkbox":
-                   question.question_title["title"] = question.node.title; 
+                   question.question_title["title"] = question.node.title;
                 break;
                 case "select":
-                   question.question_title["title"] = question.title; 
+                   question.question_title["title"] = question.title;
                 break;
                 case "scale":
-                   question.question_title["title"] = question.node.title+"："+question.title; 
+                   question.question_title["title"] = question.node.title+"："+question.title;
                 break;
                 case "text":
-                   question.question_title["title"] = question.node.title; 
+                   question.question_title["title"] = question.node.title;
                 break;
                 case "explain":
-                   question.question_title["title"] = question.node.title; 
+                   question.question_title["title"] = question.node.title;
                 break;
 
             }
@@ -182,18 +189,18 @@ app.controller('browser', function (){})
             var answer_number;
             var question_number=0;
             var deal_node_id=[];// 檢查重複出現的node_id
-           
+
             for(var i=0;i<browser_node.length;i++){
                 browser_node[i] = scope.getQuestionTitle(browser_node[i]);
                 if(page_record.indexOf(browser_node[i].node.parent_id) == -1 && scope.checkParentNodeType(browser_node[i]) == "Node"){
                     page_record.push(browser_node[i].node.parent_id);
                     browser_node[i].page = {};
                     browser_node[i].page.number = page;
-                    browser_node[i].page.node_id = browser_node[i].node.parent_id; 
+                    browser_node[i].page.node_id = browser_node[i].node.parent_id;
                     browser_node[i].page.rule =  scope.checkPageRule(browser_node[i].node.parent_id);
                     page++;
                 }
-                //檢查node_id是否為重複 
+                //檢查node_id是否為重複
                 if(deal_node_id.indexOf(node[i].node_id) == -1){
                     answer_number = 1;
                     deal_node_id.push(node[i].node_id);
@@ -219,11 +226,11 @@ app.controller('browser', function (){})
                             browser_node[i].rowspan = 1;
                             continue;
                         }else{
-                            browser_node[i].rowspan++;   
+                            browser_node[i].rowspan++;
                         }
                     }
                 }
-            }  
+            }
             this.questions=browser_node;
             return this.questions;
             }

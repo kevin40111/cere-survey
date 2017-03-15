@@ -52,8 +52,8 @@ angular.module('ngEditor.directives', [])
                             <div ng-repeat-end class="divider"> / </div>
                         </div>
                         <span flex></span>
-                        <md-button ng-click="createTable()">完成</md-button>
-                        <md-button href="/survey/{{book.id}}/page" ng-disabled="!book.lock" target="_blank">預覽</md-button>
+                        <md-button ng-click="lockBook()">完成</md-button>
+                        <md-button href="/surveyDemo/{{book.id}}/demo/page" target="_blank">預覽</md-button>
                     </div>
                 </md-toolbar>
                 <md-divider></md-divider>
@@ -71,7 +71,7 @@ angular.module('ngEditor.directives', [])
                         </div>
                     </md-toolbar>
                     <md-content  ng-if="skipSetting">
-                        <survey-skips skip-target="skipTarget"></survey-skips>
+                        <survey-skips skip-target="skipTarget" book="book"></survey-skips>
                     </md-content>
                 </md-sidenav>
             </md-content>
@@ -126,8 +126,8 @@ angular.module('ngEditor.directives', [])
 
             $scope.getNodes($scope.book);
 
-            $scope.createTable = function() {
-                editorFactory.ajax('createTable', {}, $scope.book).then(function(response) {
+            $scope.lockBook = function() {
+                editorFactory.ajax('lockBook', {}, $scope.book).then(function(response) {
                     $scope.book.lock = response.lock;
                 });
             };
@@ -626,7 +626,8 @@ angular.module('ngEditor.directives', [])
         replace: true,
         transclude: false,
         scope: {
-            skipTarget: '='
+            skipTarget: '=',
+            book: '='
         },
         template: `
             <div>
@@ -655,7 +656,7 @@ angular.module('ngEditor.directives', [])
                             </div>
                         </md-card-header>
                         <md-card-content>
-                            <survey-skip skip-target="skipTarget" rule="rule" rule-setted="ruleSetted" key="key" condition="condition" ng-repeat="(key,condition) in rule.conditions"></survey-skip>
+                            <survey-skip skip-target="skipTarget" rule="rule" rule-setted="ruleSetted" key="key" book="book" condition="condition" ng-repeat="(key,condition) in rule.conditions"></survey-skip>
                         </md-card-content>
                         <md-card-actions>
 
@@ -747,7 +748,8 @@ angular.module('ngEditor.directives', [])
             rule: '=',
             ruleSetted: '=',
             key: '=',
-            condition: '='
+            condition: '=',
+            book: '='
         },
         template: `
             <div layout-align="start center">
@@ -832,8 +834,7 @@ angular.module('ngEditor.directives', [])
             $scope.types = ['數值', '其它答案'];
             $scope.compareBooleans = {' > ':'大於', ' < ':'小於', ' == ':'等於', ' != ':'不等於', ' && ':'而且', ' || ':'或者'};
 
-
-            $http({method: 'POST', url: 'getQuestion', data:{}})
+            $http({method: 'POST', url: 'getQuestion', data:{book_id: $scope.book.id}})
             .success(function(data, status, headers, config) {
                 $scope.questions = data.questions;
             })

@@ -94,7 +94,7 @@ class SurveyFile extends CommFile
 
     public function getQuestion()
     {
-        $questions = $this->editorRepository->getQuestion($this->file->book->id);
+        $questions = $this->editorRepository->getQuestion(Input::get('book_id'));
 
         return ['questions' => $questions];
     }
@@ -128,9 +128,7 @@ class SurveyFile extends CommFile
             $table->string('created_by',255);
         });
 
-        $this->file->book->update(['lock' => true]);
-
-        return ['lock' => true];
+        return ['createTable' => true];
     }
 
     public function createNode()
@@ -597,4 +595,20 @@ class SurveyFile extends CommFile
 
         return $rules;
     }
+
+    public function lockBook()
+    {
+        $this->createTable();
+        $this->file->book->update(['lock' => true]);
+
+        return ['lock' => true];
+    }
+
+    public function checkExtBookLocked()
+    {
+        $locked = SurveyORM\Book::find(Input::get('book_id'))->lock;
+        
+        return  ['ext_locked' => $locked];
+    }
+
 }

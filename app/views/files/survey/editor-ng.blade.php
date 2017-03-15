@@ -13,23 +13,25 @@
             </md-list>
         </md-content>
     </md-sidenav>
-    <survey-book ng-if="book" book="book"></survey-book>
+    <survey-book ng-if="book && !book.lock" book="book"></survey-book>
+    <node-browser ng-if="book.lock" book="book.id"></node-browser>
 
 </div>
 
 <script src="/js/angular-file-upload.min.js"></script>
 <script src="/js/ng/ngEditor.js"></script>
+<script src="/js/ng/ngBrowser.js"></script>
 
 <script>
 app.requires.push('angularFileUpload');
 app.requires.push('ngEditor');
+app.requires.push('ngBrowser');
 app.controller('editorController', function($http, $scope, $sce, $interval, $filter, $mdSidenav) {
 
     $scope.getBook = function() {
         $scope.$parent.main.loading = true;
         $http({method: 'POST', url: 'getBook', data:{}})
         .success(function(data, status, headers, config) {
-            console.log(data);
             $scope.book = data.book;
             $scope.$parent.main.loading = false;
         }).error(function(e) {

@@ -1,7 +1,5 @@
-
 <md-content ng-cloak layout="column" ng-controller="confirm" layout-align="start center">
-        <div class="ui basic segment" ng-cloak style="overflow: auto">
-
+    <div class="ui basic segment" ng-cloak style="overflow: auto">
         <md-input-container>
             <label>選擇頁數</label>
             <md-select ng-model="currentPage" ng-change="getUsers(currentPage)">
@@ -112,8 +110,8 @@
                         <md-button ng-click="openApplication(application.members.id)" aria-label="檢視申請表"><md-icon md-svg-icon="assignment"></md-icon></md-button>
                     </td>
                     <td>
-                        <md-button aria-label="加掛問卷" class="md-icon-button" ng-click="">
-                            <md-icon md-menu-origin md-svg-icon="description"></md-icon>
+                        <md-button aria-label="加掛問卷" class="md-icon-button" ng-click="openBrowser(application.ext_book_id)">
+                            <md-icon md-menu-origin md-svg-icon="description" ng-style="{color: application.ext_book_locked }"></md-icon>
                         </md-button>
                     </td>
                     <td>{{ application.members.contact.title }}</td>
@@ -128,14 +126,15 @@
         <md-progress-linear md-mode="indeterminate" ng-disabled="sheetLoaded"></md-progress-linear>
     </div>
 </md-content>
-<script src="/js/ng/ngSurvey.js"></script>
+<script src="/js/ng/ngBrowser.js"></script>
 <script>
-    app.controller('confirm', function ($scope, $http, $filter, $q, $mdDialog){
+    app.requires.push('ngBrowser');
+    app.controller('confirm', function ($scope, $http, $filter, $q, $mdDialog, $mdPanel){
         $scope.sheetLoaded = false;
         $scope.currentPage = 1;
         $scope.lastPage = 0;
         $scope.pages = [];
-
+    
         $scope.$watch('lastPage', function(lastPage) {
             $scope.pages = [];
             for (var i = 1; i <= lastPage; i++) {
@@ -161,6 +160,9 @@
             $http({method: 'POST', url: 'getApplications', data:{}})
             .success(function(data, status, headers, config) {
                $scope.applications = data.applications;
+               for (var i in $scope.applications) {
+                   $scope.checkExtBookLocked($scope.applications[i]);
+               };
                $scope.sheetLoaded = true;
                $scope.getApplicationPages();
             })
@@ -304,5 +306,59 @@
                 clickOutsideToClose: true
             })
         };
+
+        $scope.openBrowser = function(book) {
+
+            openDialog();
+
+            function openDialog() {
+                $mdPanel.open({
+                    attachTo: angular.element(document.body),
+                    controller: ['$scope', dialogController],
+                    controllerAs: 'ctrl',
+                    template: `
+                        <md-content ng-cloak layout="column" layout-align="start center" class="demo-dialog-content">
+                            <node-browser ng-if="book" re-open="reOpen()" book="book"></node-browser>
+                        </md-content>
+                    `,
+                    panelClass: 'demo-dialog-example',
+                    position: $mdPanel.newPanelPosition().absolute().center(),
+                    trapFocus: true,
+                    zIndex: 150,
+                    clickOutsideToClose: true,
+                    clickEscapeToClose: true,
+                    hasBackdrop: true,
+                });
+            }
+            
+            function dialogController(scope) {
+                   scope.book = book;
+            }
+
+            function reOpen() {
+                openDialog();
+            }
+        };
+
+        $scope.checkExtBookLocked = function(application) {
+             $http({method: 'POST', url: 'checkExtBookLocked', data:{book_id:application.ext_book_id}})
+            .success(function(data, status, headers, config) {
+               application.ext_book_locked = data.ext_locked ? 'green' : 'gray';
+            })
+            .error(function(e){
+                console.log(e);
+            });
+        };
     });
 </script>
+
+<style>
+.demo-dialog-example {
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 7px 8px -4px rgba(0, 0, 0, 0.2),
+      0 13px 19px 2px rgba(0, 0, 0, 0.14),
+      0 5px 24px 4px rgba(0, 0, 0, 0.12);
+    width: 500px;
+}
+</style>
