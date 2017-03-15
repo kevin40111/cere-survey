@@ -89,12 +89,12 @@ angular.module('ngBrowser', [])
                 $http({method: 'POST', url: 'getRules', data:{skipTarget: skipTarget}})
                 .success(function(data, status, headers, config) {
                     temp[0] = {};
-                    data[0].conditions[0].id ? temp[0].expression = data : "";
+                    data != "null" ? temp[0].expression = data : temp[0].expression = [];
                 }).error(function(e){
                     console.log(e)
                 });
 
-                return  temp;
+                return temp;
             };
 
             scope.browserQuestion = function() {
