@@ -607,7 +607,7 @@ class SurveyFile extends CommFile
     public function checkExtBookLocked()
     {
         $locked = SurveyORM\Book::find(Input::get('book_id'))->lock;
-        
+
         return  ['ext_locked' => $locked];
     }
 

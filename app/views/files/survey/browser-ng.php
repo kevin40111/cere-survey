@@ -8,7 +8,7 @@
         text-align: center;
     }
     .td-two-logic{
-        background-color: seagreen; 
+        background-color: seagreen;
     }
 </style>
 <script src="/js/ng/ngBrowser.js"></script>

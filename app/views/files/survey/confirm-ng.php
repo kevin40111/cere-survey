@@ -134,7 +134,7 @@
         $scope.currentPage = 1;
         $scope.lastPage = 0;
         $scope.pages = [];
-    
+
         $scope.$watch('lastPage', function(lastPage) {
             $scope.pages = [];
             for (var i = 1; i <= lastPage; i++) {
@@ -330,7 +330,7 @@
                     hasBackdrop: true,
                 });
             }
-            
+
             function dialogController(scope) {
                    scope.book = book;
             }
