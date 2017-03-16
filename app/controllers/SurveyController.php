@@ -36,7 +36,7 @@ class SurveyController extends \BaseController {
         $has_answerer  = DB::table('rows.dbo.'.$table->name)->where('C'.$file_book->loginRow_id, $login_id)->exists();
 
         if (!$has_answerer) {
-             return Redirect::to('survey/'.$book_id.'/surveyLogin');
+             return Redirect::to('survey/'.$book_id.'/survey/surveyLogin');
         }
 
         $encrypt_id = SurveySession::login($book_id, $login_id);
@@ -46,7 +46,7 @@ class SurveyController extends \BaseController {
             SurveyRepository::create($book_id)->increment($encrypt_id, ['page_id' => $page->id]);
         }
 
-        return Redirect::to('survey/'.$book_id.'/page');
+        return Redirect::to('survey/'.$book_id.'/survey/page');
     }
 
     /**
@@ -81,7 +81,7 @@ class SurveyController extends \BaseController {
 
         } else {
             $previous = SurveyORM\Node::find($answers->page_id)->load(['rules']);
-            $page = Input::get('next') ? $previous->next : $previous;
+            $page = Input::get('next') ? $previous->next->load(['rules']) : $previous;
             DB::table($book_id)->where('created_by', SurveySession::getHashId())->update(['page_id' => $page->id]);
         }
 
