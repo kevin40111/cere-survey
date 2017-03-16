@@ -590,10 +590,10 @@ class SurveyFile extends CommFile
         if (!$root->rules()->first() == null) {
             $rules = $root->rules()->first()->expression;
         } else {
-            $rules = 'null';
+            $rules = [['conditions' => [['compareType' => 'question']]]];
         }
 
-        return $rules;
+        return ['rules' => $rules];
     }
 
     public function lockBook()

@@ -60,6 +60,7 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
         },
         compareRule: function(target) {
             var answers = this.answers;
+
             if (target.rules.length) {
                 var rules = target.rules[0].expression;
                 var result ='';
@@ -71,13 +72,14 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
                     result = result + '(';
                     for (var j in rule.conditions) {
                         var condition = rule.conditions[j];
-                        if (condition.logic) {
-                            result = result + condition.logic;
+                        if (condition.compareOperator) {
+                            result += condition.compareOperator;
                         }
-                        result = result + answers[condition.id] + '==' + condition.value;
+                        result += answers[condition.question] + condition.logic + (condition.compareQuestion ? condition.answer : condition.value);                     
                     }
                     result = result + ')';
                 }
+
                 return eval(result);
             } else {
                 return false;

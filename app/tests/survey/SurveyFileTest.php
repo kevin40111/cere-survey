@@ -232,4 +232,15 @@ class SurveyFileTest extends TestCase {
         $this->assertCount($amount-1, SurveyORM\Answer::all());
     }
 
+    public function testGetRules()
+    {
+        Input::replace([
+            'skipTarget' => ['class' => SurveyORM\Node::class, 'id' => SurveyORM\Node::first()->id],
+        ]);
+
+        $rules = $this->surveyFile->getRules();
+
+        $this->assertCount(1, $rules);
+    }
+
 }
