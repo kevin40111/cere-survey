@@ -46,7 +46,7 @@ angular.module('ngBrowser', [])
                         {key: ' && ', title: '而且'},
                         {key: ' || ', title: '或者'}
                     ];
-                    $http({method: 'POST', url: 'getExpressionExplanation', data:{expression: expression}})
+                    $http({method: 'POST', url: 'getExpressionExplanation', data:{rule_id: item.rules[0].id}})
                     .success(function(data, status, headers, config) {
                         console.log(data);
                         $scope.explanation = data.explanation;

@@ -615,7 +615,7 @@ class SurveyFile extends CommFile
     {
         $operators = [' && ' => '而且', ' || ' => '或者'];
         $booleans = [' > ' => '大於', ' < ' => '小於', ' == ' => '等於', ' != ' => '不等於'];
-        $expressions = Input::get('expression');
+        $expressions = SurveyORM\Rule::find(Input::get('rule_id'))->expression;
 
         $explanation = '';
         foreach ($expressions as $expression) {
@@ -634,9 +634,7 @@ class SurveyFile extends CommFile
                 $question = SurveyORM\Question::find($condition['question']);
                 $boolean = $booleans[$condition['logic']];
 
-                $comapreAnswer = isset($condition['compareQuestion']) ? SurveyORM\Answer::find($condition['answer'])->value : '';
-
-                $explanation .= $question->title . $boolean . (isset($condition['compareQuestion']) ? $comapreAnswer : $condition['value']);
+                $explanation .= $question->title . $boolean . (isset($condition['compareQuestion']) ? SurveyORM\Question::find($condition['compareQuestion'])->title : $condition['value']);
             }
             $explanation .= ' ) ';
         }

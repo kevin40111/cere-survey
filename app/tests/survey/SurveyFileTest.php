@@ -39,6 +39,13 @@ class SurveyFileTest extends TestCase {
             'previous' => NULL,
         ]);
         $this->answer = $this->surveyFile->createAnswer()['answer'];
+
+        Input::replace([
+            'skipTarget' => $this->node->toArray(),
+            'rules' => json_decode('[{"conditions":[{"compareType":"value","question":"'.$this->question->id.'","logic":" > ","value":"10"},{"compareOperator":" && ","question":"'.$this->question->id.'","logic":" > ","compareType":"question","compareQuestion":"'.$this->question->id.'"}]}]'),
+        ]);
+        $this->surveyFile->saveRules();
+        $this->rule = SurveyORM\Rule::all()->first();
     }
 
     public function testCreate()
@@ -243,4 +250,15 @@ class SurveyFileTest extends TestCase {
         $this->assertCount(1, $rules);
     }
 
+    public function testGetExpressionExplanation()
+    {
+        Input::replace([
+            'rule_id' => $this->rule->id,
+        ]);
+
+        $explanation = $this->surveyFile->getExpressionExplanation();
+
+        $this->assertStringEndsWith(' ) ', $explanation['explanation']);
+        $this->assertStringStartsWith(' ( ', $explanation['explanation']);
+    }
 }

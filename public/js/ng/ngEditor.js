@@ -751,15 +751,15 @@ angular.module('ngEditor.directives', [])
         template: `
             <div layout="row">
                 <div ng-if="!first">
-                    <md-input-container style="margin-right: 10px">
-                        <label></label>
+                    <md-input-container>
+                        <label>+</label>
                         <md-select ng-model="condition.compareOperator">
                             <md-option ng-repeat="compareOperator in compareOperators" ng-value="compareOperator.key">{{compareOperator.title}}</md-option>
                         </md-select>
                     </md-input-container>
                 </div>
                 <div>
-                    <md-input-container style="margin-right: 10px">
+                    <md-input-container>
                         <label>當題目</label>
                         <md-select ng-model="condition.question">
                             <md-option ng-repeat="question in questions" ng-value="question.id" >{{question.node.title}}-{{question.title}}</md-option>
@@ -767,7 +767,7 @@ angular.module('ngEditor.directives', [])
                     </md-input-container>
                 </div>
                 <div>
-                    <md-input-container style="margin-right: 10px">
+                    <md-input-container>
                         <label>比較邏輯</label>
                         <md-select ng-model="condition.logic">
                             <md-option ng-repeat="compareBoolean in compareBooleans" ng-value="compareBoolean.key">{{compareBoolean.title}}</md-option>
@@ -775,7 +775,7 @@ angular.module('ngEditor.directives', [])
                     </md-input-container>
                 </div>
                 <div>
-                    <md-input-container style="margin-right: 10px">
+                    <md-input-container>
                         <label>比較對象</label>
                         <md-select ng-model="condition.compareType" ng-change="changeCompareType()">
                             <md-option ng-repeat="compareType in compareTypes" ng-value="compareType.key">{{compareType.title}}</md-option>
@@ -789,16 +789,10 @@ angular.module('ngEditor.directives', [])
                     </md-input-container>
                 </div>
                 <div ng-if="condition.compareType=='question'">
-                    <md-input-container style="margin-right: 10px">
+                    <md-input-container>
                         <label>比較題目</label>
                         <md-select ng-model="condition.compareQuestion">
                             <md-option ng-repeat="question in questions" ng-value="question.id" >{{question.node.title}}-{{question.title}}</md-option>
-                        </md-select>
-                    </md-input-container>
-                    <md-input-container style="margin-right: 10px" ng-if="condition.compareQuestion">
-                        <label>答案</label>
-                        <md-select ng-model="condition.answer">
-                            <md-option ng-repeat="answer in getAnswers(condition.compareQuestion)" ng-value="answer.id" >{{answer.title}}</md-option>
                         </md-select>
                     </md-input-container>
                 </div>
@@ -837,13 +831,8 @@ angular.module('ngEditor.directives', [])
                 console.log(e);
             });
 
-            $scope.getAnswers = function(question_id) {
-                return $filter('filter')($scope.questions, {id: question_id})[0].node.answers;
-            };
-
             $scope.changeCompareType = function() {
                 delete $scope.condition.compareQuestion;
-                delete $scope.condition.answer;
                 delete $scope.condition.value;
             };
 
