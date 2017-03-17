@@ -60,7 +60,7 @@ class SurveyFileTest extends TestCase {
 
         $questions = $this->surveyFile->getQuestion()['questions'];
 
-        $this->assertCount(0, $questions);
+        $this->assertCount($amount_questions, $questions);
     }
 
     public function testGetNodes()

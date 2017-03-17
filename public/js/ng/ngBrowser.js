@@ -4,97 +4,60 @@ angular.module('ngBrowser', [])
             restrict : "E",
             templateUrl : "questionBrowser",
             link: function(scope, element, attrs, $event) {
-            scope.showPassQuestion = function(rule) {
+            scope.showPassQuestion = function(item) {
                 $mdDialog.show({
                 parent: angular.element(document.querySelector('#popupContainer')),
                 targetEvent: $event,
-                template:
-                   `<md-dialog aria-label="List dialog"> 
-                     <md-dialog-content>
-                        <table class='ui celled structured table Dialog'>
-                        <tr><td>邏輯運算</td><td>題目</td><td>選項</td></tr>
-                            <tr ng-repeat = "object in expression_array">
-                                <td class = "{{object.secondLogic ? 'td-two-logic' : ''}}" colspan = "{{object.secondLogic ? '3' : '1'}}">
-                                    {{object.logic}}
-                                </td>
-                                <td ng-if = "!object.secondLogic">{{object.title}}</td>
-                                <td ng-if = "!object.secondLogic">{{object.answer}}</td>
-                            </tr>
-                        </table>
-                     </md-dialog-content> 
-                     <md-dialog-actions> 
-                       <md-button ng-click="closeDialog()" class="md-primary"> 
-                        確認
-                       </md-button> 
-                     </md-dialog-actions> 
-                   </md-dialog>`,
+                template: `
+                    <md-dialog aria-label="跳答條件">
+                        <md-toolbar>
+                            <div class="md-toolbar-tools">
+                                <h2>跳答條件</h2>
+                            </div>
+                        </md-toolbar>
+                        <md-dialog-content>
+                            <div class="md-dialog-content">
+                                <span>{{explanation}}</span>
+                            </div>
+                        </md-dialog-content>
+                        <md-dialog-actions>
+                            <md-button ng-click="closeDialog()" class="md-primary">關閉</md-button>
+                        </md-dialog-actions>
+                    </md-dialog>
+                `,
                 locals: {
                     scope_out: scope,
-                    expression: rule[0].expression,
+                    expression: item.rules[0].expression,
                 },
-                controller: DialogController 
+                controller: DialogController
                 });
                 function DialogController($scope, scope_out, expression) {
-
-                    $scope.analyRule = function(expression){
-                        var analyLogic = {" || ":"或者", " && ":"而且", " > ":"大於", " < ":"小於", " == ":"等於", "undefined":""}
-                        var expression_array = [];
-
-                        for(var i=0 ; i < expression.length ; i++){
-                            var expression_object = {secondLogic:false};
-                            if (expression[i].compareLogic) {
-                                expression_object.secondLogic = true;
-                                expression_object.logic = analyLogic[expression[i].compareLogic];
-                                expression_array.push(expression_object);
-                            }
-                            
-                            for(var j=0 ; j < expression[i].conditions.length ; j++){
-                                var expression_object = {secondLogic:false};
-                                if (expression[i].conditions[j].type == "text") {
-                                    expression_object.logic = analyLogic[expression[i].conditions[j+1].logic];
-                                    expression_object.answer = expression[i].conditions[j+1].value+"(值)";
-                                    expression_object.title = expression[i].conditions[j].question.title;
-                                    j++;
-                                }
-                                else if (expression[i].conditions[j].type == "checkbox") {
-                                    expression_object.logic = analyLogic[expression[i].conditions[j].logic];
-                                    expression_object.title = expression[i].conditions[j].question.node.title;
-                                    expression_object.answer = expression[i].conditions[j].question.title;
-                                }
-                                else {
-                                    expression_object.logic = analyLogic[expression[i].conditions[j].logic];
-                                    expression_object.answer = expression[i].conditions[j].answer.title;
-                                    expression_object.title = expression[i].conditions[j].question.title;
-                                }
-
-                                expression_array.push(expression_object);
-                            }
-                        }
-
-                        return expression_array;
-                    }
+                    $scope.compareTypes =
+                        {key: 'value', title: '數值'},
+                        {key: 'question', title: '題目'}
+                    ;
+                    $scope.compareBooleans = [
+                        {key: ' > ', title: '大於'},
+                        {key: ' < ', title: '小於'},
+                        {key: ' == ', title: '等於'},
+                        {key: ' != ', title: '不等於'}
+                    ];
+                    $scope.compareOperators = [
+                        {key: ' && ', title: '而且'},
+                        {key: ' || ', title: '或者'}
+                    ];
+                    $http({method: 'POST', url: 'getExpressionExplanation', data:{expression: expression}})
+                    .success(function(data, status, headers, config) {
+                        console.log(data);
+                        $scope.explanation = data.explanation;
+                    }).error(function(e) {
+                        console.log(e);
+                    });
 
                     $scope.closeDialog = function() {
                         $mdDialog.hide();
                     }
-
-                    $scope.expression_array = $scope.analyRule(expression);
-                } 
-            };
-            
-
-            scope.checkPageRule = function(page_node_id){
-                var temp = [];
-                var skipTarget = {'class': "Plat\\Eloquent\\Survey\\Node", 'id': page_node_id};
-                $http({method: 'POST', url: 'getRules', data:{skipTarget: skipTarget}})
-                .success(function(data, status, headers, config) {
-                    temp[0] = {};
-                    data != "null" ? temp[0].expression = data : temp[0].expression = [];
-                }).error(function(e){
-                    console.log(e)
-                });
-
-                return temp;
+                }
             };
 
             scope.browserQuestion = function() {
@@ -214,21 +177,12 @@ angular.module('ngBrowser', [])
             scope.questionAnalysis = function(node){
             var browser_node = node;
             var page = 1;
-            var page_record = [];// 檢查parent_node_id 重複
             var answer_number;
             var question_number=0;
             var deal_node_id=[];// 檢查重複出現的node_id
 
             for(var i=0;i<browser_node.length;i++){
                 browser_node[i] = scope.getQuestionTitle(browser_node[i]);
-                if(page_record.indexOf(browser_node[i].node.parent_id) == -1 && scope.checkParentNodeType(browser_node[i]) == "Node"){
-                    page_record.push(browser_node[i].node.parent_id);
-                    browser_node[i].page = {};
-                    browser_node[i].page.number = page;
-                    browser_node[i].page.node_id = browser_node[i].node.parent_id;
-                    browser_node[i].page.rule =  scope.checkPageRule(browser_node[i].node.parent_id);
-                    page++;
-                }
                 //檢查node_id是否為重複
                 if(deal_node_id.indexOf(node[i].node_id) == -1){
                     answer_number = 1;

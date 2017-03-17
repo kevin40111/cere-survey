@@ -611,4 +611,36 @@ class SurveyFile extends CommFile
         return  ['ext_locked' => $locked];
     }
 
+    public function getExpressionExplanation()
+    {
+        $operators = [' && ' => '而且', ' || ' => '或者'];
+        $booleans = [' > ' => '大於', ' < ' => '小於', ' == ' => '等於', ' != ' => '不等於'];
+        $expressions = Input::get('expression');
+
+        $explanation = '';
+        foreach ($expressions as $expression) {
+            if (isset($expression['compareLogic'])) {
+                $operator = $operators[$expression['compareLogic']];
+                $explanation .= $operator;
+            }
+            $explanation .= ' ( ';
+            foreach ($expression['conditions'] as $condition) {
+
+                if (isset($condition['compareOperator'])) {
+                    $operator = $operators[$condition['compareOperator']];
+                    $explanation .= $operator;
+                }
+
+                $question = SurveyORM\Question::find($condition['question']);
+                $boolean = $booleans[$condition['logic']];
+
+                $comapreAnswer = isset($condition['compareQuestion']) ? SurveyORM\Answer::find($condition['answer'])->value : '';
+
+                $explanation .= $question->title . $boolean . (isset($condition['compareQuestion']) ? $comapreAnswer : $condition['value']);
+            }
+            $explanation .= ' ) ';
+        }
+
+        return ['explanation' => $explanation];
+    }
 }
