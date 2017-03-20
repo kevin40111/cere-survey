@@ -75,7 +75,7 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
                         if (condition.compareOperator) {
                             result += condition.compareOperator;
                         }
-                        result += answers[condition.question] + condition.logic + (condition.compareQuestion ? condition.answer : condition.value);
+                        result += answers[condition.question] + condition.logic + condition.value;
                     }
                     result = result + ')';
                 }

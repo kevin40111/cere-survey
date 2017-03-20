@@ -761,7 +761,7 @@ angular.module('ngEditor.directives', [])
                 <div>
                     <md-input-container>
                         <label>當題目</label>
-                        <md-select ng-model="condition.question">
+                        <md-select ng-model="condition.question" ng-change="resetAnswers()">
                             <md-option ng-repeat="question in questions" ng-value="question.id" >{{question.node.title}}-{{question.title}}</md-option>
                         </md-select>
                     </md-input-container>
@@ -785,14 +785,14 @@ angular.module('ngEditor.directives', [])
                 <div ng-if="condition.compareType=='value'">
                     <md-input-container>
                         <label>數值</label>
-                        <input ng-model="condition.value" survey-input string-converter />
+                        <input ng-model="condition.value" />
                     </md-input-container>
                 </div>
-                <div ng-if="condition.compareType=='question'">
+                <div ng-if="condition.compareType=='answer'">
                     <md-input-container>
-                        <label>比較題目</label>
-                        <md-select ng-model="condition.compareQuestion">
-                            <md-option ng-repeat="question in questions" ng-value="question.id" >{{question.node.title}}-{{question.title}}</md-option>
+                        <label>選項</label>
+                        <md-select ng-model="condition.value" md-on-open="getAnswers()" ng-init="resetAnswers()">
+                            <md-option ng-repeat="answer in answers" ng-value="answer.value">{{answer.title}}</md-option>
                         </md-select>
                     </md-input-container>
                 </div>
@@ -810,7 +810,7 @@ angular.module('ngEditor.directives', [])
 
             $scope.compareTypes = [
                 {key: 'value', title: '數值'},
-                {key: 'question', title: '題目'}
+                {key: 'answer', title: '選項'}
             ];
             $scope.compareBooleans = [
                 {key: ' > ', title: '大於'},
@@ -831,9 +831,16 @@ angular.module('ngEditor.directives', [])
                 console.log(e);
             });
 
-            $scope.changeCompareType = function() {
-                delete $scope.condition.compareQuestion;
-                delete $scope.condition.value;
+            $scope.resetAnswers = function() {
+                $scope.answers = [];
+                $scope.promiseAnswers = $http({method: 'POST', url: 'getAnswers', data:{question_id: $scope.condition.question}})
+                .then(function(response) {
+                    $scope.answers = response.data.answers;
+                });
+            };
+
+            $scope.getAnswers = function() {
+                return $scope.promiseAnswers;
             };
 
          }

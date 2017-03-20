@@ -99,6 +99,13 @@ class SurveyFile extends CommFile
         return ['questions' => $questions];
     }
 
+    public function getAnswers()
+    {
+        $answers = SurveyORM\Question::find(Input::get('question_id'))->node->answers;
+
+        return ['answers' => $answers];
+    }
+
     public function getNodes()
     {
         $class = Input::get('root.class');
@@ -634,7 +641,9 @@ class SurveyFile extends CommFile
                 $question = SurveyORM\Question::find($condition['question']);
                 $boolean = $booleans[$condition['logic']];
 
-                $explanation .= $question->title . $boolean . (isset($condition['compareQuestion']) ? SurveyORM\Question::find($condition['compareQuestion'])->title : $condition['value']);
+                $answer = $condition['compareType'] == 'value' ? $condition['value'] : $question->node->answers()->where('value', $condition['value'])->first()->title;
+
+                $explanation .= $question->title . $boolean . $answer;
             }
             $explanation .= ' ) ';
         }
