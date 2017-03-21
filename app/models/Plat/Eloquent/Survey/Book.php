@@ -8,7 +8,7 @@ class Book extends Eloquent {
 
     use \Plat\Survey\Tree;
 
-    protected $table = 'file_book';
+    protected $table = 'survey_book';
 
     public $timestamps = false;
 
@@ -74,7 +74,7 @@ class Book extends Eloquent {
     }
 
     public function file()
-    {   
+    {
         return $this->belongsTo('Files', 'file_id', 'id');
     }
 

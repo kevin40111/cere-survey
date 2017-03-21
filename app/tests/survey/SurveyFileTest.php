@@ -9,15 +9,30 @@ class SurveyFileTest extends TestCase {
     {
         parent::setUp();
         $this->app->make('artisan')->call('migrate');
-        $file = Files::create(['id' => 1, 'type' => 6, 'title' => '', 'created_by' => 1]);
-        $book = SurveyORM\Book::create(['file_id' => $file->id, 'title' => '', 'lock' => false]);
-
         $this->user = new User;
         $this->user->username = 'gg';
         $this->user->email    = 'tim72117@gmail.com';
         $this->user->actived = false;
         $this->user->disabled = false;
         $this->user->save();
+        Auth::login($this->user);
+
+        $rows_file = Files::create(['id' => 2, 'type' => 5, 'title' => '', 'created_by' => 1]);
+        $sheet = $rows_file->sheets()->create(['title' => '', 'editable' => true, 'fillable' => true]);
+        $table = $sheet->tables()->create(['database' => 'rows', 'name' => 'row_20150817_202236_1_0lzuu', 'lock' => false, 'construct_at' => Carbon\Carbon::now()->toDateTimeString()]);
+        $column = $table->columns()->create([
+            'name' => 'stdidno',
+            'title' => '身分證字號',
+            'rules' => 'stdidnumber',
+            'unique' => false,
+            'encrypt' => false,
+            'isnull' => false,
+            'readonly' => false,
+        ]);
+
+        $file = Files::create(['id' => 1, 'type' => 6, 'title' => '', 'created_by' => 1]);
+        $book = SurveyORM\Book::create(['file_id' => $file->id, 'title' => '', 'lock' => false, 'column_id' => $column->id]);
+        $doc = ShareFile::create(['file_id' => $file->id, 'target' => 'user', 'target_id' => 1, 'created_by' => 1, 'visible' => true, 'folder_id' => 1]);
 
         $this->surveyFile = new SurveyFile($file, $this->user);
 
@@ -239,6 +254,75 @@ class SurveyFileTest extends TestCase {
         $this->assertCount($amount-1, SurveyORM\Answer::all());
     }
 
+    public function testGetApplicationPages()
+    {
+        $currentPage = $this->surveyFile->getApplicationPages()['currentPage'];
+
+        $this->assertEquals(1, $currentPage);
+    }
+
+    public function testSetExtBook()
+    {
+
+    }
+
+    public function testGetExtBook()
+    {
+        //$column = $this->surveyFile->getExtBook($this->surveyFile->file->book->id);
+    }
+
+    public function testGetConditionColumn()
+    {
+        $this->surveyFile->file->book->column_id = 1;
+        $this->surveyFile->file->book->save();
+
+        $column = $this->surveyFile->getConditionColumn();
+
+        $this->assertInstanceOf(Row\Column::class, $column);
+    }
+
+    public function testSetConditionColumns()
+    {
+        $this->surveyFile->setConditionColumns(['id' => 1]);
+
+        $this->assertEquals(1, $this->surveyFile->file->book->column_id);
+    }
+
+    public function testDeleteCondition()
+    {
+        $this->surveyFile->file->book->column_id = 1;
+        $this->surveyFile->file->book->rowsFile_id = 1;
+        $this->surveyFile->file->book->save();
+
+        $this->surveyFile->deleteCondition();
+
+        $this->assertNull($this->surveyFile->file->book->column_id);
+        $this->assertNull($this->surveyFile->file->book->rowsFile_id);
+    }
+
+    public function testSaveRules()
+    {
+        Input::replace([
+            'skipTarget' => $this->node->toArray(),
+            'rules' => json_decode('[{"conditions":[{"compareType":"value","question":"'.$this->question->id.'","logic":" > ","value":"10"},{"compareOperator":" && ","question":"'.$this->question->id.'","logic":" > ","compareType":"question","compareQuestion":"'.$this->question->id.'"}]}]'),
+        ]);
+
+        $this->surveyFile->saveRules();
+
+        $this->assertCount(1, SurveyORM\Rule::all());
+    }
+
+    public function testDeleteRules()
+    {
+        Input::replace([
+            'skipTarget' => ['class' => SurveyORM\Node::class, 'id' => SurveyORM\Node::first()->id],
+        ]);
+
+        $this->surveyFile->deleteRules();
+
+        $this->assertCount(0, SurveyORM\Rule::all());
+    }
+
     public function testGetRules()
     {
         Input::replace([
@@ -248,6 +332,24 @@ class SurveyFileTest extends TestCase {
         $rules = $this->surveyFile->getRules();
 
         $this->assertCount(1, $rules);
+    }
+
+    public function testLockBook()
+    {
+        //$locked = $this->surveyFile->lockBook()['lock'];
+
+        //$this->assertTrue($locked);
+    }
+
+    public function testCheckExtBookLocked()
+    {
+        Input::replace([
+            'book_id' => $this->surveyFile->file->book->id,
+        ]);
+
+        $ext_locked = $this->surveyFile->checkExtBookLocked()['ext_locked'];
+
+        $this->assertFalse($ext_locked);
     }
 
     public function testGetExpressionExplanation()
