@@ -2,9 +2,9 @@
 
 namespace Plat\Survey;
 
-use DB;
+use Session;
 
-class SurveyRepository implements SurveyRepositoryInterface
+class DemoRepository implements SurveyRepositoryInterface
 {
     function __construct($book_id)
     {
@@ -27,9 +27,9 @@ class SurveyRepository implements SurveyRepositoryInterface
     {
         $attributes = array_add($default, 'created_by', $id);
 
-        DB::table($this->book_id)->insert($attributes);
+        Session::put('answers', $attributes);
 
-        return $attributes;
+        return Session::get('answers');
     }
 
     /**
@@ -40,7 +40,9 @@ class SurveyRepository implements SurveyRepositoryInterface
      */
     public function decrement($id)
     {
-        DB::table($this->book_id)->where('created_by', $id)->delete();
+        Session::forget('answers');
+
+        return Session::get('answers');
     }
 
     /**
@@ -52,9 +54,9 @@ class SurveyRepository implements SurveyRepositoryInterface
      */
     public function get($id, $key)
     {
-        $answer = DB::table($this->book_id)->where('created_by', $id)->select($key)->get();
+        $answers = Session::get('answers.'.$key);
 
-        return $answer;
+        return $answers;
     }
 
     /**
@@ -67,9 +69,9 @@ class SurveyRepository implements SurveyRepositoryInterface
      */
     public function put($id, $key, $value)
     {
-        $answers = DB::table($this->book_id)->where('created_by', $id)->update(array($key => $value));
+        $answers = Session::put('answers.'.$key, $value);
 
-        return $answers;
+        return Session::has('answers.'.$key);
     }
 
     /**
@@ -79,7 +81,7 @@ class SurveyRepository implements SurveyRepositoryInterface
      */
     public function all($id)
     {
-        $answers = DB::table($this->book_id)->where('created_by', $id)->first();
+        $answers = Session::get('answers');
 
         return $answers;
     }
@@ -91,7 +93,6 @@ class SurveyRepository implements SurveyRepositoryInterface
      */
     public function exist($id)
     {
-        $existed = DB::table($this->book_id)->where('created_by', $id)->exists();
-        return $existed;
+        return Session::has('answers');
     }
 }

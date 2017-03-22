@@ -52,8 +52,9 @@ angular.module('ngEditor.directives', [])
                             <div ng-repeat-end class="divider"> / </div>
                         </div>
                         <span flex></span>
-                        <md-button ng-click="lockBook()">完成</md-button>
+                        <md-button ng-click="lockBook()">定稿</md-button>
                         <md-button href="/surveyDemo/{{book.id}}/demo/page" target="_blank">預覽</md-button>
+                        <md-button href="/surveyDemo/{{book.id}}/demo/cleanAnswers" target="_blank">刪除填答值</md-button>
                     </div>
                 </md-toolbar>
                 <md-divider></md-divider>
