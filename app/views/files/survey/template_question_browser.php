@@ -51,7 +51,7 @@
                 </span> <!-- 只印出複選題選項 -->
             </td>
             <td ng-if="question.page">
-                <b>第{{question.page.title}}頁</b>
+                <b>{{question.page.title}}</b>
                 <span ng-if="question.page.rules[0].expression.length > 0" ng-click="showPassQuestion(question.page)" class="ui left pointing red basic label">
                         {{question.page.rules[0].expression.length}}個跳頁條件
                 </span>

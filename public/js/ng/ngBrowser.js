@@ -6,7 +6,7 @@ angular.module('ngBrowser', [])
             link: function(scope, element, attrs, $event) {
             scope.showPassQuestion = function(item) {
                 $mdDialog.show({
-                parent: angular.element(document.querySelector('#popupContainer')),
+                parent: angular.element(element),
                 targetEvent: $event,
                 template: `
                     <md-dialog aria-label="跳答條件">
@@ -48,7 +48,6 @@ angular.module('ngBrowser', [])
                     ];
                     $http({method: 'POST', url: 'getExpressionExplanation', data:{rule_id: item.rules[0].id}})
                     .success(function(data, status, headers, config) {
-                        console.log(data);
                         $scope.explanation = data.explanation;
                     }).error(function(e) {
                         console.log(e);
