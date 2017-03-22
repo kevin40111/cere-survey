@@ -57,7 +57,7 @@ class SurveyFileTest extends TestCase {
 
         Input::replace([
             'skipTarget' => $this->node->toArray(),
-            'rules' => json_decode('[{"conditions":[{"compareType":"value","question":"'.$this->question->id.'","logic":" > ","value":"10"},{"compareOperator":" && ","question":"'.$this->question->id.'","logic":" > ","compareType":"question","compareQuestion":"'.$this->question->id.'"}]}]'),
+            'rules' => json_decode('[{"conditions":[{"compareType":"value","question":"'.$this->question->id.'","logic":" > ","value":"10"},{"compareOperator":" && ","question":"'.$this->question->id.'","logic":" > ","compareType":"question","value":"'.$this->answer->value.'"}]}]'),
         ]);
         $this->surveyFile->saveRules();
         $this->rule = SurveyORM\Rule::all()->first();
@@ -83,6 +83,17 @@ class SurveyFileTest extends TestCase {
         $questions = $this->surveyFile->getQuestion()['questions'];
 
         $this->assertCount($amount_questions, $questions);
+    }
+
+    public function testGetAnswers()
+    {
+        Input::replace([
+            'question_id' => $this->question->id,
+        ]);
+
+        $answers = $this->surveyFile->getAnswers()['answers'];
+
+        $this->assertCount($answers->count(), SurveyORM\Answer::all());
     }
 
     public function testGetNodes()
