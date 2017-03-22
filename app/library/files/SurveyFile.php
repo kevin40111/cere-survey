@@ -322,7 +322,7 @@ class SurveyFile extends CommFile
             $rules = $this->getRules();
             $organizationsSelected = array_map(function($rule){
                 return \Plat\Project\OrganizationDetail::find($rule['value']);
-            }, $rules[0]['conditions']);
+            }, $rules['rules'][0]['conditions']);
         } else {
             $applicableOption = $this->file->book->applicableOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
                 return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
