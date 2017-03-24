@@ -1,8 +1,8 @@
-<md-content ng-controller="browser-layout">
+<div ng-controller="browser-layout">
     <md-content ng-cloak layout="column" layout-align="start center">
         <node-browser ng-if="book" book="book"></node-browser>
     </md-content>
-</md-content>
+</div>
 <style type="text/css">
     .Dialog tr{
         text-align: center;

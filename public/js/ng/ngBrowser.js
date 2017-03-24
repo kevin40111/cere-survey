@@ -27,7 +27,7 @@ angular.module('ngBrowser', [])
                 `,
                 locals: {
                     scope_out: scope,
-                    expression: item.rules[0].expression,
+                    expression: item.rule.expression,
                 },
                 controller: DialogController
                 });
@@ -46,7 +46,7 @@ angular.module('ngBrowser', [])
                         {key: ' && ', title: '而且'},
                         {key: ' || ', title: '或者'}
                     ];
-                    $http({method: 'POST', url: 'getExpressionExplanation', data:{rule_id: item.rules[0].id}})
+                    $http({method: 'POST', url: 'getExpressionExplanation', data:{rule_id: item.rule.id}})
                     .success(function(data, status, headers, config) {
                         $scope.explanation = data.explanation;
                     }).error(function(e) {

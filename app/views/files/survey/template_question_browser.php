@@ -19,8 +19,8 @@
             <td ng-if="question.rowspan>=1" rowspan="{{question.rowspan}}">
                 {{getParentNode(question,key)}}
                 {{question.question_title["title"]}}
-                <span ng-if="question.node.rules[0].expression.length > 0" ng-click="showPassQuestion(question.node)" class="ui left pointing red basic label">
-                    {{question.node.rules[0].expression.length}}個跳題條件
+                <span ng-if="question.node.rule.expressions.length > 0" ng-click="showPassQuestion(question.node)" class="ui left pointing red basic label">
+                    {{question.node.rule.expressions.length}}個跳題條件
                 </span>
             </td>
 
@@ -38,22 +38,22 @@
             <td>
                 <span ng-repeat="(key,answer) in question.node.answers">
                     {{key+1}}.{{answer.title}}
-                    <span ng-if="answer.rules[0].expression.length > 0" ng-click="showPassQuestion(answer)" class="ui left pointing red basic label">
-                        {{answer.rules[0].expression.length}}個跳答條件
+                    <span ng-if="answer.rule.expressions.length > 0" ng-click="showPassQuestion(answer)" class="ui left pointing red basic label">
+                        {{answer.rule.expressions.length}}個跳答條件
                     </span>
                     </br>
                 </span>
                 <span ng-if="!checkQuestionType(question)">
                     {{question.answer_number}}.{{question.title}}
-                    <span ng-if="question.rules[0].expression.length > 0" ng-click="showPassQuestion(question)" class="ui left pointing red basic label">
-                        {{question.node.rules[0].expression.length}}個跳答條件
+                    <span ng-if="question.rule.expressions.length > 0" ng-click="showPassQuestion(question)" class="ui left pointing red basic label">
+                        {{question.node.rule.expressions.length}}個跳答條件
                     </span>
                 </span> <!-- 只印出複選題選項 -->
             </td>
             <td ng-if="question.page">
                 <b>{{question.page.title}}</b>
-                <span ng-if="question.page.rules[0].expression.length > 0" ng-click="showPassQuestion(question.page)" class="ui left pointing red basic label">
-                        {{question.page.rules[0].expression.length}}個跳頁條件
+                <span ng-if="question.page.rule.expressions.length > 0" ng-click="showPassQuestion(question.page)" class="ui left pointing red basic label">
+                        {{question.page.rule.expressions.length}}個跳頁條件
                 </span>
             </td>
             <td ng-if="!question.page"></td>
