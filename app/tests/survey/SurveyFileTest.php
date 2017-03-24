@@ -57,9 +57,9 @@ class SurveyFileTest extends TestCase {
 
         Input::replace([
             'skipTarget' => $this->node->toArray(),
-            'rules' => json_decode('[{"conditions":[{"compareType":"value","question":"'.$this->question->id.'","logic":" > ","value":"10"},{"compareOperator":" && ","question":"'.$this->question->id.'","logic":" > ","compareType":"question","value":"'.$this->answer->value.'"}]}]'),
+            'expressions' => json_decode('[{"conditions":[{"compareType":"value","question":"'.$this->question->id.'","logic":" > ","value":"10"},{"compareOperator":" && ","question":"'.$this->question->id.'","logic":" > ","compareType":"question","value":"'.$this->answer->value.'"}]}]'),
         ]);
-        $this->surveyFile->saveRules();
+        $this->surveyFile->saveRule();
         $this->rule = SurveyORM\Rule::all()->first();
     }
 
@@ -311,38 +311,38 @@ class SurveyFileTest extends TestCase {
         $this->assertNull($this->surveyFile->file->book->rowsFile_id);
     }
 
-    public function testSaveRules()
+    public function testSaveRule()
     {
         Input::replace([
             'skipTarget' => $this->node->toArray(),
-            'rules' => json_decode('[{"conditions":[{"compareType":"value","question":"'.$this->question->id.'","logic":" > ","value":"10"},{"compareOperator":" && ","question":"'.$this->question->id.'","logic":" > ","compareType":"question","compareQuestion":"'.$this->question->id.'"}]}]'),
+            'expressions' => json_decode('[{"conditions":[{"compareType":"value","question":"'.$this->question->id.'","logic":" > ","value":"10"},{"compareOperator":" && ","question":"'.$this->question->id.'","logic":" > ","compareType":"question","compareQuestion":"'.$this->question->id.'"}]}]'),
         ]);
 
-        $this->surveyFile->saveRules();
+        $this->surveyFile->saveRule();
 
         $this->assertCount(1, SurveyORM\Rule::all());
     }
 
-    public function testDeleteRules()
+    public function testDeleteRule()
     {
         Input::replace([
             'skipTarget' => ['class' => SurveyORM\Node::class, 'id' => SurveyORM\Node::first()->id],
         ]);
 
-        $this->surveyFile->deleteRules();
+        $this->surveyFile->deleteRule();
 
         $this->assertCount(0, SurveyORM\Rule::all());
     }
 
-    public function testGetRules()
+    public function testGetRule()
     {
         Input::replace([
             'skipTarget' => ['class' => SurveyORM\Node::class, 'id' => SurveyORM\Node::first()->id],
         ]);
 
-        $rules = $this->surveyFile->getRules();
+        $rule = $this->surveyFile->getRule()['rule'];
 
-        $this->assertCount(1, $rules);
+        $this->assertCount(1, $rule->expressions);
     }
 
     public function testLockBook()

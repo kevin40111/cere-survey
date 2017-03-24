@@ -121,7 +121,7 @@ class SurveyController extends \BaseController {
         $page = Input::get('next') ? $previous->next : $previous;
         $this->repository->put($this->user_id, 'page_id', $page->id);
 
-        return ['node' => $page->load(['rules']), 'answers' => $this->repository->all($this->user_id)];
+        return ['node' => $page->load(['rule']), 'answers' => $this->repository->all($this->user_id)];
     }
 
     /**
@@ -131,7 +131,7 @@ class SurveyController extends \BaseController {
      */
     public function getNextNodes()
     {
-        $nodes = SurveyORM\Node::find(Input::get('page.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.rules', 'answers.rules','rules']);
+        $nodes = SurveyORM\Node::find(Input::get('page.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.rule', 'answers.rule', 'rule']);
 
         return ['nodes' => $nodes];
     }
@@ -145,7 +145,7 @@ class SurveyController extends \BaseController {
     {
         if (Input::has('parent')) {
             $class = Input::get('parent.class');
-            $nodes = $class::find(Input::get('parent.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.rules', 'answers.rules','rules']);
+            $nodes = $class::find(Input::get('parent.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.rule', 'answers.rule', 'rule']);
         } else {
             $nodes = [];
         }
@@ -160,18 +160,12 @@ class SurveyController extends \BaseController {
      *
      * @return Response
      */
-    public function getRules()
+    public function getRule()
     {
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
 
-        if (!$root->rules()->first() == null) {
-            $rules = $root->rules()->first()->expression;
-        } else {
-            $rules = null;
-        }
-
-        return ['rules' => $rules];
+        return ['rule' => $root->rule];
     }
 
     /**

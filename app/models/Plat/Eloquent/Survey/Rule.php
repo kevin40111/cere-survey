@@ -10,7 +10,7 @@ class Rule extends Eloquent {
 
     public $timestamps = true;
 
-    protected $fillable = array('expression', 'answer_id', 'warning');
+    protected $fillable = array('expressions', 'answer_id', 'warning');
 
     public function questions()
     {
@@ -51,14 +51,14 @@ class Rule extends Eloquent {
     //     $this->attributes['expression'] = json_encode($expression);
     // }
 
-    public function setExpressionAttribute($expression)
+    public function setExpressionsAttribute($expressions)
     {
-        $this->attributes['expression'] = json_encode($expression);
+        $this->attributes['expressions'] = json_encode($expressions);
     }
 
-    public function getExpressionAttribute($expression)
+    public function getExpressionsAttribute($expressions)
     {
-        return json_decode($expression, true);
+        return json_decode($expressions, true);
     }
 
 }

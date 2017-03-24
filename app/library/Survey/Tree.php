@@ -20,7 +20,7 @@ trait Tree {
 
             $questions = $node->sortByPrevious(['questions'])->questions->reduce(function($carry, $question) {
                 return array_merge($carry, $question->getQuestions());
-            }, $node->sortByPrevious(['questions'])->questions->load(['node.answers.rules','rules','node.rules'])->toArray());
+            }, $node->sortByPrevious(['questions'])->questions->load(['node.answers.rule', 'rule', 'node.rule'])->toArray());
 
             $questionsWithInAnswer = $node->sortByPrevious(['answers'])->answers->reduce(function($carry, $answer) {
                 return array_merge($carry, $answer->getQuestions());
@@ -86,7 +86,7 @@ trait Tree {
         $this->next->moveUp();
 
         return $this;
-    }        
+    }
     public function delete()
     {
         if ($this->next) {
@@ -112,7 +112,7 @@ trait Tree {
                 $subNode->deleteNode();
             });
         });
-        
+
         return $this->delete();
     }
 

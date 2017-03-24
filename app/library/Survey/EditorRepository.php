@@ -24,7 +24,7 @@ class EditorRepository
 
     public function getQuestion($book_id)
     {
-        $questions = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->load('rules')->reduce(function ($carry, $page) {
+        $questions = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->load('rule')->reduce(function ($carry, $page) {
             $questions = $page->getQuestions();
             $questions[0]['page'] = $page;
             return array_merge($carry, $questions);

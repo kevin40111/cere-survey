@@ -561,46 +561,40 @@ class SurveyFile extends CommFile
         $book->save();
     }
 
-    public function saveRules()
+    public function saveRule()
     {
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
-        $rules = Input::get('rules');
-        if ($root->rules()->first() == null) {
-            $rule = SurveyORM\Rule::create(array('expression' => $rules));
-            $root->rules()->attach($rule->id);
+
+        $expressions = Input::get('expressions');
+
+        if ($root->rule == null) {
+            $root->rule()->save(new SurveyORM\Rule(['expressions' => $expressions]));
         } else {
-            $root->rules()->first()->update(['expression' => $rules]);
+            $root->rule->update(['expressions' => $expressions]);
         }
 
         return 'save rules successed';
     }
 
-    public function deleteRules()
+    public function deleteRule()
     {
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
-        if (!$root->rules()->first() == null) {
-            $ruleId = $root->rules()->first()->id;
-            $root->rules()->detach($ruleId);
-            SurveyORM\Rule::find($ruleId)->delete();
-        }
+
+        $root->rule->delete();
 
         return 'delete rules successed';
     }
 
-    public function getRules()
+    public function getRule()
     {
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
 
-        if (!$root->rules()->first() == null) {
-            $rules = $root->rules()->first()->expression;
-        } else {
-            $rules = [['conditions' => [['compareType' => 'question']]]];
-        }
+        $rule = $root->rule ? $root->rule : new SurveyORM\Rule(['expressions' => [['conditions' => [['compareType' => 'question']]]]]);
 
-        return ['rules' => $rules];
+        return ['rule' => $rule];
     }
 
     public function lockBook()
@@ -622,7 +616,7 @@ class SurveyFile extends CommFile
     {
         $operators = [' && ' => '而且', ' || ' => '或者'];
         $booleans = [' > ' => '大於', ' < ' => '小於', ' == ' => '等於', ' != ' => '不等於'];
-        $expressions = SurveyORM\Rule::find(Input::get('rule_id'))->expression;
+        $expressions = SurveyORM\Rule::find(Input::get('rule_id'))->expressions;
 
         $explanation = '';
         foreach ($expressions as $expression) {

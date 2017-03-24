@@ -91,7 +91,7 @@ class SurveyControllerTest extends TestCase
         $this->assertArrayHasKey('nodes', $this->client->getResponse()->original);
     }
 
-    public function testGetRules()
+    public function testGetRule()
     {
         $node = $this->book->childrenNodes()->save(new SurveyORM\Node(['type' => 'select']));
 
@@ -99,8 +99,8 @@ class SurveyControllerTest extends TestCase
             'skipTarget' => $node->toArray(),
         ];
 
-        $this->client->request('POST', 'survey/' . $this->book->id . '/survey/getRules', $input);
+        $this->client->request('POST', 'survey/' . $this->book->id . '/survey/getRule', $input);
 
-        $this->assertArrayHasKey('rules', $this->client->getResponse()->original);
+        $this->assertArrayHasKey('rule', $this->client->getResponse()->original);
     }
 }

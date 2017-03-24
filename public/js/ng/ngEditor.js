@@ -628,31 +628,31 @@ angular.module('ngEditor.directives', [])
                         <h4>跳題設定</h4>
                         <div flex></div>
                         <md-button aria-label="關閉" ng-click="toggleSidenavRight()">關閉</md-button>
-                        <md-button aria-label="儲存設定" md-colors="{background: 'blue'}" style="float:right" ng-click="saveRules()">
+                        <md-button aria-label="儲存設定" md-colors="{background: 'blue'}" style="float:right" ng-click="saveRule()">
                             儲存設定
                         </md-button>
-                        <md-button aria-label="刪除設定" md-colors="{background: 'blue'}" style="float:right" ng-click="deleteRules()">
+                        <md-button aria-label="刪除設定" md-colors="{background: 'blue'}" style="float:right" ng-click="deleteRule()">
                             刪除設定
                         </md-button>
                     </div>
                 </md-toolbar>
                 <md-content>
-                    <md-card ng-repeat="rule in rules">
+                    <md-card ng-repeat="expression in rule.expressions">
                         <md-card-header md-colors="{background: 'indigo'}">
                             <div flex layout="row" layout-align="start center">
-                                <div  style="margin: 0 0 0 16px" ng-if="rule.compareLogic">
-                                    {{ (compareOperators | filter: {key: rule.compareLogic}:true)[0].title }}
+                                <div  style="margin: 0 0 0 16px" ng-if="expression.compareLogic">
+                                    {{ (compareOperators | filter: {key: expression.compareLogic}:true)[0].title }}
                                 </div>
                                 <span flex></span>
                                 <div>
-                                    <md-button class="md-icon-button" aria-label="刪除" ng-click="removeRule($index)">
+                                    <md-button class="md-icon-button" aria-label="刪除" ng-click="removeExpression($index)">
                                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
                                     </md-button>
                                 </div>
                             </div>
                         </md-card-header>
-                        <md-card-content ng-repeat="(key,condition) in rule.conditions">
-                            <survey-skip first="$first" book="book" condition="condition" remove-condition="removeCondition(rule, key)" create-condition="createCondition(rule, key)"></survey-skip>
+                        <md-card-content ng-repeat="(key,condition) in expression.conditions">
+                            <survey-skip first="$first" book="book" condition="condition" remove-condition="removeCondition(expression, key)" create-condition="createCondition(expression, key)"></survey-skip>
                         </md-card-content>
                         <md-card-actions>
                             <md-fab-toolbar md-direction="right">
@@ -663,7 +663,7 @@ angular.module('ngEditor.directives', [])
                                 </md-fab-trigger>
                                 <md-toolbar>
                                     <md-fab-actions class="md-toolbar-tools" >
-                                        <md-button aria-label="邏輯" ng-repeat="compareOperator in compareOperators" ng-click="createRule($index, compareOperator.key)">
+                                        <md-button aria-label="邏輯" ng-repeat="compareOperator in compareOperators" ng-click="createExpression($index, compareOperator.key)">
                                             {{compareOperator.title}}
                                         </md-button>
                                     </md-fab-actions>
@@ -678,15 +678,15 @@ angular.module('ngEditor.directives', [])
         },
         controller: function($scope, $http, $mdSidenav) {
             $scope.ran = Math.random();
-            $scope.getRules = function() {
-                $http({method: 'POST', url: 'getRules', data:{skipTarget: $scope.skipTarget}})
+            $scope.getRule = function() {
+                $http({method: 'POST', url: 'getRule', data:{skipTarget: $scope.skipTarget}})
                 .success(function(data) {
-                    $scope.rules = data.rules;
+                    $scope.rule = data.rule;
                 }).error(function(e) {
                     console.log(e)
                 });
             };
-            $scope.getRules();
+            $scope.getRule();
 
             $scope.toggleSidenavRight = function() {
                 $mdSidenav('survey-skips').close();
@@ -697,27 +697,27 @@ angular.module('ngEditor.directives', [])
                 {key: ' || ', title: '或者'}
             ];
 
-            $scope.createCondition = function(rule, index) {
-                rule.conditions.splice(index+1, 0, {});
+            $scope.createCondition = function(expression, index) {
+                expression.conditions.splice(index+1, 0, {});
             };
 
-            $scope.removeCondition = function(rule, index) {
-                rule.conditions.splice(index, 1);
+            $scope.removeCondition = function(expression, index) {
+                expression.conditions.splice(index, 1);
             };
 
-            $scope.removeRule = function(index) {
+            $scope.removeExpression = function(index) {
                 if (index == 0) {
-                    delete $scope.rules[1].compareLogic;
+                    delete $scope.rule.expressions[index].compareLogic;
                 }
-                $scope.rules.splice(index, 1);
+                $scope.rule.expressions.splice(index, 1);
             };
 
-            $scope.createRule = function(index, logic) {
-                $scope.rules.splice(index+1, 0,{'compareLogic':logic, 'conditions':[{'compareType':'question'}]});
+            $scope.createExpression = function(index, logic) {
+                $scope.rule.expressions.splice(index+1, 0, {'compareLogic':logic, 'conditions':[{'compareType':'question'}]});
             };
 
-            $scope.saveRules = function() {
-               $http({method: 'POST', url: 'saveRules', data:{rules: $scope.rules, skipTarget: $scope.skipTarget}})
+            $scope.saveRule = function() {
+               $http({method: 'POST', url: 'saveRule', data:{expressions: $scope.rule.expressions, skipTarget: $scope.skipTarget}})
                 .success(function(data) {
 
                 }).error(function(e) {
@@ -725,10 +725,10 @@ angular.module('ngEditor.directives', [])
                 });
             };
 
-            $scope.deleteRules = function() {
-               $http({method: 'POST', url: 'deleteRules', data:{skipTarget: $scope.skipTarget}})
+            $scope.deleteRule = function() {
+               $http({method: 'POST', url: 'deleteRule', data:{skipTarget: $scope.skipTarget}})
                 .success(function(data) {
-                    $scope.getRules();
+                    $scope.getRule();
                 }).error(function(e) {
                     console.log(e)
                 });

@@ -43,14 +43,9 @@ class Answer extends Eloquent {
         return $this->hasOne('Plat\Eloquent\Survey\Rule', 'expression', 'children_expression');
     }
 
-    public function rules()
-    {
-        return $this->morphToMany('Plat\Eloquent\Survey\Rule', 'survey_rule_effect');
-    }
-
     public function rule()
     {
-        return $this->hasOne('Plat\Eloquent\Survey\Rule', 'expression', 'expression');
+        return $this->morphOne('Plat\Eloquent\Survey\Rule', 'effect');
     }
 
     public function choose()

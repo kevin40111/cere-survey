@@ -61,17 +61,17 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
         compareRule: function(target) {
             var answers = this.answers;
 
-            if (target.rules.length) {
-                var rules = target.rules[0].expression;
+            if (target.rule) {
+                var expressions = target.rule.expressions;
                 var result ='';
-                for (var i in rules) {
-                    var rule = rules[i];
-                    if (rule.compareLogic) {
-                        result = result + rule.compareLogic;
+                for (var i in expressions) {
+                    var expression = expressions[i];
+                    if (expression.compareLogic) {
+                        result = result + expression.compareLogic;
                     }
                     result = result + '(';
-                    for (var j in rule.conditions) {
-                        var condition = rule.conditions[j];
+                    for (var j in expression.conditions) {
+                        var condition = expression.conditions[j];
                         if (condition.compareOperator) {
                             result += condition.compareOperator;
                         }
