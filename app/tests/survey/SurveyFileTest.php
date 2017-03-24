@@ -38,6 +38,13 @@ class SurveyFileTest extends TestCase {
 
         Input::replace([
             'parent' => $this->surveyFile->file->book->toArray(),
+            'node' => ['type' => 'page'],
+            'previous' => NULL,
+        ]);
+        $this->page = $this->surveyFile->createNode()['node'];
+
+        Input::replace([
+            'parent' => $this->page->toArray(),
             'node' => ['type' => 'select'],
             'previous' => NULL,
         ]);
@@ -198,7 +205,7 @@ class SurveyFileTest extends TestCase {
             'root' => $this->answer->toArray(),
         ]);
 
-        $amount = SurveyORM\Node::all()->count();
+        $amount = $this->page->childrenNodes->count();
 
         $nodes = $this->surveyFile->getNodes()['nodes'];
 
@@ -326,7 +333,7 @@ class SurveyFileTest extends TestCase {
     public function testDeleteRule()
     {
         Input::replace([
-            'skipTarget' => ['class' => SurveyORM\Node::class, 'id' => SurveyORM\Node::first()->id],
+            'skipTarget' => $this->node->toArray(),
         ]);
 
         $this->surveyFile->deleteRule();
