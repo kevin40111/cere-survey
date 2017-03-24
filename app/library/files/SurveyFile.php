@@ -283,8 +283,8 @@ class SurveyFile extends CommFile
             $extDoc = $this->createExtBook();
             $extBook = $this->setExtBook($application, $extDoc['id']);
         }
-        Input::replace(['skipTarget' => ['class' => $this->file->book->class, 'id' => $application->ext_book_id], 'rules' => $selected['rules']]);
-        $this->saveRules();
+        Input::replace(['skipTarget' => ['class' => $this->file->book->class, 'id' => $application->ext_book_id], 'expressions' => $selected['rules']]);
+        $this->saveRule();
         $application->appliedOptions()->sync($selected['columns']);
         $appliedOptions = $this->getAppliedOptions();
         return $appliedOptions;
@@ -319,10 +319,10 @@ class SurveyFile extends CommFile
             $options = $appliedOptions;
             $extBook = $this->getExtBook($application->ext_book_id);
             Input::replace(['skipTarget' => ['class' => $this->file->book->class, 'id' => $application->ext_book_id]]);
-            $rules = $this->getRules();
+            $rule = $this->getRule()['rule'];
             $organizationsSelected = array_map(function($rule){
                 return \Plat\Project\OrganizationDetail::find($rule['value']);
-            }, $rules['rules'][0]['conditions']);
+            }, $rule->expressions[0]['conditions']);
         } else {
             $applicableOption = $this->file->book->applicableOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
                 return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
@@ -360,7 +360,7 @@ class SurveyFile extends CommFile
         $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
         Input::replace(['skipTarget' => ['class' => $this->file->book->class, 'id' => $application->ext_book_id]]);
         $this->deleteApplication();
-        $this->deleteRules();
+        $this->deleteRule();
         return $this->getAppliedOptions();
     }
 

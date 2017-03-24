@@ -78,9 +78,9 @@ class Book extends Eloquent {
         return $this->belongsTo('Files', 'file_id', 'id');
     }
 
-    public function rules()
+    public function rule()
     {
-        return $this->morphToMany('Plat\Eloquent\Survey\Rule', 'survey_rule_effect');
+        return $this->morphOne('Plat\Eloquent\Survey\Rule', 'effect');
     }
 
 
