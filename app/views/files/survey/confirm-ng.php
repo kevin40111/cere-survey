@@ -1,5 +1,5 @@
-<md-content ng-cloak layout="column" ng-controller="confirm" layout-align="start center">
-    <div class="ui basic segment" ng-cloak style="overflow: auto">
+<md-content ng-controller="confirm" layout-align="start center" style="height: 100%">
+    <div class="ui basic segment" style="x-overflow: auto">
         <md-input-container>
             <label>選擇頁數</label>
             <md-select ng-model="currentPage" ng-change="getUsers(currentPage)">
@@ -26,6 +26,7 @@
                     <th width="140">姓名</th>
                     <th width="250">email</th>
                     <th width="100">加掛審核</th>
+                    <th width="100">退件</th>
                     <th width="100">檢視申請表</th>
                     <th width="100">加掛問卷</th>
                     <th>職稱</th>
@@ -88,6 +89,7 @@
                     <th></th>
                     <th></th>
                     <th></th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -104,14 +106,17 @@
                         <div ng-if="application.members.user.email2">{{ application.members.user.email2 }}</div>
                     </td>
                     <td class="center aligned">
-                        <md-checkbox ng-model="application.extension" ng-disabled="application.saving" aria-label="加掛審核" ng-change="activeExtension(application)"></md-checkbox>
+                        <md-checkbox ng-model="application.extension" ng-disabled="application.saving" aria-label="加掛審核" ng-change="activeExtension(application)" ng-click="sendMail(application.members.user.email,application.ext_book_id,1)"></md-checkbox>
                     </td>
+<td><md-button ng-click="sendMail(application.members.user.email,application.ext_book_id,0)">退件！</md-button></td>
                     <td class="center aligned">
                         <md-button ng-click="openApplication(application.members.id)" aria-label="檢視申請表"><md-icon md-svg-icon="assignment"></md-icon></md-button>
                     </td>
                     <td>
                         <md-button aria-label="加掛問卷" class="md-icon-button" ng-click="openBrowser(application.ext_book_id)">
                             <md-icon md-menu-origin md-svg-icon="description" ng-style="{color: application.ext_book_locked }"></md-icon>
+                        }
+                        }
                         </md-button>
                     </td>
                     <td>{{ application.members.contact.title }}</td>
@@ -125,16 +130,40 @@
         </table>
         <md-progress-linear md-mode="indeterminate" ng-disabled="sheetLoaded"></md-progress-linear>
     </div>
+     <md-sidenav class="md-sidenav-right" md-component-id="" md-is-open="emailSender" style="min-width:40%">
+        <md-toolbar class="md-theme-light">
+        <h1 class="md-toolbar-tools">通知信寄送</h1>
+      </md-toolbar>
+      <md-content layout-padding flex="100%">
+        <form class="ui form">
+            <div class="field">
+                <label>寄送對象</label>
+                <input type="text" ng-model="email" size="100" />    
+            </div>
+            <div class="field">
+                <label>標題</label>
+                <input type="text" ng-model="title" size="100" />
+            </div>
+            <div class="field">
+                <label>內文</label>                
+                <textarea ng-model="context" cols="100" rows="15"></textarea>
+            </div>
+            <md-button ng-click="sendStart()">送出</md-button>
+        </form>
+    </md-content>
+    </md-sidenav>
+    
 </md-content>
 <script src="/js/ng/ngBrowser.js"></script>
 <script>
     app.requires.push('ngBrowser');
-    app.controller('confirm', function ($scope, $http, $filter, $q, $mdDialog, $mdPanel){
+    app.controller('confirm', function ($scope, $http, $filter, $q, $mdDialog, $mdPanel, $mdSidenav){
         $scope.sheetLoaded = false;
         $scope.currentPage = 1;
         $scope.lastPage = 0;
         $scope.pages = [];
-
+        $scope.emailSender = false;
+  
         $scope.$watch('lastPage', function(lastPage) {
             $scope.pages = [];
             for (var i = 1; i <= lastPage; i++) {
@@ -349,7 +378,38 @@
                 console.log(e);
             });
         };
+
+        $scope.sendMail = function(email,book_id,type) {
+            $scope.emailSender = !$scope.emailSender;
+            $scope.email = email;
+            $scope.type = type;
+            $scope.book_id = book_id;
+            if(type == 1){
+console.log(1);
+            }else{
+console.log(0);
+            }
+            console.log(email,book_id,type);
+        };
+
+        $scope.sendStart = function() {
+        console.log($scope);
+            $http({method: 'POST', url: 'ajax/sendMail', data:{
+                email: $scope.email,
+                title: $scope.title,
+                context: $scope.context,
+            }})
+            .success(function(data, status, headers, config) {
+                console.log(data);
+            })
+            .error(function(e){
+                console.log(e);
+            });
+        };
     });
+
+    
+
 </script>
 
 <style>
