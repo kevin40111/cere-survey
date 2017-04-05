@@ -475,8 +475,23 @@ class SurveyFile extends CommFile
     public function activeExtension()
     {
         $application_id = Input::get('application_id');
-        $extension = $this->file->book->applications()->where('id', $application_id)->first();
-        $this->file->book->applications()->where('id', $application_id)->update(array('extension' => !$extension->extension));
+        $application = $this->file->book->applications()->where('id', $application_id)->first();
+        if (!$application->reject) {
+            SurveyORM\Book::find($application->ext_book_id)->update(array('lock' => true));
+        }
+        $this->file->book->applications()->where('id', $application_id)->update(array('extension' => !$application->extension));
+
+        return ['application' => $this->file->book->applications()->where('id', $application_id)->first()];
+    }
+
+    public function reject()
+    {
+        $application_id = Input::get('application_id');
+        $application = $this->file->book->applications()->where('id', $application_id)->first();
+        if (!$application->reject) {
+            SurveyORM\Book::find($application->ext_book_id)->update(array('lock' => false));
+        }
+        $this->file->book->applications()->where('id', $application_id)->update(array('reject' => !$application->reject));
 
         return ['application' => $this->file->book->applications()->where('id', $application_id)->first()];
     }

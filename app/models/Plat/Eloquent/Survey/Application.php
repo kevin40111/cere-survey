@@ -40,4 +40,9 @@ class Application extends Eloquent {
         return (boolean)$value;
     }
 
+    public function getRejectAttribute($value)
+    {
+        return (boolean)$value;
+    }
+
 }

@@ -106,17 +106,17 @@
                         <div ng-if="application.members.user.email2">{{ application.members.user.email2 }}</div>
                     </td>
                     <td class="center aligned">
-                        <md-checkbox ng-model="application.extension" ng-disabled="application.saving" aria-label="加掛審核" ng-change="activeExtension(application)" ng-click="sendMail(application.members.user.email,application.ext_book_id,1)"></md-checkbox>
+                        <md-checkbox ng-model="application.extension" ng-disabled="application.saving || application.reject" aria-label="加掛審核" ng-change="activeExtension(application)" ng-click="sendMail(application.members.user.email,application.ext_book_id,1)"></md-checkbox>
                     </td>
-<td><md-button ng-click="sendMail(application.members.user.email,application.ext_book_id,0)">退件！</md-button></td>
+                    <td class="center aligned">
+                        <md-checkbox ng-model="application.reject" ng-disabled="application.saving || application.extension" aria-label="退件" ng-change="reject(application)" ng-click="sendMail(application.members.user.email,application.ext_book_id,0)"></md-checkbox>
+                    </td>
                     <td class="center aligned">
                         <md-button ng-click="openApplication(application.members.id)" aria-label="檢視申請表"><md-icon md-svg-icon="assignment"></md-icon></md-button>
                     </td>
                     <td>
                         <md-button aria-label="加掛問卷" class="md-icon-button" ng-click="openBrowser(application.ext_book_id)">
                             <md-icon md-menu-origin md-svg-icon="description" ng-style="{color: application.ext_book_locked }"></md-icon>
-                        }
-                        }
                         </md-button>
                     </td>
                     <td>{{ application.members.contact.title }}</td>
@@ -138,21 +138,21 @@
         <form class="ui form">
             <div class="field">
                 <label>寄送對象</label>
-                <input type="text" ng-model="email" size="100" />    
+                <input type="text" ng-model="email" size="100" />
             </div>
             <div class="field">
                 <label>標題</label>
                 <input type="text" ng-model="title" size="100" />
             </div>
             <div class="field">
-                <label>內文</label>                
+                <label>內文</label>
                 <textarea ng-model="context" cols="100" rows="15"></textarea>
             </div>
             <md-button ng-click="sendStart()">送出</md-button>
         </form>
     </md-content>
     </md-sidenav>
-    
+
 </md-content>
 <script src="/js/ng/ngBrowser.js"></script>
 <script>
@@ -163,7 +163,7 @@
         $scope.lastPage = 0;
         $scope.pages = [];
         $scope.emailSender = false;
-  
+
         $scope.$watch('lastPage', function(lastPage) {
             $scope.pages = [];
             for (var i = 1; i <= lastPage; i++) {
@@ -207,6 +207,18 @@
             $http({method: 'POST', url: 'activeExtension', data:{application_id: application.id}})
             .success(function(data, status, headers, config) {
                 application.saving = false;
+            })
+            .error(function(e) {
+                console.log(e);
+            });
+        };
+
+        $scope.reject = function(application) {
+            application.saving = true;
+            $http({method: 'POST', url: 'reject', data:{application_id: application.id}})
+            .success(function(data, status, headers, config) {
+                application.saving = false;
+                $scope.getApplications();
             })
             .error(function(e) {
                 console.log(e);
@@ -384,16 +396,9 @@
             $scope.email = email;
             $scope.type = type;
             $scope.book_id = book_id;
-            if(type == 1){
-console.log(1);
-            }else{
-console.log(0);
-            }
-            console.log(email,book_id,type);
         };
 
         $scope.sendStart = function() {
-        console.log($scope);
             $http({method: 'POST', url: 'ajax/sendMail', data:{
                 email: $scope.email,
                 title: $scope.title,
@@ -408,7 +413,7 @@ console.log(0);
         };
     });
 
-    
+
 
 </script>
 
