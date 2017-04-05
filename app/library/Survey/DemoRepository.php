@@ -27,9 +27,9 @@ class DemoRepository implements SurveyRepositoryInterface
     {
         $attributes = array_add($default, 'created_by', $id);
 
-        Session::put('answers', $attributes);
+        Session::put('answer.'.$this->book_id, $attributes);
 
-        return Session::get('answers');
+        return Session::get('answer.'.$this->book_id);
     }
 
     /**
@@ -40,9 +40,9 @@ class DemoRepository implements SurveyRepositoryInterface
      */
     public function decrement($id)
     {
-        Session::forget('answers');
+        Session::forget('answer');
 
-        return Session::get('answers');
+        return Session::get('answer');
     }
 
     /**
@@ -54,7 +54,7 @@ class DemoRepository implements SurveyRepositoryInterface
      */
     public function get($id, $key)
     {
-        $answers = Session::get('answers.'.$key);
+        $answers = Session::get('answer.'.$this->book_id.'.'.$key);
 
         return $answers;
     }
@@ -69,9 +69,9 @@ class DemoRepository implements SurveyRepositoryInterface
      */
     public function put($id, $key, $value)
     {
-        $answers = Session::put('answers.'.$key, $value);
+        $answers = Session::put('answer.'.$this->book_id.'.'.$key, $value);
 
-        return Session::has('answers.'.$key);
+        return Session::has('answer.'.$this->book_id.'.'.$key);
     }
 
     /**
@@ -81,7 +81,7 @@ class DemoRepository implements SurveyRepositoryInterface
      */
     public function all($id)
     {
-        $answers = Session::get('answers');
+        $answers = Session::get('answer.'.$this->book_id);
 
         return $answers;
     }
@@ -93,6 +93,6 @@ class DemoRepository implements SurveyRepositoryInterface
      */
     public function exist($id)
     {
-        return Session::has('answers');
+        return Session::has('answer.'.$this->book_id);
     }
 }

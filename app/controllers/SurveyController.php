@@ -67,6 +67,16 @@ class SurveyController extends \BaseController {
     }
 
     /**
+     * Display a page of the demo login.
+     *
+     * @return Response
+     */
+    public function demoLogin()
+    {
+        return View::make('layout-survey')->nest('context', 'files.survey.demologin-ng');
+    }
+
+    /**
      * Check if login user in population.
      *
      * @param  int  $book_id
@@ -119,52 +129,38 @@ class SurveyController extends \BaseController {
         $answers = (object)$this->repository->all($this->user_id);
         $previous = SurveyORM\Node::find($answers->page_id);
         $page = Input::get('next') ? $previous->next : $previous;
-        $extBook_id = null;        
+        $extBook_id = null;
         if ($page != null) {
-            $this->repository->put($this->user_id, 'page_id', $page->id);
+            $page->load('rule');
+            $this->repository->put($this->user_id, 'page_id', $page->id); //not last page
         } else {
-            if (count($this->getExtBook($book_id))) {
-                $lastPage = true;
-            } else {
+            if (count($this->getExtBook($book_id)) != 0) {
                 if ($this->type == 'survey') {
-                    $book = SurveyORM\Book::find($book_id);
-                    if (!is_null($book->rowsFile_id)) {
-                        $rowsFile = Files::find($book->rowsFile_id)->sheets()->first()->tables()->first();
-                        return ($this->repository->all($this->user_id));
-                        /*$userOrganization = DB::table('rows.dbo.'.$rowsFile->name)->where('C'.$book->loginRow_id, $user_id)->select('C'.$book->column_id.' AS value')->first();
-                        $extBook = $this->getExtBook($book_id)->filter(function($extBook) use($userOrganization){
-                            $values = array_fetch($extBook->rules->first()->expression['rules'][0]['conditions'], 'value');
-                            return in_array($userOrganization->value, $values);
-                        })->first();
 
-                        $extBook_id = $extBook->id;*/
+                    $book = SurveyORM\Book::find($book_id);
+                    $rowsFile = Files::find($book->rowsFile_id)->sheets()->first()->tables()->first();
+                    $userOrganization = DB::table('rows.dbo.'.$rowsFile->name)->where('C'.$book->loginRow_id, SurveySession::getLoginId())->select('C'.$book->column_id.' AS value')->first();
+
+                    $extBook = $this->getExtBook($book_id)->filter(function($extBook) use($userOrganization){
+                        $values = array_fetch($extBook->rule->expressions[0]['conditions'], 'value');
+                        return in_array($userOrganization->value, $values);
+                    })->first();
+
+                    $extBook_id = $extBook->id;
+
+                    $encrypt_id = SurveySession::login($extBook_id, SurveySession::getLoginId());
+                    $extBook_page = SurveyORM\Book::find($extBook_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
+                    if (!DB::table($extBook_id)->where('created_by', $encrypt_id)->exists()) {
+                        DB::table($extBook_id)->insert(['page_id' => $extBook_page->id, 'created_by' => $encrypt_id]);
                     }
                 }
-
-                if ($this->type == 'demo') {
-
-                }
             }
-            
         }
-        
-
-        /*$user_id = 'P224406821'; //測試user帳號
-        $book = SurveyORM\Book::find($book_id);
-        if (!is_null($book->rowsFile_id)) {
-            $rowsFile = Files::find($book->rowsFile_id)->sheets()->first()->tables()->first();
-            $userOrganization = DB::table('rows.dbo.'.$rowsFile->name)->where('C'.$book->loginRow_id, $user_id)->select('C'.$book->column_id.' AS value')->first();
-            $extBook = $this->getExtBook($book_id)->filter(function($extBook) use($userOrganization){
-                $values = array_fetch($extBook->rules->first()->expression['rules'][0]['conditions'], 'value');
-                return in_array($userOrganization->value, $values);
-            })->first();
-
-            $extBook_id = $extBook->id;
-        }*/
 
         $lastPage = is_null($page) ? true : false;
+        $extended = (count($this->getExtBook($book_id)) == 0) ? false : true;
 
-        return ['node' => $page->load(['rules']), 'answers' => $this->repository->all($this->user_id), 'extBook_id' => $extBook_id, 'lastPage' => $lastPage];
+        return ['node' => $page, 'answers' => $this->repository->all($this->user_id), 'extBook_id' => $extBook_id, 'lastPage' => $lastPage, 'type' => $this->type, 'extended' => $extended];
     }
 
     /**
@@ -224,12 +220,44 @@ class SurveyController extends \BaseController {
         return Redirect::to('surveyDemo/'.$book_id.'/demo/page');
     }
 
+    /**
+     * get extend books .
+     *
+     * @param  int  $book_id
+     * @return Response
+     */
     public function getExtBook($book_id)
     {
         return SurveyORM\Book::find($book_id)->applications->filter(function($application){
-            return SurveyORM\Book::find($application->ext_book_id)->rules()->exists();
+            return SurveyORM\Book::find($application->extension) == true;
+        })->filter(function($application){
+            return SurveyORM\Book::find($application->ext_book_id)->rule()->exists();
         })->map(function($application){
-            return SurveyORM\Book::find($application->ext_book_id)->load('rules');
+            return SurveyORM\Book::find($application->ext_book_id)->load('rule');
         });
+    }
+
+    /**
+     * get demo options .
+     *
+     * @param  int  $book_id
+     * @return Response
+     */
+    public function getDemoOption($book_id)
+    {
+        $options = [];
+        foreach ($this->getExtBook($book_id)  as $extBook) {
+            $values = array_fetch($extBook->rule->expressions[0]['conditions'], 'value');
+
+            foreach ($values  as $value) {
+                $option = [];
+                $option['ext_book_id'] = $extBook->id;
+                $option['organization_id'] = $value;
+                $option['name'] = \Plat\Project\OrganizationDetail::where('id',$value)->orderBy('year', 'desc')->select('name')->first()->name;
+                array_push($options,$option);
+            }
+        }
+
+        return ['options' => $options];
     }
 }

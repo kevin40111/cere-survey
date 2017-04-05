@@ -47,6 +47,13 @@ class SurveySession
         return $survey_login['encrypt_id'];
     }
 
+    public static function getLoginId()
+    {
+        $survey_login = Session::get('survey_login');
+
+        return $survey_login['login_id'];
+    }
+
     public static function logout()
     {
         Session::forget('survey_login');

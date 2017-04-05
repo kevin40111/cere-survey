@@ -42,7 +42,6 @@ app.controller('quesController', function quesController($scope, $http, $filter,
         $scope.$parent.main.loading = true;
         $http({method: 'POST', url: 'getBook', data:{}})
         .success(function(data, status, headers, config) {
-            console.log(data);
             $scope.book = data.book;
             $scope.$parent.main.loading = false;
         }).error(function(e) {

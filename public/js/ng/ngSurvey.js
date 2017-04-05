@@ -112,7 +112,10 @@ angular.module('ngSurvey.directives', [])
                 </div>
                 <div ng-if="!book.saving">
                     <survey-page ng-if="node" page="node" ng-hide="compareRule(node)"></survey-page>
-                    <md-button class="md-raised md-primary" ng-click="getNextNode(true)" ng-disabled="book.saving">繼續</md-button>
+                    <md-button class="md-raised md-primary" ng-click="getNextNode(true)" ng-disabled="book.saving" aria-label="繼續">
+                        <p ng-if="!book.done">繼續</p>
+                        <p ng-if="book.done">填答完畢</p>
+                    </md-button>
                 </div>
             </div>
         `,
@@ -125,7 +128,16 @@ angular.module('ngSurvey.directives', [])
                     $scope.node = response.node;
                     surveyFactory.answers = response.answers;
                     if (response.lastPage) {
-                        location.href = '/survey/'+response.extBook_id+'/page';
+                        if (response.extended) {
+                            if (response.type == 'survey') {
+                            location.href = '/survey/'+response.extBook_id+'/survey/page';
+                            }
+                            if (response.type == 'demo') {
+                                location.href = '/surveyDemo/'+$scope.book.id+'/demo/demoLogin';
+                            }
+                        } else {
+                            $scope.book.done = true;
+                        }
                     }
                 });
             };
