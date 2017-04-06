@@ -11,8 +11,8 @@
             <div class="field">
                 <md-input-container>
                     <label>請選擇學校</label>
-                    <md-select ng-model="option.ext_book_id">
-                        <md-option ng-repeat="option in options" ng-value="option.ext_book_id">{{option.name}}</md-option>
+                    <md-select ng-model="option">
+                        <md-option ng-repeat="option in options" ng-value="option">{{option.name}}</md-option>
                     </md-select>
                 </md-input-container>
             </div>
@@ -22,7 +22,7 @@
     </div>
 </form>
 </md-content>
-<script src="/js/ng/ngSurvey.js"></script>
+
 <script >
     app.controller('demologin', function ($scope, $http){
 
