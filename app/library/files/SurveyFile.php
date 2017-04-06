@@ -7,6 +7,7 @@ use Input, View;
 use User;
 use Files;
 use Auth;
+use Mail;
 use Plat\Survey;
 use Plat\Eloquent\Survey as SurveyORM;
 
@@ -677,5 +678,17 @@ class SurveyFile extends CommFile
         }
 
         return ['explanation' => $explanation];
+    }
+
+    public function sendMail()
+    {
+        try {
+            Mail::send('emails.empty', ['context' => Input::get('context')], function($message) {
+                $message->to(Input::get('email'))->subject(Input::get('title'));
+            });
+            return ['sended' => true];
+        } catch (Exception $e){
+            return ['sended' => false];
+        }
     }
 }

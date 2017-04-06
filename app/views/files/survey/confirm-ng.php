@@ -106,10 +106,10 @@
                         <div ng-if="application.members.user.email2">{{ application.members.user.email2 }}</div>
                     </td>
                     <td class="center aligned">
-                        <md-checkbox ng-model="application.extension" ng-disabled="application.saving || application.reject" aria-label="加掛審核" ng-change="activeExtension(application)" ng-click="sendMail(application.members.user.email,application.ext_book_id,1)"></md-checkbox>
+                        <md-checkbox ng-model="application.extension" ng-disabled="application.saving || application.reject" aria-label="加掛審核" ng-change="activeExtension(application)" ng-click="sendMail(application.members.user.email)"></md-checkbox>
                     </td>
                     <td class="center aligned">
-                        <md-checkbox ng-model="application.reject" ng-disabled="application.saving || application.extension" aria-label="退件" ng-change="reject(application)" ng-click="sendMail(application.members.user.email,application.ext_book_id,0)"></md-checkbox>
+                        <md-checkbox ng-model="application.reject" ng-disabled="application.saving || application.extension" aria-label="退件" ng-change="reject(application)" ng-click="sendMail(application.members.user.email)"></md-checkbox>
                     </td>
                     <td class="center aligned">
                         <md-button ng-click="openApplication(application.members.id)" aria-label="檢視申請表"><md-icon md-svg-icon="assignment"></md-icon></md-button>
@@ -152,8 +152,7 @@
         </form>
     </md-content>
     </md-sidenav>
-
-</md-content>
+    </md-content>
 <script src="/js/ng/ngBrowser.js"></script>
 <script>
     app.requires.push('ngBrowser');
@@ -391,11 +390,9 @@
             });
         };
 
-        $scope.sendMail = function(email,book_id,type) {
+        $scope.sendMail = function(email) {
             $scope.emailSender = !$scope.emailSender;
             $scope.email = email;
-            $scope.type = type;
-            $scope.book_id = book_id;
         };
 
         $scope.sendStart = function() {
@@ -410,6 +407,11 @@
             .error(function(e){
                 console.log(e);
             });
+            var sendMailConfirm = $mdDialog.confirm()
+            .title('信件已送出')
+            .ok('確認')
+
+            $mdDialog.show(sendMailConfirm);
         };
     });
 
