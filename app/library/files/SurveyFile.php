@@ -570,10 +570,13 @@ class SurveyFile extends CommFile
 
         if ($root->rule == null) {
             $root->rule()->save(new SurveyORM\Rule(['expressions' => $expressions]));
+            $rule_id = SurveyORM\Rule::orderBy('id', 'desc')->first()['id'];
         } else {
             $root->rule->update(['expressions' => $expressions]);
+            $rule_id = $root->rule->id;
         }
 
+        $this->saveRulesFactor($expressions, $rule_id);
         return 'save rules successed';
     }
 
@@ -582,9 +585,23 @@ class SurveyFile extends CommFile
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
 
+        SurveyORM\SurveyRuleFactor::where('rule_id',$root->rule->id)->delete();
         $root->rule->delete();
 
         return 'delete rules successed';
+    }
+
+    public function saveRulesFactor($expressions, $rule_id)
+    {   
+        if(SurveyORM\Rule::where('id', $rule_id)->exists()){
+            SurveyORM\SurveyRuleFactor::where('rule_id', $rule_id)->delete();
+        }
+
+        foreach ($expressions as $rule) {
+            foreach ($rule['conditions'] as $condition) {
+                isset($condition['question']) ? SurveyORM\SurveyRuleFactor::create(array('rule_relation_factor'=>$condition['question'], 'rule_id'=>$rule_id)) : "";
+            }
+        }
     }
 
     public function getRule()
