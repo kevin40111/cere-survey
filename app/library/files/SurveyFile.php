@@ -360,11 +360,10 @@ class SurveyFile extends CommFile
 
     public function resetApplication()
     {
-
         $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
-        Input::replace(['skipTarget' => ['class' => $this->file->book->class, 'id' => $application->ext_book_id]]);
         $this->deleteApplication();
-        $this->deleteRule();
+        $extBook = SurveyORM\Book::find($application->ext_book_id);
+        Survey\RuleRepository::target($extBook)->deleteRule();
         return $this->getAppliedOptions();
     }
 
@@ -575,11 +574,8 @@ class SurveyFile extends CommFile
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
 
-        $expressions = Input::get('expressions');
+        $rule = Survey\RuleRepository::target($root)->saveExpressions(Input::get('expressions'));
 
-        $rule = Survey\RuleRepository::target($root)->saveExpressions($expressions);
-
-        $this->saveRulesFactor($expressions, $rule->id);
         return 'save rules successed';
     }
 
@@ -588,23 +584,9 @@ class SurveyFile extends CommFile
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
 
-        SurveyORM\SurveyRuleFactor::where('rule_id',$root->rule->id)->delete();
-        $root->rule->delete();
+        Survey\RuleRepository::target($root)->deleteRule();
 
         return 'delete rules successed';
-    }
-
-    public function saveRulesFactor($expressions, $rule_id)
-    {
-        if(SurveyORM\Rule::find($rule_id)->exists()){
-            SurveyORM\SurveyRuleFactor::where('rule_id', $rule_id)->delete();
-        }
-
-        foreach ($expressions as $expression) {
-            foreach ($expression['conditions'] as $condition) {
-                isset($condition['question']) && SurveyORM\SurveyRuleFactor::create(['rule_relation_factor' => $condition['question'], 'rule_id' => $rule_id]);
-            }
-        }
     }
 
     public function getRule()

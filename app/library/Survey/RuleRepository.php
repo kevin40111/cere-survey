@@ -30,6 +30,26 @@ class RuleRepository
             $rule->update(['expressions' => $expressions]);
         }
 
+        $this->saveRulesFactor($expressions, $rule);
+
         return $rule;
+    }
+
+    public function deleteRule()
+    {
+        SurveyORM\SurveyRuleFactor::where('rule_id', $this->target->rule->id)->delete();
+
+        $this->target->rule()->delete();
+    }
+
+    protected function saveRulesFactor($expressions, $rule)
+    {
+        SurveyORM\SurveyRuleFactor::where('rule_id', $rule->id)->delete();
+
+        foreach ($expressions as $expression) {
+            foreach ($expression['conditions'] as $condition) {
+                isset($condition['question']) && SurveyORM\SurveyRuleFactor::create(['rule_relation_factor' => $condition['question'], 'rule_id' => $rule->id]);
+            }
+        }
     }
 }
