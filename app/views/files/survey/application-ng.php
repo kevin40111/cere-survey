@@ -3,7 +3,7 @@
         <md-card style="width: 100%">
             <md-card-header md-colors="{background: 'indigo'}">
                 <md-card-header-text>
-                    <span class="md-title">加掛題申請表</span>
+                    <span class="md-title">加掛題申請表 <md-button style="background-color:#4DB6AC;font-weight:bold">({{status}})</md-button></span>
                 </md-card-header-text>
             </md-card-header>
             <md-content>
@@ -97,6 +97,11 @@
         $scope.organizations = {'lists': [], 'selected': []};
         $scope.disabled = false;
         $scope.empty = {'organizations': false, 'questions': false, 'columns': false};
+        $scope.allStatus = [
+            {key: ' 0 ', title: '審核中'},
+            {key: ' 1 ', title: '退件'},
+            {key: ' 2 ', title: '審核通過'}
+        ];
 
         $scope.setOrganization = function(organization) {
             $scope.selected.organizations = organization;
@@ -174,5 +179,20 @@
         };
 
         $scope.getAppliedOptions();
+
+        $scope.applicationStatus = function() {
+            $http({method: 'POST', url: 'applicationStatus', data:{}})
+            .success(function(data, status, headers, config) {
+                $scope.status = $scope.allStatus[data.status].title;
+                if($scope.allStatus[data.status].title == '審核通過'){
+                    $scope.disabled = true;
+                }
+            })
+            .error(function(e){
+                console.log(e);
+            });
+        };
+
+        $scope.applicationStatus();
     });
 </script>

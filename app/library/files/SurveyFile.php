@@ -691,4 +691,16 @@ class SurveyFile extends CommFile
             return ['sended' => false];
         }
     }
+
+    public function applicationStatus(){
+        $application = $this->file->book->applications()->OfMe()->first();
+        if($application->extension ==  $application->reject){
+            $status = '0';
+        }else if($application->reject){
+            $status = '1';
+        }else{
+            $status = '2';
+        }
+        return ['status' => $status];
+    }
 }
