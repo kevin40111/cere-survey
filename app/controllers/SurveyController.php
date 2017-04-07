@@ -154,7 +154,7 @@ class SurveyController extends \BaseController {
                     $rowsFile = Files::find($book->rowsFile_id)->sheets()->first()->tables()->first();
                     $userOrganization = DB::table('rows.dbo.'.$rowsFile->name)->where('C'.$book->loginRow_id, SurveySession::getLoginId())->select('C'.$book->column_id.' AS value')->first();
 
-                    $extBook = $extBooks->filter(function($extBook) use($userOrganization){
+                    $extBook = $extBooks->filter(function ($extBook) use($userOrganization){
                         $values = array_fetch($extBook->rule->expressions[0]['conditions'], 'value');
                         return in_array($userOrganization->value, $values);
                     })->first();
@@ -242,9 +242,9 @@ class SurveyController extends \BaseController {
      */
     public function getExtBook($book_id)
     {
-        return SurveyORM\Book::find($book_id)->applications->filter(function($application){
-            return SurveyORM\Book::find($application->ext_book_id)->rule()->exists() && (SurveyORM\Book::find($application->extension) == true);
-        })->map(function($application){
+        return SurveyORM\Book::find($book_id)->applications->filter(function ($application) {
+            return SurveyORM\Book::find($application->ext_book_id)->rule()->exists() && $application->extension ;
+        })->map(function ($application) {
             return SurveyORM\Book::find($application->ext_book_id)->load('rule');
         });
     }
