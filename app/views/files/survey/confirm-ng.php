@@ -156,7 +156,7 @@
 <script src="/js/ng/ngBrowser.js"></script>
 <script>
     app.requires.push('ngBrowser');
-    app.controller('confirm', function ($scope, $http, $filter, $q, $mdDialog, $mdPanel, $mdSidenav, $timeout){
+    app.controller('confirm', function ($scope, $http, $filter, $q, $mdDialog, $mdPanel, $mdSidenav, $mdToast){
         $scope.sheetLoaded = false;
         $scope.currentPage = 1;
         $scope.lastPage = 0;
@@ -221,7 +221,6 @@
                 application.saving = false;
                 angular.extend(application, data.application);
                 $scope.checkExtBookLocked(application);
-                console.log(data.application)
             })
             .error(function(e) {
                 console.log(e);
@@ -406,15 +405,15 @@
                 context: $scope.context,
             }})
             .success(function(data, status, headers, config) {
+                $mdToast.show(
+                  $mdToast.simple()
+                    .textContent('送出成功!')
+                    .hideDelay(1000)
+                );
             })
             .error(function(e){
                 console.log(e);
             });
-            var sendMailConfirm = $mdDialog.confirm()
-            .title('信件已送出')
-            .ok('確認')
-
-            $mdDialog.show(sendMailConfirm);
         };
     });
 
