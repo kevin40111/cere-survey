@@ -64,7 +64,24 @@ class SurveyFileTest extends TestCase {
 
         Input::replace([
             'skipTarget' => $this->node->toArray(),
-            'expressions' => json_decode('[{"conditions":[{"compareType":"value","question":"'.$this->question->id.'","logic":" > ","value":"10"},{"compareOperator":" && ","question":"'.$this->question->id.'","logic":" > ","compareType":"question","value":"'.$this->answer->value.'"}]}]'),
+            'expressions' => [
+                [
+                    "conditions" => [
+                        [
+                            "compareType" => "value",
+                            "question" => $this->question->id,
+                            "logic" => " > ",
+                            "value" => "10",
+                        ], [
+                            "compareOperator" => " && ",
+                            "question" => $this->question->id,
+                            "logic" => " > ",
+                            "compareType" => "question",
+                            "value" => $this->answer->value,
+                        ],
+                    ],
+                ],
+            ],
         ]);
         $this->surveyFile->saveRule();
         $this->rule = SurveyORM\Rule::all()->first();
@@ -322,7 +339,24 @@ class SurveyFileTest extends TestCase {
     {
         Input::replace([
             'skipTarget' => $this->node->toArray(),
-            'expressions' => json_decode('[{"conditions":[{"compareType":"value","question":"'.$this->question->id.'","logic":" > ","value":"10"},{"compareOperator":" && ","question":"'.$this->question->id.'","logic":" > ","compareType":"question","compareQuestion":"'.$this->question->id.'"}]}]'),
+            'expressions' => [
+                [
+                    "conditions" => [
+                        [
+                            "compareType" => "value",
+                            "question" => $this->question->id,
+                            "logic" => " > ",
+                            "value" => "10",
+                        ], [
+                            "compareOperator" => " && ",
+                            "question" => $this->question->id,
+                            "logic" => " > ",
+                            "compareType" => "question",
+                            "value" => $this->answer->value,
+                        ],
+                    ],
+                ],
+            ],
         ]);
 
         $this->surveyFile->saveRule();

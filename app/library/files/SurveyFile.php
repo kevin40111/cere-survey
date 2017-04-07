@@ -616,8 +616,8 @@ class SurveyFile extends CommFile
         }
 
         foreach ($expressions as $expression) {
-            foreach ($expression->conditions as $condition) {
-                isset($condition->question) && SurveyORM\SurveyRuleFactor::create(['rule_relation_factor' => $condition->question, 'rule_id' => $rule_id]);
+            foreach ($expression['conditions'] as $condition) {
+                isset($condition['question']) && SurveyORM\SurveyRuleFactor::create(['rule_relation_factor' => $condition['question'], 'rule_id' => $rule_id]);
             }
         }
     }
