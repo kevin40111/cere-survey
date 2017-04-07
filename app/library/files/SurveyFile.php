@@ -319,8 +319,11 @@ class SurveyFile extends CommFile
             $edited = true;
             $options = $appliedOptions;
             $extBook = $this->getExtBook($application->ext_book_id);
+
             Input::replace(['skipTarget' => ['class' => $this->file->book->class, 'id' => $application->ext_book_id]]);
-            $rule = $this->getRule()['rule'];
+
+            $extBook = SurveyORM\Book::find($application->ext_book_id);
+            $rule = Survey\RuleRepository::target($extBook)->getRule();
             $organizationsSelected = array_map(function($rule){
                 return \Plat\Project\OrganizationDetail::find($rule['value']);
             }, $rule->expressions[0]['conditions']);
@@ -627,7 +630,7 @@ class SurveyFile extends CommFile
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
 
-        $rule = $root->rule ? $root->rule : new SurveyORM\Rule(['expressions' => [['conditions' => [['compareType' => 'question']]]]]);
+        $rule = Survey\RuleRepository::target($root)->getRule();
 
         return ['rule' => $rule];
     }
