@@ -296,11 +296,6 @@ class SurveyFileTest extends TestCase {
         $this->assertEquals(1, $currentPage);
     }
 
-    public function testSetExtBook()
-    {
-
-    }
-
     public function testGetConditionColumn()
     {
         $this->surveyFile->file->book->column_id = 1;

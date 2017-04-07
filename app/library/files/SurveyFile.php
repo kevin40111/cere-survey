@@ -282,10 +282,13 @@ class SurveyFile extends CommFile
         } else {
             $application = $this->createApplication();
             $extDoc = $this->createExtBook();
-            $extBook = $this->setExtBook($application, $extDoc['id']);
+            $application->ext_book_id = \ShareFile::find($extDoc['id'])->isFile->book->id;
+            $application->save();
         }
-        Input::replace(['skipTarget' => ['class' => $this->file->book->class, 'id' => $application->ext_book_id], 'expressions' => $selected['rules']]);
-        $this->saveRule();
+
+        $extBook = SurveyORM\Book::find($application->ext_book_id);
+        Survey\RuleRepository::target($extBook)->saveExpressions($selected['rules']);
+
         $application->appliedOptions()->sync($selected['columns']);
         $appliedOptions = $this->getAppliedOptions();
         return $appliedOptions;
@@ -346,7 +349,7 @@ class SurveyFile extends CommFile
             'columns' => $columns,
             'questions' => $questions,
             'edited' => $edited,
-            'extBook' => \Struct_file::open($extBook->file->docs()->OfMe()->first()),
+            'extBook' => isset($application) ? \Struct_file::open($extBook->file->docs()->OfMe()->first()) : NULL,
             'extColumn' => $extColumn,
             'organizations' => [
                 'lists' => $organizations,
@@ -540,12 +543,6 @@ class SurveyFile extends CommFile
         return ['currentPage' => $members->getCurrentPage(), 'lastPage' => $members->getLastPage()];
     }
 
-    public function setExtBook(&$application, $doc_id)
-    {
-        $application->ext_book_id = \ShareFile::find($doc_id)->isFile->book->id;
-        $application->save();
-    }
-
     /*public function deleteDoc($docId)
     {
         \ShareFile::find($docId)->delete();
@@ -580,15 +577,9 @@ class SurveyFile extends CommFile
 
         $expressions = Input::get('expressions');
 
-        if ($root->rule == null) {
-            $root->rule()->save(new SurveyORM\Rule(['expressions' => $expressions]));
-            $rule_id = SurveyORM\Rule::orderBy('id', 'desc')->first()['id'];
-        } else {
-            $root->rule->update(['expressions' => $expressions]);
-            $rule_id = $root->rule->id;
-        }
+        $rule = Survey\RuleRepository::target($root)->saveExpressions($expressions);
 
-        $this->saveRulesFactor($expressions, $rule_id);
+        $this->saveRulesFactor($expressions, $rule->id);
         return 'save rules successed';
     }
 
