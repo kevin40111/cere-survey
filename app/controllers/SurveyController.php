@@ -128,7 +128,7 @@ class SurveyController extends \BaseController {
     {
         $answers = (object)$this->repository->all($this->user_id);
         $url = null;
-        $previous = SurveyORM\Node::find($answers->page_id) ;//已填答頁數
+        $previous = is_null($answers->page_id) ? null : SurveyORM\Node::find($answers->page_id) ;//已填答頁數
         $page = is_null($previous) ? SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first() : $previous->next;
 
         if (Input::get('next')) {
