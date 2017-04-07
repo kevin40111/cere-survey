@@ -480,9 +480,10 @@ class SurveyFile extends CommFile
         if (!$application->reject) {
             SurveyORM\Book::find($application->ext_book_id)->update(array('lock' => true));
         }
-        $this->file->book->applications()->where('id', $application_id)->update(array('extension' => !$application->extension));
+        $application->extension = !$application->extension;
+        $application->save();
 
-        return ['application' => $this->file->book->applications()->where('id', $application_id)->first()];
+        return ['application' => $application];
     }
 
     public function reject()
@@ -492,9 +493,10 @@ class SurveyFile extends CommFile
         if (!$application->reject) {
             SurveyORM\Book::find($application->ext_book_id)->update(array('lock' => false));
         }
-        $this->file->book->applications()->where('id', $application_id)->update(array('reject' => !$application->reject));
+        $application->reject = !$application->reject;
+        $application->save();
 
-        return ['application' => $this->file->book->applications()->where('id', $application_id)->first()];
+        return ['application' => $application];
     }
 
     public function queryOrganizations()

@@ -156,7 +156,7 @@
 <script src="/js/ng/ngBrowser.js"></script>
 <script>
     app.requires.push('ngBrowser');
-    app.controller('confirm', function ($scope, $http, $filter, $q, $mdDialog, $mdPanel, $mdSidenav){
+    app.controller('confirm', function ($scope, $http, $filter, $q, $mdDialog, $mdPanel, $mdSidenav, $timeout){
         $scope.sheetLoaded = false;
         $scope.currentPage = 1;
         $scope.lastPage = 0;
@@ -206,6 +206,8 @@
             $http({method: 'POST', url: 'activeExtension', data:{application_id: application.id}})
             .success(function(data, status, headers, config) {
                 application.saving = false;
+                angular.extend(application, data.application);
+                $scope.checkExtBookLocked(application);
             })
             .error(function(e) {
                 console.log(e);
@@ -217,7 +219,9 @@
             $http({method: 'POST', url: 'reject', data:{application_id: application.id}})
             .success(function(data, status, headers, config) {
                 application.saving = false;
-                $scope.getApplications();
+                angular.extend(application, data.application);
+                $scope.checkExtBookLocked(application);
+                console.log(data.application)
             })
             .error(function(e) {
                 console.log(e);
@@ -402,7 +406,6 @@
                 context: $scope.context,
             }})
             .success(function(data, status, headers, config) {
-                console.log(data);
             })
             .error(function(e){
                 console.log(e);
