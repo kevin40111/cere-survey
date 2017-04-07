@@ -301,11 +301,6 @@ class SurveyFileTest extends TestCase {
 
     }
 
-    public function testGetExtBook()
-    {
-        //$column = $this->surveyFile->getExtBook($this->surveyFile->file->book->id);
-    }
-
     public function testGetConditionColumn()
     {
         $this->surveyFile->file->book->column_id = 1;

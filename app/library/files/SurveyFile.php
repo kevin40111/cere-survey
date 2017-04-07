@@ -318,9 +318,6 @@ class SurveyFile extends CommFile
             });
             $edited = true;
             $options = $appliedOptions;
-            $extBook = $this->getExtBook($application->ext_book_id);
-
-            Input::replace(['skipTarget' => ['class' => $this->file->book->class, 'id' => $application->ext_book_id]]);
 
             $extBook = SurveyORM\Book::find($application->ext_book_id);
             $rule = Survey\RuleRepository::target($extBook)->getRule();
@@ -349,7 +346,7 @@ class SurveyFile extends CommFile
             'columns' => $columns,
             'questions' => $questions,
             'edited' => $edited,
-            'extBook' => $extBook,
+            'extBook' => \Struct_file::open($extBook->file->docs()->OfMe()->first()),
             'extColumn' => $extColumn,
             'organizations' => [
                 'lists' => $organizations,
@@ -547,12 +544,6 @@ class SurveyFile extends CommFile
     {
         $application->ext_book_id = \ShareFile::find($doc_id)->isFile->book->id;
         $application->save();
-    }
-
-    public function getExtBook($book_id)
-    {
-        $doc = SurveyORM\Book::find($book_id)->file->docs()->OfMe()->first();
-        return  \Struct_file::open($doc);
     }
 
     /*public function deleteDoc($docId)
