@@ -61,7 +61,7 @@ class Rule extends Eloquent {
         return json_decode($expressions, true);
     }
 
-    public function ruleFactor()
+    public function factors()
     {
         return $this->hasMany('Plat\Eloquent\Survey\SurveyRuleFactor', 'rule_id');
     }

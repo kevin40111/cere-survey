@@ -608,16 +608,14 @@ class SurveyFile extends CommFile
     }
 
     public function saveRulesFactor($expressions, $rule_id)
-    {   
+    {
         if(SurveyORM\Rule::find($rule_id)->exists()){
             SurveyORM\SurveyRuleFactor::where('rule_id', $rule_id)->delete();
         }
 
-        foreach ($expressions as $rule) {
-            $rule = json_decode(json_encode($rule), true);
-            foreach ($rule['conditions'] as $condition) {
-                $condition = json_decode(json_encode($condition), true);
-                isset($condition['question']) ? SurveyORM\SurveyRuleFactor::create(array('rule_relation_factor'=>$condition['question'], 'rule_id'=>$rule_id)) : "";
+        foreach ($expressions as $expression) {
+            foreach ($expression->conditions as $condition) {
+                isset($condition->question) && SurveyORM\SurveyRuleFactor::create(['rule_relation_factor' => $condition->question, 'rule_id' => $rule_id]);
             }
         }
     }
