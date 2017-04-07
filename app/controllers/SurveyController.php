@@ -24,8 +24,8 @@ class SurveyController extends \BaseController {
                 $this->repository = new DemoRepository($book_id);
                 if (!$this->repository->exist('answers')) {
 
-                    $page = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
-                    $this->repository->increment($this->user_id, ['page_id' => $page->id]);
+                    //$page = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
+                    $this->repository->increment($this->user_id, ['page_id' => null]);
                     $questions = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
                         return array_merge($carry, $page->getQuestions());
                     }, []);
@@ -99,9 +99,9 @@ class SurveyController extends \BaseController {
         }
 
         $encrypt_id = SurveySession::login($book_id, $login_id);
-        $page = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
+        //$page = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
         if (!$this->repository->exist($encrypt_id)) {
-            $this->repository->increment($encrypt_id, ['page_id' => $page->id]);
+            $this->repository->increment($encrypt_id, ['page_id' => null]);
         }
 
         return Redirect::to('survey/'.$book_id.'/survey/page');
@@ -127,18 +127,29 @@ class SurveyController extends \BaseController {
     public function getNextNode($book_id)
     {
         $answers = (object)$this->repository->all($this->user_id);
-        $previous = SurveyORM\Node::find($answers->page_id);
-        $page = Input::get('next') ? $previous->next : $previous;
-        $extBook_id = null;
-        $extBooks = $this->getExtBook($book_id);
-        $extended = (count($extBooks) == 0) ? false : true;
-        if ($page != null) {
-            $page->load('rule');
-            $this->repository->put($this->user_id, 'page_id', $page->id); //not last page
+        $url = null;
+        $previous = SurveyORM\Node::find($answers->page_id) ;//已填答頁數
+        $page = is_null($previous) ? SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first() : $previous->next;
+
+        if (Input::get('next')) {
+            //撿查是否有漏答
+            //if (checkHasMissing($page->id)) {
+                $this->repository->put($this->user_id, 'page_id', $page->id); //update page
+            /*} else {
+                return ['node' => $page->load('rule'), 'answers' => $this->repository->all($this->user_id), 'url' => $url];
+            }*/
+            $lastPage = is_null($page->next);
+            $nextPage = $lastPage ? null : $page->next->load('rule');
         } else {
+            $lastPage = is_null($page);
+            $nextPage = $lastPage ? null : $page->load('rule');
+        }
+
+        if ($lastPage) {
+            $extBooks = $this->getExtBook($book_id);
+            $extended = (count($extBooks) == 0) ? false : true;
             if ($extended) {
                 if ($this->type == 'survey') {
-
                     $book = SurveyORM\Book::find($book_id);
                     $rowsFile = Files::find($book->rowsFile_id)->sheets()->first()->tables()->first();
                     $userOrganization = DB::table('rows.dbo.'.$rowsFile->name)->where('C'.$book->loginRow_id, SurveySession::getLoginId())->select('C'.$book->column_id.' AS value')->first();
@@ -151,17 +162,19 @@ class SurveyController extends \BaseController {
                     $extBook_id = $extBook->id;
 
                     $encrypt_id = SurveySession::login($extBook_id, SurveySession::getLoginId());
-                    $extBook_page = SurveyORM\Book::find($extBook_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
                     if (!DB::table($extBook_id)->where('created_by', $encrypt_id)->exists()) {
-                        DB::table($extBook_id)->insert(['page_id' => $extBook_page->id, 'created_by' => $encrypt_id]);
+                        DB::table($extBook_id)->insert(['page_id' => null, 'created_by' => $encrypt_id]);
                     }
+
+                    $url = '/survey'.'/'.$extBook_id.'/survey/page';
+                }
+                if ($this->type == 'demo') {
+                    $url = '/surveyDemo'.'/'.$book_id.'/demo/demoLogin';
                 }
             }
         }
 
-        $lastPage = is_null($page) ? true : false;
-
-        return ['node' => $page, 'answers' => $this->repository->all($this->user_id), 'extBook_id' => $extBook_id, 'lastPage' => $lastPage, 'type' => $this->type, 'extended' => $extended];
+        return ['node' => $nextPage, 'answers' => $this->repository->all($this->user_id), 'url' => $url];
     }
 
     /**

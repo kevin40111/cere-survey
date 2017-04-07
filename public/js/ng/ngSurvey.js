@@ -110,11 +110,19 @@ angular.module('ngSurvey.directives', [])
                 <div layout="row" layout-align="space-around" ng-if="book.saving">
                     <md-progress-circular md-mode="indeterminate"></md-progress-circular>
                 </div>
-                <div ng-if="!book.saving">
+                <div ng-if="!book.saving && !book.done">
                     <survey-page ng-if="node" page="node" ng-hide="compareRule(node)"></survey-page>
                     <md-button class="md-raised md-primary" ng-click="getNextNode(true)" ng-disabled="book.saving" aria-label="繼續">
                         <p ng-if="!book.done">繼續</p>
-                        <p ng-if="book.done">填答完畢</p>
+                    </md-button>
+                </div>
+                <div class="ui segment" style="width:800px;margin:0 auto" ng-if="!book.saving && book.done">
+                    <div class="ui basic segment">
+                        <h3>本問卷填答完畢</h3>
+                        <h3>祝您一切順利、中大獎</strong>！</font></h3>
+                    </div>
+                    <md-button ng-if="ext_book_url" class="md-raised md-primary" href="{{ext_book_url}}" target="_blank" ng-disabled="book.saving" aria-label="跳至加掛題本" >
+                        填寫加掛題本
                     </md-button>
                 </div>
             </div>
@@ -127,17 +135,14 @@ angular.module('ngSurvey.directives', [])
                 surveyFactory.get('getNextNode', {next: next, book: $scope.book}, $scope.book).then(function(response) {
                     $scope.node = response.node;
                     surveyFactory.answers = response.answers;
-                    if (response.lastPage) {
-                        if (response.extended) {
-                            if (response.type == 'survey') {
-                            location.href = '/survey/'+response.extBook_id+'/survey/page';
-                            }
-                            if (response.type == 'demo') {
-                                location.href = '/surveyDemo/'+$scope.book.id+'/demo/demoLogin';
-                            }
-                        } else {
-                            $scope.book.done = true;
-                        }
+                    $scope.book.saving = false;
+                    $scope.book.done = false;
+                    $scope.ext_book_url = null;
+                    if (response.url != null) {
+                        $scope.ext_book_url = response.url;
+                    }
+                    if ($scope.node == null) {
+                        $scope.book.done = true;
                     }
                 });
             };
