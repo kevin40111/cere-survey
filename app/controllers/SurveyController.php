@@ -108,12 +108,13 @@ class SurveyController extends \BaseController {
 
         if (Input::get('next')) {
             //撿查是否有漏答
-            /*if (checkHasMissing($page->id)) {
-                return ['node' => $page->load('rule'), 'answers' => $this->repository->all($this->user_id), 'url' => $url];
-            } else {*/
-                $this->repository->put($this->user_id, 'page_id', $page->id); //update page
 
-            //}
+            if ($this->checkHasMissing($page->id)) {
+                return ['node' => $page->load('rule'), 'answers' => $this->repository->all($this->user_id), 'url' => $url];
+            } else {
+                $this->repository->put($this->user_id, 'page_id', $page->id); //update page
+            }
+
             $lastPage = is_null($page->next);
             $nextPage = $lastPage ? null : $page->next->load('rule');
         } else {
@@ -153,6 +154,23 @@ class SurveyController extends \BaseController {
         return ['node' => $nextPage, 'answers' => $this->repository->all($this->user_id), 'url' => $url];
     }
 
+    public function checkHasMissing($page_id)
+    {
+        $answers = $this->repository->all($this->user_id);
+
+        gettype($answers) == 'object' ? $answers = get_object_vars($answers) : '';
+
+        $questions = SurveyORM\Node::find($page_id)->getQuestions();
+
+        foreach ($questions as $question) {
+            if ($answers[$question['id']] == null) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Show nodes in a page node.
      *
@@ -181,7 +199,143 @@ class SurveyController extends \BaseController {
 
         Input::has('value') && $this->repository->put($this->user_id, Input::get('question.id'), Input::get('value'));
 
-        return ['nodes' => $nodes];
+        if(Input::get('trigger') == 'saveAnswer'){
+
+            if (Input::get('parent.class') == '') {
+                $this->setChildQuestion(Input::get('parent.class'), Input::get('question.node_id'), Input::get('question.id'));
+            } else {
+                $this->setChildQuestion(Input::get('parent.class'), Input::get('parent.node_id'), Input::get('parent.id'));
+            }
+
+        $this->setJumpQuestion();
+        }
+
+        return ['nodes' => $nodes, 'answers' => $this->repository->all(SurveySession::getHashId())];
+
+    }
+
+    public function setChildQuestion($input_class, $input_node_id, $input_select_id)
+    {
+        if ($input_class == SurveyORM\Answer::class) {
+
+            $root_list = SurveyORM\Node::find($input_node_id)->answers;
+
+            $selected = SurveyORM\Answer::find($input_select_id);
+
+            foreach ($root_list as $root) {
+
+                $this->initialParentListValue($root, 0, true);
+
+            }
+
+        $this->initialParentListValue($selected, 1);
+
+        } else if($input_class == SurveyORM\Question::class || $input_class == '') {
+
+            $root_list = SurveyORM\Node::find($input_node_id)->questions;
+
+            $selected = SurveyORM\Question::find($input_select_id);
+
+            Input::get('value') == '1' ? $initial_type = 1 : $initial_type = 0;
+
+            foreach ($root_list as $root) {
+
+                $this->repository->get(SurveySession::getHashId(), $root['id']) == null ? $this->repository->put(SurveySession::getHashId(), $root['id'], '0') : '';
+
+                $this->initialParentListValue($root, 0);
+            }
+
+        $this->initialParentListValue($selected, $initial_type);
+
+        }
+
+    }
+
+
+    public function setJumpQuestion()
+    {
+        $relates = SurveyORM\SurveyRuleFactor::where('rule_relation_factor', Input::get('question.id'))->with('rules')->get();
+
+        foreach ($relates as $relate) {
+
+            $node = SurveyORM\Node::find($relate->rules['effect_id']);
+
+            $node->type == 'page' ? $node_questions = SurveyORM\Node::find($node->id)->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions'])[0]->questions : $node_questions = SurveyORM\Node::find($node->id)->questions;
+
+            sizeof(SurveyORM\Node::find($node->id)->answers) > 0 ? $root_list = SurveyORM\Node::find($node->id)->answers : $root_list = SurveyORM\Node::find($node->id)->questions;
+            $answers = $this->repository->all($this->user_id);
+
+            if ($this->compareRule($relate->rules['id'],$answers)) {
+
+                foreach ($root_list as $root) {
+
+                    $this->initialParentListValue($root, 2);
+
+                }
+
+                foreach ($node_questions as $node_question) {
+
+                    $this->repository->put(SurveySession::getHashId(), $node_question->id, -8);
+
+                }
+
+
+            } else {
+
+                foreach ($root_list as $root) {
+
+                    $this->initialParentListValue($root, 1);
+
+                }
+
+                foreach ($node_questions as $node_question) {
+
+                    $this->repository->put(SurveySession::getHashId(), $node_question->id, null);
+
+                }
+
+            }
+
+        }
+    }
+
+    /**
+     * Initial select question and it's child question
+     *
+     * @param  int  $root=>get parent child, $initial_type (1) :  need answer, (2) :  don't need answer
+     * @return Response
+     */
+
+    public function initialParentListValue($root, $initial_type, $force = false)
+    {
+        $initial_list = array();
+
+        $initial_question = $root->getQuestions();
+
+        foreach ($initial_question as $question) {
+
+            if ($initial_type == 0) {
+
+                $this->repository->get(SurveySession::getHashId(), $question['id']) == null || $force ? $initial_list[$question['id']] = -7 : '' ;
+
+            } else if ($initial_type == 1) {
+
+                $initial_list[$question['id']] = null;
+
+            } else if ($initial_type == 2) {
+
+                $initial_list[$question['id']] = -8;
+            }
+
+        }
+
+        if (sizeof($initial_list) > 0) {
+            foreach ($initial_list as $key => $value) {
+                $this->repository->put(SurveySession::getHashId(), $key, $value);
+            }
+        }
+
+        return $initial_list;
     }
 
     /**可能用不到，確定用不到再移除

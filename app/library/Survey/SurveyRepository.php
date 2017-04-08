@@ -53,9 +53,9 @@ class SurveyRepository implements SurveyRepositoryInterface
      */
     public function get($id, $key)
     {
-        $answer = DB::table($this->book_id)->where('created_by', $id)->select($key)->get();
+        $answer = DB::table($this->book_id)->where('created_by', $id)->select($key.' as value')->first();
 
-        return $answer;
+        return $answer->value;
     }
 
     /**

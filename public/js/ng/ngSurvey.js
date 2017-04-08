@@ -132,7 +132,11 @@ angular.module('ngSurvey.directives', [])
             surveyFactory.types = $scope.book.types;
 
             $scope.getNextNode = function(next = false) {
-                surveyFactory.get('getNextNode', {next: next, book: $scope.book}, $scope.book).then(function(response) {
+                surveyFactory.get('getNextNode', {next: next, book: $scope.book}, $scope.book).then(function(response) {console.log(response);
+                    if (response.hasMissing ) {
+                        alert('有尚未填答題目');
+                    }
+
                     $scope.node = response.node;
                     surveyFactory.answers = response.answers;
                     $scope.book.saving = false;
@@ -234,18 +238,11 @@ angular.module('ngSurvey.directives', [])
         restrict: 'A',
         require: 'ngModel',
         controller: function($scope, $attrs) {
-            var previous_select_answer="";
             $scope.saveAnswer = function(parent, value) {
                 $scope.question.childrens = {};
-                surveyFactory.get('getChildren', {question: $scope.question, parent: parent, value: value , previous:previous_select_answer}, $scope.node).then(function(response) {
+                surveyFactory.get('getChildren', {question: $scope.question, parent: parent, value: value, trigger: 'saveAnswer'}, $scope.node).then(function(response) {
                     $scope.question.childrens = response.nodes;
-                    try{
-                        previous_select_answer =  response.nodes[0].questions[0].id;
-                    }catch(err){
-                        previous_select_answer = null;
-                    }
-                    surveyFactory.answers[$scope.question.id] = $scope.answer.value;
-                    surveyFactory.answers[previous_select_answer]=null;
+                    surveyFactory.answers = response.answers;
                 });
             };
 
@@ -258,7 +255,7 @@ angular.module('ngSurvey.directives', [])
             var parent = $scope.$eval($attrs.parent);
 
             if (parent) {
-                surveyFactory.get('getChildren', {question: $scope.question, parent: parent}, $scope.node).then(function(response) {
+                surveyFactory.get('getChildren', {question: $scope.question, parent: parent, trigger: 'getNode'}, $scope.node).then(function(response) {
                     $scope.question.childrens = response.nodes;
                 });
             }

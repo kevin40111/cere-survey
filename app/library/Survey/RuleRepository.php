@@ -67,7 +67,6 @@ class RuleRepository
     public function compareRule($rule_id,$answers)
     {
         $rule = SurveyORM\Rule::where('id', $rule_id)->first();
-
         if ($rule) {
             $expressions = $rule->expressions;
             $result = 'return ';
