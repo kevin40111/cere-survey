@@ -4,7 +4,7 @@ use Plat\Eloquent\Survey as SurveyORM;
 use Plat\Survey\SurveySession;
 use Plat\Survey\SurveyRepository;
 use Plat\Survey\DemoRepository;
-
+use Plat\Survey;
 class SurveyController extends \BaseController {
     /**
      * init the repository of the survey.
@@ -213,13 +213,15 @@ class SurveyController extends \BaseController {
      *
      * @return Response
      */
-    public function getRule()
+    /*public function getRule()
     {
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
 
-        return ['rule' => $root->rule];
-    }
+        $rule = Survey\RuleRepository::target($root)->getRule();
+
+        return ['rule' => $rule];
+    }*/
 
     /**
      * Clean demo answers .
@@ -271,5 +273,18 @@ class SurveyController extends \BaseController {
         }
 
         return ['options' => $options];
+    }
+
+    /**
+     * Compare rules.
+     *
+     * @return Response
+     */
+    public function compareRule($rule_id,$answer)
+    {
+
+        $status = Survey\RuleRepository::target($rule_id)->compareRule($rule_id,$answer);
+
+        return $status;
     }
 }

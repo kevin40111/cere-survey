@@ -54,4 +54,33 @@ class RuleRepository
             }
         }
     }
+
+    public function compareRule($rule_id,$answers)
+    {
+        $rule = SurveyORM\Rule::where('id', $rule_id)->first();
+
+        if ($rule) {
+            $expressions = $rule->expressions;
+            $result = 'return ';
+            foreach ($expressions as $expression) {
+                if (isset($expression['compareLogic'])) {
+                    $result = $result.$expression['compareLogic'];
+                }
+                $result = $result.'(';
+                foreach ($expression['conditions'] as $condition) {
+                    if (isset($condition['compareOperator'])) {
+                        $result = $result.$condition['compareOperator'];
+                    }
+                    $result = $result.$answers[$condition['question']].$condition['logic'].$condition['value'];
+                }
+                $result = $result.');';
+            }
+
+            return eval($result);
+
+        } else {
+
+            return false;
+        }
+    }
 }
