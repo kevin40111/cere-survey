@@ -48,7 +48,9 @@ class RuleRepository
 
         foreach ($expressions as $expression) {
             foreach ($expression['conditions'] as $condition) {
-                isset($condition['question']) && SurveyORM\SurveyRuleFactor::create(['rule_relation_factor' => $condition['question'], 'rule_id' => $rule->id]);
+                if (isset($condition['question']) && !SurveyORM\SurveyRuleFactor::where('rule_relation_factor', $condition['question'])->where('rule_id', $rule->id)->exists()) {
+                    SurveyORM\SurveyRuleFactor::create(['rule_relation_factor' => $condition['question'], 'rule_id' => $rule->id]);   
+                }
             }
         }
     }
