@@ -9,15 +9,23 @@ class SurveyFileTest extends TestCase {
     {
         parent::setUp();
         $this->app->make('artisan')->call('migrate');
+        $this->seed();
         $this->user = new User;
         $this->user->username = 'gg';
         $this->user->email    = 'tim72117@gmail.com';
         $this->user->actived = false;
         $this->user->disabled = false;
         $this->user->save();
-        Auth::login($this->user);
+        $this->be($this->user);
 
-        $rows_file = Files::create(['id' => 2, 'type' => 5, 'title' => '', 'created_by' => 1]);
+        $member = $this->user->members()->save(new \Plat\Member(['project_id' => 1, 'actived' => true]));
+        $member->logined_at = Carbon\Carbon::now()->toDateTimeString();
+        $member->save();
+
+        $folder = Files::create(['type' => 20, 'title' => '', 'created_by' => 1]);
+        $folderDoc = ShareFile::create(['file_id' => $folder->id, 'target' => 'user', 'target_id' => 1, 'created_by' => 1, 'visible' => true]);
+
+        $rows_file = Files::create(['type' => 5, 'title' => '', 'created_by' => 1]);
         $sheet = $rows_file->sheets()->create(['title' => '', 'editable' => true, 'fillable' => true]);
         $table = $sheet->tables()->create(['database' => 'rows', 'name' => 'row_20150817_202236_1_0lzuu', 'lock' => false, 'construct_at' => Carbon\Carbon::now()->toDateTimeString()]);
         $column = $table->columns()->create([
@@ -30,7 +38,7 @@ class SurveyFileTest extends TestCase {
             'readonly' => false,
         ]);
 
-        $file = Files::create(['id' => 1, 'type' => 6, 'title' => '', 'created_by' => 1]);
+        $file = Files::create(['type' => 6, 'title' => '', 'created_by' => 1]);
         $book = SurveyORM\Book::create(['file_id' => $file->id, 'title' => '', 'lock' => false, 'column_id' => $column->id]);
         $doc = ShareFile::create(['file_id' => $file->id, 'target' => 'user', 'target_id' => 1, 'created_by' => 1, 'visible' => true, 'folder_id' => 1]);
 
@@ -289,11 +297,96 @@ class SurveyFileTest extends TestCase {
         $this->assertCount($amount-1, SurveyORM\Answer::all());
     }
 
+    public function testSetAppliedOptions()
+    {
+        Input::replace([
+            'selected' => [
+                'rules' => [
+                    [
+                        "conditions" => [
+                            [
+                                "compareType" => "value",
+                                "question" => $this->question->id,
+                                "logic" => " > ",
+                                "value" => "10",
+                            ], [
+                                "compareOperator" => " && ",
+                                "question" => $this->question->id,
+                                "logic" => " > ",
+                                "compareType" => "question",
+                                "value" => $this->answer->value,
+                            ],
+                        ],
+                    ],
+                ],
+                'columns' => [],
+            ],
+        ]);
+
+        $appliedOptions = $this->surveyFile->setAppliedOptions();
+
+        $this->assertArrayHasKey('book', $appliedOptions);
+        $this->assertArrayHasKey('columns', $appliedOptions);
+        $this->assertArrayHasKey('questions', $appliedOptions);
+        $this->assertArrayHasKey('edited', $appliedOptions);
+        $this->assertArrayHasKey('extBook', $appliedOptions);
+        $this->assertArrayHasKey('extColumn', $appliedOptions);
+        $this->assertArrayHasKey('organizations', $appliedOptions);
+    }
+
+    public function testCreateExtBook()
+    {
+        $struct_file = $this->surveyFile->createExtBook();
+
+        $this->assertCount(11, $struct_file);
+    }
+
+    public function testReject()
+    {
+
+    }
+
+    public function testQueryOrganizations()
+    {
+        Input::replace([
+            'query' => 'gg',
+        ]);
+
+        $organizations = $this->surveyFile->queryOrganizations()['organizations'];
+
+        $this->assertCount(0, $organizations);
+    }
+
+    public function testQueryUsernames()
+    {
+        Input::replace([
+            'query' => 'gg',
+        ]);
+
+        $usernames = $this->surveyFile->queryUsernames()['usernames'];
+
+        $this->assertCount(0, $usernames);
+    }
+
+    public function testQueryEmails()
+    {
+        Input::replace([
+            'query' => 'gg',
+        ]);
+
+        $emails = $this->surveyFile->queryEmails()['emails'];
+
+        $this->assertCount(0, $emails);
+    }
+
     public function testGetApplicationPages()
     {
-        $currentPage = $this->surveyFile->getApplicationPages()['currentPage'];
+        $paginate = $this->surveyFile->getApplicationPages();
 
-        $this->assertEquals(1, $currentPage);
+        $this->assertArrayHasKey('currentPage', $paginate);
+        $this->assertArrayHasKey('lastPage', $paginate);
+        $this->assertEquals(1, $paginate['currentPage']);
+        $this->assertEquals(1, $paginate['lastPage']);
     }
 
     public function testGetConditionColumn()
@@ -404,5 +497,10 @@ class SurveyFileTest extends TestCase {
 
         $this->assertStringEndsWith(' ) ', $explanation['explanation']);
         $this->assertStringStartsWith(' ( ', $explanation['explanation']);
+    }
+
+    public function testApplicationStatus()
+    {
+
     }
 }
