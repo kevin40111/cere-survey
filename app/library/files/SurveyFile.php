@@ -1,4 +1,5 @@
 <?php
+
 namespace Plat\Files;
 
 use DB;
@@ -261,18 +262,6 @@ class SurveyFile extends CommFile
         return ['item' => $item->load(['questions', 'answers']), 'next' => $item->next->load(['questions', 'answers'])];
     }
 
-    public function getBooks()
-    {
-        return ['books' => Set\Book::all()];
-    }
-
-    public function getColumns()
-    {
-        $columns = \ShareFile::find(Input::get('file_id'))->isFile->sheets->first()->tables->first()->columns;
-
-        return ['columns' => $columns];
-    }
-
     public function setAppliedOptions()
     {
         $selected = Input::get('selected');
@@ -302,7 +291,7 @@ class SurveyFile extends CommFile
 
         $user = Auth::user();
 
-        $doc = $this->getPaths()->first();
+        $doc = \ShareFile::whereNull('folder_id')->first();
 
         $folderComponent = new \Plat\Files\FolderComponent($doc->is_file, $user);
 
@@ -396,7 +385,6 @@ class SurveyFile extends CommFile
         $this->file->book->applications->each(function($application){
             $application->delete();
         });
-
     }
 
     public function setApplicableOptions()
@@ -551,7 +539,6 @@ class SurveyFile extends CommFile
     {
         $column_id = $this->file->book->column_id;
         return \Row\Column::find($column_id);
-
     }
 
     public function setConditionColumns($conditionColumn)
@@ -659,13 +646,14 @@ class SurveyFile extends CommFile
         }
     }
 
-    public function applicationStatus(){
+    public function applicationStatus()
+    {
         $application = $this->file->book->applications()->OfMe()->first();
-        if($application->extension ==  $application->reject){
+        if ($application->extension ==  $application->reject) {
             $status = '0';
-        }else if($application->reject){
+        } else if ($application->reject) {
             $status = '1';
-        }else{
+        } else {
             $status = '2';
         }
         return ['status' => $status];

@@ -13,7 +13,9 @@ class Application extends Eloquent {
 
     public $timestamps = true;
 
-    protected $fillable = array('book_id', 'member_id', 'extension', 'ext_book_id', 'updated_at', 'created_at', 'deleted_at', 'deleted_by');
+    protected $fillable = array('book_id', 'member_id', 'extension', 'reject', 'ext_book_id', 'updated_at', 'created_at', 'deleted_at', 'deleted_by');
+
+    protected $attributes = ['extension' => false, 'reject' => false];
 
     public function book()
     {
