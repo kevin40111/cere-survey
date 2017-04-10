@@ -16,6 +16,14 @@ class RuleRepository
         return new self($target);
     }
 
+    public static function find($rule_id)
+    {
+        $rule = SurveyORM\Rule::find($rule_id);
+        $target = $rule->effect_id;
+
+        return new self($target);
+    }
+
     public function getRule()
     {
         return $this->target->rule ? $this->target->rule : new SurveyORM\Rule(['expressions' => [['conditions' => [['compareType' => 'question']]]]]);
@@ -71,10 +79,12 @@ class RuleRepository
                     if (isset($condition['compareOperator'])) {
                         $result = $result.$condition['compareOperator'];
                     }
-                    $result = $result.$answers[$condition['question']].$condition['logic'].$condition['value'];
+                    $question = is_null($answers[$condition['question']]) ? 'null' : $answers[$condition['question']];
+                    $result = $result.$question.$condition['logic'].$condition['value'];
                 }
-                $result = $result.');';
+                $result = $result.')';
             }
+            $result = $result.';';
 
             return eval($result);
 

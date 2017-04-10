@@ -99,7 +99,6 @@ class SurveyController extends \BaseController {
         }
 
         $encrypt_id = SurveySession::login($book_id, $login_id);
-        //$page = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
         if (!$this->repository->exist($encrypt_id)) {
             $this->repository->increment($encrypt_id, ['page_id' => null]);
         }
@@ -133,11 +132,12 @@ class SurveyController extends \BaseController {
 
         if (Input::get('next')) {
             //撿查是否有漏答
-            //if (checkHasMissing($page->id)) {
-                $this->repository->put($this->user_id, 'page_id', $page->id); //update page
-            /*} else {
+            /*if (checkHasMissing($page->id)) {
                 return ['node' => $page->load('rule'), 'answers' => $this->repository->all($this->user_id), 'url' => $url];
-            }*/
+            } else {*/
+                $this->repository->put($this->user_id, 'page_id', $page->id); //update page
+
+            //}
             $lastPage = is_null($page->next);
             $nextPage = $lastPage ? null : $page->next->load('rule');
         } else {
@@ -208,7 +208,7 @@ class SurveyController extends \BaseController {
         return ['nodes' => $nodes];
     }
 
-    /**
+    /**可能用不到，確定用不到再移除
      * Get rules.
      *
      * @return Response
@@ -282,8 +282,7 @@ class SurveyController extends \BaseController {
      */
     public function compareRule($rule_id,$answer)
     {
-
-        $status = Survey\RuleRepository::target($rule_id)->compareRule($rule_id,$answer);
+        $status =Survey\RuleRepository::find($rule_id)->compareRule($rule_id,$answer);
 
         return $status;
     }
