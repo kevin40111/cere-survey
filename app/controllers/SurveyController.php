@@ -110,7 +110,7 @@ class SurveyController extends \BaseController {
             //撿查是否有漏答
 
             if ($this->checkHasMissing($page->id)) {
-                return ['node' => $page->load('rule'), 'answers' => $this->repository->all($this->user_id), 'url' => $url];
+                return ['node' => $page->load('rule'), 'answers' => $this->repository->all($this->user_id), 'url' => $url, 'hasMissing' => true];
             } else {
                 $this->repository->put($this->user_id, 'page_id', $page->id); //update page
             }
@@ -239,13 +239,13 @@ class SurveyController extends \BaseController {
             Input::get('value') == '1' ? $initial_type = 1 : $initial_type = 0;
 
             foreach ($root_list as $root) {
-
-                $this->repository->get(SurveySession::getHashId(), $root['id']) == null ? $this->repository->put(SurveySession::getHashId(), $root['id'], '0') : '';
-
-                $this->initialParentListValue($root, 0);
+                //judge (null) is for initial foreach same level of question value
+                $this->repository->get(SurveySession::getHashId(), $root['id']) == null && $this->repository->put(SurveySession::getHashId(), $root['id'], '0');
+                //judge (0) is for initial foreach same level question of child question
+                $this->repository->get(SurveySession::getHashId(), $root['id']) == 0 && $this->initialParentListValue($root, 0);
             }
 
-        $this->initialParentListValue($selected, $initial_type);
+        $this->initialParentListValue($selected, $initial_type, true);
 
         }
 
@@ -254,18 +254,27 @@ class SurveyController extends \BaseController {
 
     public function setJumpQuestion()
     {
-        $relates = SurveyORM\SurveyRuleFactor::where('rule_relation_factor', Input::get('question.id'))->with('rules')->get();
+        $relates_rule = SurveyORM\SurveyRuleFactor::where('rule_relation_factor', Input::get('question.id'))->with('rules')->get();
 
-        foreach ($relates as $relate) {
+        foreach ($relates_rule as $relate) {
 
             $node = SurveyORM\Node::find($relate->rules['effect_id']);
 
             $node->type == 'page' ? $node_questions = SurveyORM\Node::find($node->id)->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions'])[0]->questions : $node_questions = SurveyORM\Node::find($node->id)->questions;
 
+            //judge jumped node content's is answer or question
             sizeof(SurveyORM\Node::find($node->id)->answers) > 0 ? $root_list = SurveyORM\Node::find($node->id)->answers : $root_list = SurveyORM\Node::find($node->id)->questions;
-            $answers = $this->repository->all($this->user_id);
 
-            if ($this->compareRule($relate->rules['id'],$answers)) {
+            $answers =  array();
+
+            $factors = SurveyORM\SurveyRuleFactor::where('rule_id', $relate->rule_id)->get();
+
+            foreach ($factors as $factor) {
+                $question = $factor->rule_relation_factor;
+                $answers[$question] = $this->repository->get(SurveySession::getHashId(), $factor->rule_relation_factor);
+            }
+
+            if ($this->compareRule($relate->rules['id'], $answers)) {
 
                 foreach ($root_list as $root) {
 
