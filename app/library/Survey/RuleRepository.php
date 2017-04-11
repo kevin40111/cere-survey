@@ -19,7 +19,8 @@ class RuleRepository
     public static function find($rule_id)
     {
         $rule = SurveyORM\Rule::find($rule_id);
-        $target = $rule->effect_id;
+        $class = $rule->effect_type;
+        $target = $class::find($rule->effect_id);
 
         return new self($target);
     }

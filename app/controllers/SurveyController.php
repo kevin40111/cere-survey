@@ -213,7 +213,7 @@ class SurveyController extends \BaseController {
      *
      * @return Response
      */
-    /*public function getRule()
+    public function getRule()
     {
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
@@ -221,7 +221,7 @@ class SurveyController extends \BaseController {
         $rule = Survey\RuleRepository::target($root)->getRule();
 
         return ['rule' => $rule];
-    }*/
+    }
 
     /**
      * Clean demo answers .
