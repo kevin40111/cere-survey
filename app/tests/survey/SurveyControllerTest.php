@@ -23,7 +23,7 @@ class SurveyControllerTest extends TestCase
         ]);
 
         $file = Files::create(['id' => 1, 'type' => 6, 'title' => '', 'created_by' => 1]);
-        $this->book = SurveyORM\Book::create(['file_id' => $file->id, 'title' => '', 'lock' => false, 'column_id' => $column->id]);
+        $this->book = SurveyORM\Book::create(['file_id' => $file->id, 'title' => '', 'lock' => false, 'column_id' => $column->id, 'rowsFile_id' => $rows_file->id]);
     }
 
     public function testPage()
@@ -40,9 +40,16 @@ class SurveyControllerTest extends TestCase
         $this->assertTrue($this->client->getResponse()->isOk());
     }
 
-    public function testGetSurveyQuesion()
+    public function testDemoLogin()
     {
+        $crawler = $this->client->request('GET', 'surveyDemo/' . $this->book->id . '/demo/demoLogin');
 
+        $this->assertTrue($this->client->getResponse()->isOk());
+    }
+
+    public function testCheckInRows()
+    {
+        //$crawler = $this->client->request('POST', 'survey/' . $this->book->id . '/demo/checkInRows', ['id' => 'g']);
     }
 
     public function testGetBook()

@@ -62,7 +62,7 @@ class SurveyController extends \BaseController {
     {
         SurveySession::logout();
 
-        $login_id = Input::get('id') ;
+        $login_id = Input::get('id');
 
         $file_book = SurveyORM\Book::find($book_id);
 
@@ -256,9 +256,9 @@ class SurveyController extends \BaseController {
      *
      * @return Response
      */
-    public function compareRule($rule_id,$answer)
+    public function compareRule($rule_id, $answer)
     {
-        $status =Survey\RuleRepository::find($rule_id)->compareRule($rule_id,$answer);
+        $status =Survey\RuleRepository::find($rule_id)->compareRule($rule_id, $answer);
 
         return $status;
     }
