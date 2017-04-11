@@ -91,7 +91,7 @@ class SurveyControllerTest extends TestCase
         $this->assertArrayHasKey('nodes', $this->client->getResponse()->original);
     }
 
-    public function testGetRule()
+    /*public function testGetRule()
     {
         $node = $this->book->childrenNodes()->save(new SurveyORM\Node(['type' => 'select']));
 
@@ -102,5 +102,5 @@ class SurveyControllerTest extends TestCase
         $this->client->request('POST', 'survey/' . $this->book->id . '/survey/getRule', $input);
 
         $this->assertArrayHasKey('rule', $this->client->getResponse()->original);
-    }
+    }*/
 }
