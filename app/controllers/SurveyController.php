@@ -210,7 +210,7 @@ class SurveyController extends \BaseController {
 
         Input::has('value') && $this->repository->put($this->user_id, Input::get('question.id'), Input::get('value'));
 
-        if(Input::get('trigger') == 'saveAnswer'){
+        if(Input::has('value')){
 
             if (Input::get('parent.class') == '') {
                 $this->setChildQuestion(Input::get('parent.class'), Input::get('question.node_id'), Input::get('question.id'));
@@ -218,7 +218,7 @@ class SurveyController extends \BaseController {
                 $this->setChildQuestion(Input::get('parent.class'), Input::get('parent.node_id'), Input::get('parent.id'));
             }
 
-        return $this->setJumpQuestion();
+        $this->setJumpQuestion();
         }
 
         return ['nodes' => $nodes, 'answers' => $this->repository->all(SurveySession::getHashId())];
