@@ -99,7 +99,7 @@ class SurveyController extends \BaseController {
      * @param  int  $book_id
      * @return Response
      */
-    public function getNextNode($book_id)
+    public function getNextNode($book_id, $has_missing = true)
     {
         $answers = (object)$this->repository->all($this->user_id);
         $url = null;
@@ -109,12 +109,17 @@ class SurveyController extends \BaseController {
         if (Input::get('next')) {
             //撿查是否有漏答
 
-            if ($this->checkHasMissing($page->id)) {
-                return ['node' => $page->load('rule'), 'answers' => $this->repository->all($this->user_id), 'url' => $url, 'hasMissing' => true];
-            } else {
-                $this->repository->put($this->user_id, 'page_id', $page->id); //update page
+            if ($this->checkPage($page->id) == 'has_missing') {
+                return ['node' => $page->load('rule'), 'answers' => $this->repository->all($this->user_id), 'url' => $url, 'hasMissing' => $has_missing];
+            }  
+            
+            if ($page->next != '' && $this->checkPage($page->next->id) == 'has_jump') {
+                $this->repository->put($this->user_id, 'page_id', $page->next->id);
+                return $this->getNextNode($book_id, false);
             }
 
+            $this->repository->put($this->user_id, 'page_id', $page->id); //update page
+            
             $lastPage = is_null($page->next);
             $nextPage = $lastPage ? null : $page->next->load('rule');
         } else {
@@ -154,21 +159,27 @@ class SurveyController extends \BaseController {
         return ['node' => $nextPage, 'answers' => $this->repository->all($this->user_id), 'url' => $url];
     }
 
-    public function checkHasMissing($page_id)
+    public function checkPage($page_id)
     {
         $answers = $this->repository->all($this->user_id);
 
         gettype($answers) == 'object' ? $answers = get_object_vars($answers) : '';
 
         $questions = SurveyORM\Node::find($page_id)->getQuestions();
-
+        $page_jump=0;
         foreach ($questions as $question) {
             if ($answers[$question['id']] == null) {
-                return true;
+                return 'has_missing';
+            }else if ($answers[$question['id']] == -8) {
+                $page_jump++;   
             }
         }
 
-        return false;
+        if ($page_jump == sizeof($questions)) {
+            return 'has_jump';
+        }
+
+        return 'has_next';
     }
 
     /**
@@ -207,7 +218,7 @@ class SurveyController extends \BaseController {
                 $this->setChildQuestion(Input::get('parent.class'), Input::get('parent.node_id'), Input::get('parent.id'));
             }
 
-        $this->setJumpQuestion();
+        return $this->setJumpQuestion();
         }
 
         return ['nodes' => $nodes, 'answers' => $this->repository->all(SurveySession::getHashId())];
@@ -255,26 +266,35 @@ class SurveyController extends \BaseController {
     public function setJumpQuestion()
     {
         $relates_rule = SurveyORM\SurveyRuleFactor::where('rule_relation_factor', Input::get('question.id'))->with('rules')->get();
+        foreach ($relates_rule as $rule) {
 
-        foreach ($relates_rule as $relate) {
-
-            $node = SurveyORM\Node::find($relate->rules['effect_id']);
-
-            $node->type == 'page' ? $node_questions = SurveyORM\Node::find($node->id)->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions'])[0]->questions : $node_questions = SurveyORM\Node::find($node->id)->questions;
-
+            $node = SurveyORM\Node::find($rule->rules['effect_id']);
+            
+            if ($node->type == 'page') {
+                $nodes = SurveyORM\Node::find($node->id)->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions']);
+                $node_questions = array();
+                foreach ($nodes as $node) {
+                    foreach ($node->questions as $question) {
+                        array_push($node_questions, $question);
+                    }
+                }
+            } else {
+                $node_questions = SurveyORM\Node::find($node->id)->questions;
+            }
             //judge jumped node content's is answer or question
             sizeof(SurveyORM\Node::find($node->id)->answers) > 0 ? $root_list = SurveyORM\Node::find($node->id)->answers : $root_list = SurveyORM\Node::find($node->id)->questions;
 
             $answers =  array();
 
-            $factors = SurveyORM\SurveyRuleFactor::where('rule_id', $relate->rule_id)->get();
+            $factors = SurveyORM\SurveyRuleFactor::where('rule_id', $rule->rule_id)->get();
 
+            // get all of the factor value in repository for compareRule function
             foreach ($factors as $factor) {
                 $question = $factor->rule_relation_factor;
                 $answers[$question] = $this->repository->get(SurveySession::getHashId(), $factor->rule_relation_factor);
-            }
-
-            if ($this->compareRule($relate->rules['id'], $answers)) {
+            }   
+            
+            if ($this->compareRule($rule->rules['id'], $answers)) {
 
                 foreach ($root_list as $root) {
 

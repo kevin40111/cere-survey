@@ -133,7 +133,7 @@ class SurveyFile extends CommFile
                 $table->text($question['id'])->nullable();
             }
 
-            $table->integer('page_id');
+            $table->integer('page_id')->nullable();
             $table->string('created_by',255);
         });
 
