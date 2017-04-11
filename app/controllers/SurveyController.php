@@ -16,6 +16,8 @@ class SurveyController extends \BaseController {
     function __construct(SurveyRepositoryInterface $repository)
     {
         $this->user_id = $repository->getId();
+        $this->type = $repository->getType();
+        $this->repository = $repository;
     }
 
     /**

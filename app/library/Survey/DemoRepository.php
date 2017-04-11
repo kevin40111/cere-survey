@@ -3,6 +3,7 @@
 namespace Plat\Survey;
 
 use Session;
+use Auth;
 
 class DemoRepository implements SurveyRepositoryInterface
 {
@@ -103,6 +104,19 @@ class DemoRepository implements SurveyRepositoryInterface
      */
     public function getId()
     {
-        return 1;
+        $user_id = Auth::user()->id;
+
+        return $user_id;
+    }
+
+    /**
+     * Get login type.
+     *
+     * @return mixed
+     */
+    public function getType()
+    {
+
+        return 'demo';
     }
 }

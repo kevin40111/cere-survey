@@ -2,6 +2,7 @@
 
 namespace Plat\Survey;
 
+use Plat\Eloquent\Survey as SurveyORM;
 use Illuminate\Support\ServiceProvider;
 use Plat\Survey\SurveyRepositoryInterface;
 use Plat\Survey\SurveyRepository;
@@ -20,16 +21,14 @@ class SurveyServiceProvider extends ServiceProvider
 
             if ($type == 'demo') {
                 $user_id = Auth::user()->id;
+
                 $repository = new DemoRepository($book_id);
                 if (!$repository->exist('answers')) {
-
-                    //$page = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
                     $repository->increment($user_id, ['page_id' => null]);
                     $questions = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
                         return array_merge($carry, $page->getQuestions());
                     }, []);
-
-                    array_map(function ($question) use ($repository) {
+                    array_map(function ($question) use ($repository, $user_id) {
                         $repository->put($user_id, $question['id'], null);
                     }, $questions);
                 }

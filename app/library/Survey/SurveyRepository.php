@@ -3,6 +3,7 @@
 namespace Plat\Survey;
 
 use DB;
+use Plat\Survey\SurveySession;
 
 class SurveyRepository implements SurveyRepositoryInterface
 {
@@ -102,6 +103,19 @@ class SurveyRepository implements SurveyRepositoryInterface
      */
     public function getId()
     {
-        return 1;
+        $user_id = SurveySession::getHashId();
+
+        return $user_id;
+    }
+
+    /**
+     * Get login type.
+     *
+     * @return mixed
+     */
+    public function getType()
+    {
+
+        return 'survey';
     }
 }
