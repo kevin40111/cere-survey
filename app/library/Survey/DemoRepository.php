@@ -95,4 +95,14 @@ class DemoRepository implements SurveyRepositoryInterface
     {
         return Session::has('answer.'.$this->book_id);
     }
+
+    /**
+     * Get user ID.
+     *
+     * @return mixed
+     */
+    public function getId()
+    {
+        return 1;
+    }
 }

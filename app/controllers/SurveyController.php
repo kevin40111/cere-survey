@@ -2,9 +2,9 @@
 
 use Plat\Eloquent\Survey as SurveyORM;
 use Plat\Survey\SurveySession;
-use Plat\Survey\SurveyRepository;
-use Plat\Survey\DemoRepository;
+use Plat\Survey\SurveyRepositoryInterface;
 use Plat\Survey;
+
 class SurveyController extends \BaseController {
     /**
      * init the repository of the survey.
@@ -13,35 +13,9 @@ class SurveyController extends \BaseController {
      * @param  string  $type
      * @return Response
      */
-    function __construct()
+    function __construct(SurveyRepositoryInterface $repository)
     {
-        $this->beforeFilter(function ($route) {
-            $this->type = $route->getParameter('type');
-            $book_id = $route->getParameter('book_id');
-
-            if ($this->type == 'demo') {
-                $this->user_id = Auth::user()->id;
-                $this->repository = new DemoRepository($book_id);
-                if (!$this->repository->exist('answers')) {
-
-                    //$page = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
-                    $this->repository->increment($this->user_id, ['page_id' => null]);
-                    $questions = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
-                        return array_merge($carry, $page->getQuestions());
-                    }, []);
-
-                    array_map (function($question) {
-                        $this->repository->put($this->user_id, $question['id'], null);
-                    }, $questions);
-                }
-            }
-
-            if ($this->type == 'survey') {
-                $this->user_id = SurveySession::getHashId();
-                $this->repository = new SurveyRepository($book_id);
-            }
-        });
-
+        $this->user_id = $repository->getId();
     }
 
     /**

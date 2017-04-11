@@ -53,4 +53,11 @@ interface SurveyRepositoryInterface
      * @return array
      */
     public function exist($id);
+
+    /**
+     * Get user ID.
+     *
+     * @return mixed
+     */
+    public function getId();
 }

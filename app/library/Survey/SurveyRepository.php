@@ -94,4 +94,14 @@ class SurveyRepository implements SurveyRepositoryInterface
         $existed = DB::table($this->book_id)->where('created_by', $id)->exists();
         return $existed;
     }
+
+    /**
+     * Get user ID.
+     *
+     * @return mixed
+     */
+    public function getId()
+    {
+        return 1;
+    }
 }
