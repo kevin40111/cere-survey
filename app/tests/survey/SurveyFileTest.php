@@ -10,6 +10,21 @@ class SurveyFileTest extends TestCase {
         parent::setUp();
         $this->app->make('artisan')->call('migrate');
         $this->seed();
+
+        $this->setUpMember();
+        $this->setUpFolder();
+        $column = $this->setUpRowsFile();
+        $file = $this->setUpFile($column);
+        $this->surveyFile = new SurveyFile($file, $this->user);
+        $this->setUpPage();
+        $this->setUpNode();
+        $this->setUpQuestion();
+        $this->setUpAnswer();
+        $this->setUpRule();
+    }
+
+    private function setUpMember()
+    {
         $this->user = new User;
         $this->user->username = 'gg';
         $this->user->email    = 'tim72117@gmail.com';
@@ -21,10 +36,16 @@ class SurveyFileTest extends TestCase {
         $member = $this->user->members()->save(new \Plat\Member(['project_id' => 1, 'actived' => true]));
         $member->logined_at = Carbon\Carbon::now()->toDateTimeString();
         $member->save();
+    }
 
+    private function setUpFolder()
+    {
         $folder = Files::create(['type' => 20, 'title' => '', 'created_by' => 1]);
         $folderDoc = ShareFile::create(['file_id' => $folder->id, 'target' => 'user', 'target_id' => 1, 'created_by' => 1, 'visible' => true]);
+    }
 
+    private function setUpRowsFile()
+    {
         $rows_file = Files::create(['type' => 5, 'title' => '', 'created_by' => 1]);
         $sheet = $rows_file->sheets()->create(['title' => '', 'editable' => true, 'fillable' => true]);
         $table = $sheet->tables()->create(['database' => 'rows', 'name' => 'row_20150817_202236_1_0lzuu', 'lock' => false, 'construct_at' => Carbon\Carbon::now()->toDateTimeString()]);
@@ -38,38 +59,58 @@ class SurveyFileTest extends TestCase {
             'readonly' => false,
         ]);
 
+        return $column;
+    }
+
+    private function setUpFile($column)
+    {
         $file = Files::create(['type' => 6, 'title' => '', 'created_by' => 1]);
         $book = SurveyORM\Book::create(['file_id' => $file->id, 'title' => '', 'lock' => false, 'column_id' => $column->id]);
         $doc = ShareFile::create(['file_id' => $file->id, 'target' => 'user', 'target_id' => 1, 'created_by' => 1, 'visible' => true, 'folder_id' => 1]);
 
-        $this->surveyFile = new SurveyFile($file, $this->user);
+        return $file;
+    }
 
+    private function setUpPage()
+    {
         Input::replace([
             'parent' => $this->surveyFile->file->book->toArray(),
             'node' => ['type' => 'page'],
             'previous' => NULL,
         ]);
         $this->page = $this->surveyFile->createNode()['node'];
+    }
 
+    private function setUpNode()
+    {
         Input::replace([
             'parent' => $this->page->toArray(),
             'node' => ['type' => 'select'],
             'previous' => NULL,
         ]);
         $this->node = $this->surveyFile->createNode()['node'];
+    }
 
+    private function setUpQuestion()
+    {
         Input::replace([
             'node' => $this->node->toArray(),
             'previous' => NULL,
         ]);
         $this->question = $this->surveyFile->createQuestion()['question'];
+    }
 
+    private function setUpAnswer()
+    {
         Input::replace([
             'node' => $this->node->toArray(),
             'previous' => NULL,
         ]);
         $this->answer = $this->surveyFile->createAnswer()['answer'];
+    }
 
+    private function setUpRule()
+    {
         Input::replace([
             'skipTarget' => $this->node->toArray(),
             'expressions' => [
@@ -339,6 +380,64 @@ class SurveyFileTest extends TestCase {
         $struct_file = $this->surveyFile->createExtBook();
 
         $this->assertCount(11, $struct_file);
+    }
+
+    public function testGetAppliedOptions()
+    {
+        $appliedOptions = $this->surveyFile->getAppliedOptions();
+
+        $this->assertArrayHasKey('book', $appliedOptions);
+        $this->assertArrayHasKey('columns', $appliedOptions);
+        $this->assertArrayHasKey('questions', $appliedOptions);
+        $this->assertArrayHasKey('edited', $appliedOptions);
+        $this->assertArrayHasKey('extBook', $appliedOptions);
+        $this->assertArrayHasKey('extColumn', $appliedOptions);
+        $this->assertArrayHasKey('organizations', $appliedOptions);
+    }
+
+    public function testResetApplication()
+    {
+        Input::replace([
+            'selected' => [
+                'rules' => [
+                    [
+                        "conditions" => [
+                            [
+                                "compareType" => "value",
+                                "question" => $this->question->id,
+                                "logic" => " > ",
+                                "value" => "10",
+                            ], [
+                                "compareOperator" => " && ",
+                                "question" => $this->question->id,
+                                "logic" => " > ",
+                                "compareType" => "question",
+                                "value" => $this->answer->value,
+                            ],
+                        ],
+                    ],
+                ],
+                'columns' => [],
+            ],
+        ]);
+
+        $this->surveyFile->setAppliedOptions();
+        $appliedOptions = $this->surveyFile->resetApplication();
+
+        $this->assertArrayHasKey('book', $appliedOptions);
+        $this->assertArrayHasKey('columns', $appliedOptions);
+        $this->assertArrayHasKey('questions', $appliedOptions);
+        $this->assertArrayHasKey('edited', $appliedOptions);
+        $this->assertArrayHasKey('extBook', $appliedOptions);
+        $this->assertArrayHasKey('extColumn', $appliedOptions);
+        $this->assertArrayHasKey('organizations', $appliedOptions);
+    }
+
+    public function testCreateApplication()
+    {
+        $application = $this->surveyFile->createApplication();
+
+        $this->assertInstanceOf(\Plat\Eloquent\Survey\Application::class, $application);
     }
 
     public function testReject()

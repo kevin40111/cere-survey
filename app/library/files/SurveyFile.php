@@ -352,25 +352,18 @@ class SurveyFile extends CommFile
         $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
         $application->reject = false;
         $application->save();
-        $this->deleteApplication();
         $extBook = SurveyORM\Book::find($application->ext_book_id);
         Survey\RuleRepository::target($extBook)->deleteRule();
+        $this->file->book->applications()->OfMe()->delete();
         return $this->getAppliedOptions();
     }
 
     public function createApplication()
     {
         return $this->file->book->applications()->create([
-            'book_id' => Input::get('book_id'),
             'member_id' => Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->id,
         ]);
     }
-
-    public function deleteApplication()
-    {
-        $this->file->book->applications()->OfMe()->first()->delete();
-    }
-
 
     public function setRowsFile($rows_file_id)
     {
