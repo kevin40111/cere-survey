@@ -93,4 +93,37 @@ class RuleRepository
             return false;
         }
     }
+
+    public function explanation()
+    {
+        $operators = [' && ' => '而且', ' || ' => '或者'];
+        $booleans = [' > ' => '大於', ' < ' => '小於', ' == ' => '等於', ' != ' => '不等於'];
+        $expressions = $this->target->rule->expressions;
+
+        $explanation = '';
+        foreach ($expressions as $expression) {
+            if (isset($expression['compareLogic'])) {
+                $operator = $operators[$expression['compareLogic']];
+                $explanation .= $operator;
+            }
+            $explanation .= ' ( ';
+            foreach ($expression['conditions'] as $condition) {
+
+                if (isset($condition['compareOperator'])) {
+                    $operator = $operators[$condition['compareOperator']];
+                    $explanation .= $operator;
+                }
+
+                $question = SurveyORM\Question::find($condition['question']);
+                $boolean = $booleans[$condition['logic']];
+
+                $answer = $condition['compareType'] == 'value' ? $condition['value'] : $question->node->answers()->where('value', $condition['value'])->first()->title;
+
+                $explanation .= $question->title . $boolean . $answer;
+            }
+            $explanation .= ' ) ';
+        }
+
+        return $explanation;
+    }
 }

@@ -34,6 +34,7 @@ class SurveyControllerTest extends TestCase
         $crawler = $this->client->request('GET', 'survey/' . $this->book->id . '/survey/page');
 
         $this->assertTrue($this->client->getResponse()->isOk());
+        $this->assertViewHas('context');
     }
 
     public function testSurveyLogin()
@@ -41,6 +42,7 @@ class SurveyControllerTest extends TestCase
         $crawler = $this->client->request('GET', 'survey/' . $this->book->id . '/survey/surveyLogin');
 
         $this->assertTrue($this->client->getResponse()->isOk());
+        $this->assertViewHas('context');
     }
 
     public function testDemoLogin()
@@ -48,6 +50,7 @@ class SurveyControllerTest extends TestCase
         $crawler = $this->client->request('GET', 'surveyDemo/' . $this->book->id . '/demo/demoLogin');
 
         $this->assertTrue($this->client->getResponse()->isOk());
+        $this->assertViewHas('context');
     }
 
     public function testCheckInRows()

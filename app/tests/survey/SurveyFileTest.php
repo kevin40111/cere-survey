@@ -68,6 +68,8 @@ class SurveyFileTest extends TestCase {
         $book = SurveyORM\Book::create(['file_id' => $file->id, 'title' => '', 'lock' => false, 'column_id' => $column->id]);
         $doc = ShareFile::create(['file_id' => $file->id, 'target' => 'user', 'target_id' => 1, 'created_by' => 1, 'visible' => true, 'folder_id' => 1]);
 
+        $this->applicationRepository = Plat\Survey\ApplicationRepository::book($book);
+
         return $file;
     }
 
@@ -350,12 +352,6 @@ class SurveyFileTest extends TestCase {
                                 "question" => $this->question->id,
                                 "logic" => " > ",
                                 "value" => "10",
-                            ], [
-                                "compareOperator" => " && ",
-                                "question" => $this->question->id,
-                                "logic" => " > ",
-                                "compareType" => "question",
-                                "value" => $this->answer->value,
                             ],
                         ],
                     ],
@@ -373,13 +369,6 @@ class SurveyFileTest extends TestCase {
         $this->assertArrayHasKey('extBook', $appliedOptions);
         $this->assertArrayHasKey('extColumn', $appliedOptions);
         $this->assertArrayHasKey('organizations', $appliedOptions);
-    }
-
-    public function testCreateExtBook()
-    {
-        $struct_file = $this->surveyFile->createExtBook();
-
-        $this->assertCount(11, $struct_file);
     }
 
     public function testGetAppliedOptions()
@@ -407,12 +396,6 @@ class SurveyFileTest extends TestCase {
                                 "question" => $this->question->id,
                                 "logic" => " > ",
                                 "value" => "10",
-                            ], [
-                                "compareOperator" => " && ",
-                                "question" => $this->question->id,
-                                "logic" => " > ",
-                                "compareType" => "question",
-                                "value" => $this->answer->value,
                             ],
                         ],
                     ],
@@ -433,16 +416,40 @@ class SurveyFileTest extends TestCase {
         $this->assertArrayHasKey('organizations', $appliedOptions);
     }
 
-    public function testCreateApplication()
+    public function testGetApplications()
     {
-        $application = $this->surveyFile->createApplication();
+        $applications = $this->surveyFile->getApplications()['applications'];
 
-        $this->assertInstanceOf(\Plat\Eloquent\Survey\Application::class, $application);
+        $this->assertCount(0, $applications);
     }
 
     public function testReject()
     {
+        $selected = [
+            'rules' => [
+                [
+                    "conditions" => [
+                        [
+                            "compareType" => "value",
+                            "question" => $this->question->id,
+                            "logic" => " > ",
+                            "value" => "10",
+                        ],
+                    ],
+                ],
+            ],
+            'columns' => [],
+        ];
 
+        $this->applicationRepository->setAppliedOptions($selected);
+        $application = $this->applicationRepository->book->applications()->OfMe()->first();
+
+        Input::replace([
+            'application_id' => $application->id,
+        ]);
+        $application = $this->surveyFile->reject()['application'];
+
+        $this->assertInstanceOf(Plat\Eloquent\Survey\Application::class, $application);
     }
 
     public function testQueryOrganizations()

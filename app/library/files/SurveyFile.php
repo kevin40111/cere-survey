@@ -265,104 +265,20 @@ class SurveyFile extends CommFile
     public function setAppliedOptions()
     {
         $selected = Input::get('selected');
-        $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
-        if ($application) {
-            $application->restore();
-        } else {
-            $application = $this->createApplication();
-            $extDoc = $this->createExtBook();
-            $application->ext_book_id = \ShareFile::find($extDoc['id'])->isFile->book->id;
-            $application->save();
-        }
 
-        $extBook = SurveyORM\Book::find($application->ext_book_id);
-        Survey\RuleRepository::target($extBook)->saveExpressions($selected['rules']);
-
-        $application->appliedOptions()->sync($selected['columns']);
-        $appliedOptions = $this->getAppliedOptions();
-        return $appliedOptions;
-    }
-
-    public function createExtBook()
-    {
-        $newDoc = ['title' => $this->file->book->title .'(加掛題本)', 'type' => 6];
-
-        Input::replace(['fileInfo' => $newDoc]);
-
-        $user = Auth::user();
-
-        $doc = \ShareFile::whereNull('folder_id')->first();
-
-        $folderComponent = new \Plat\Files\FolderComponent($doc->is_file, $user);
-
-        $folderComponent->setDoc($doc);
-
-        return $folderComponent->createComponent()['doc'];
+        return Survey\ApplicationRepository::book($this->file->book)->setAppliedOptions($selected);
     }
 
     public function getAppliedOptions()
     {
         $member_id = Input::get('member_id');
-        $application = isset($member_id) ? $this->file->book->applications()->where('member_id', Input::get('member_id'))->first() : $this->file->book->applications()->OfMe()->first();
-        if ($application) {
-            $appliedOptions =  $application->appliedOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
-                return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
-            });
-            $edited = true;
-            $options = $appliedOptions;
 
-            $extBook = SurveyORM\Book::find($application->ext_book_id);
-            $rule = Survey\RuleRepository::target($extBook)->getRule();
-            $organizationsSelected = array_map(function($rule){
-                return \Plat\Project\OrganizationDetail::find($rule['value']);
-            }, $rule->expressions[0]['conditions']);
-        } else {
-            $applicableOption = $this->file->book->applicableOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
-                return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
-            });
-            $edited = false;
-            $options = $applicableOption;
-            $extBook = [];
-            $organizationsSelected = [];
-        }
-
-        $columns = isset($options['applicableColumns']) ? $options['applicableColumns'] : [];
-        $questions = isset($options['applicableQuestions']) ? $options['applicableQuestions'] : [];
-        $extColumn = \Row\Column::find($this->file->book->column_id);
-        $organizations = Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->organizations->map(function($organization){
-            return $organization->now;
-        })->toArray();
-
-        return [
-            'book' => $this->file->book,
-            'columns' => $columns,
-            'questions' => $questions,
-            'edited' => $edited,
-            'extBook' => isset($application) ? \Struct_file::open($extBook->file->docs()->OfMe()->first()) : NULL,
-            'extColumn' => $extColumn,
-            'organizations' => [
-                'lists' => $organizations,
-                'selected' => $organizationsSelected,
-            ],
-        ];
+        return Survey\ApplicationRepository::book($this->file->book)->getAppliedOptions($member_id);
     }
 
     public function resetApplication()
     {
-        $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
-        $application->reject = false;
-        $application->save();
-        $extBook = SurveyORM\Book::find($application->ext_book_id);
-        Survey\RuleRepository::target($extBook)->deleteRule();
-        $this->file->book->applications()->OfMe()->delete();
-        return $this->getAppliedOptions();
-    }
-
-    public function createApplication()
-    {
-        return $this->file->book->applications()->create([
-            'member_id' => Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->id,
-        ]);
+        return Survey\ApplicationRepository::book($this->file->book)->resetApplication();
     }
 
     public function setRowsFile($rows_file_id)
@@ -473,13 +389,9 @@ class SurveyFile extends CommFile
 
     public function reject()
     {
-        $application_id = Input::get('application_id');
-        $application = $this->file->book->applications()->where('id', $application_id)->first();
-        if (!$application->reject) {
-            SurveyORM\Book::find($application->ext_book_id)->update(array('lock' => false));
-        }
-        $application->reject = !$application->reject;
-        $application->save();
+        $application = $this->file->book->applications()->where('id', Input::get('application_id'))->first();
+
+        $application = Survey\ApplicationRepository::application($application)->reject();
 
         return ['application' => $application];
     }
@@ -519,16 +431,10 @@ class SurveyFile extends CommFile
 
     public function getApplicationPages()
     {
-        $members_id = $this->file->book->applications->load('members')->fetch('members.id')->all();
-        $members = \Plat\Member::with('user')->whereIn('id', $members_id)->paginate(10);
+        $pagination = Survey\ApplicationRepository::book($this->file->book)->getApplicationPages();
 
-        return ['currentPage' => $members->getCurrentPage(), 'lastPage' => $members->getLastPage()];
+        return ['currentPage' => $pagination->getCurrentPage(), 'lastPage' => $pagination->getLastPage()];
     }
-
-    /*public function deleteDoc($docId)
-    {
-        \ShareFile::find($docId)->delete();
-    }*/
 
     public function getConditionColumn()
     {
@@ -598,33 +504,7 @@ class SurveyFile extends CommFile
 
     public function getExpressionExplanation()
     {
-        $operators = [' && ' => '而且', ' || ' => '或者'];
-        $booleans = [' > ' => '大於', ' < ' => '小於', ' == ' => '等於', ' != ' => '不等於'];
-        $expressions = SurveyORM\Rule::find(Input::get('rule_id'))->expressions;
-
-        $explanation = '';
-        foreach ($expressions as $expression) {
-            if (isset($expression['compareLogic'])) {
-                $operator = $operators[$expression['compareLogic']];
-                $explanation .= $operator;
-            }
-            $explanation .= ' ( ';
-            foreach ($expression['conditions'] as $condition) {
-
-                if (isset($condition['compareOperator'])) {
-                    $operator = $operators[$condition['compareOperator']];
-                    $explanation .= $operator;
-                }
-
-                $question = SurveyORM\Question::find($condition['question']);
-                $boolean = $booleans[$condition['logic']];
-
-                $answer = $condition['compareType'] == 'value' ? $condition['value'] : $question->node->answers()->where('value', $condition['value'])->first()->title;
-
-                $explanation .= $question->title . $boolean . $answer;
-            }
-            $explanation .= ' ) ';
-        }
+        $explanation = Survey\RuleRepository::find(Input::get('rule_id'))->explanation();
 
         return ['explanation' => $explanation];
     }
