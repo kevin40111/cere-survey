@@ -344,6 +344,7 @@ class SurveyFile extends CommFile
                 'lists' => $organizations,
                 'selected' => $organizationsSelected,
             ],
+            'application_id' => $application ? $application->id : null,
         ];
     }
 
@@ -649,13 +650,28 @@ class SurveyFile extends CommFile
     public function applicationStatus()
     {
         $application = $this->file->book->applications()->OfMe()->first();
-        if ($application->extension ==  $application->reject) {
-            $status = '0';
-        } else if ($application->reject) {
-            $status = '1';
-        } else {
-            $status = '2';
+        if (is_null($application)) {
+            return ['status' => null];
+        } else {            
+            if ($application->extension ==  $application->reject) {
+                $status = '0';
+            } else if ($application->reject) {
+                $status = '1';
+            } else {
+                $status = '2';
+            }
+            return ['status' => $status];
         }
-        return ['status' => $status];
     }
+
+    public function rejectSetFalse()
+    {
+        $application_id = Input::get('application_id');
+        $application = $this->file->book->applications()->where('id', $application_id)->first();
+        $application->reject = false;
+        $application->save();
+
+        return ['application' => $application];
+    }
+
 }
