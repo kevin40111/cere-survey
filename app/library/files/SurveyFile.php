@@ -344,13 +344,14 @@ class SurveyFile extends CommFile
                 'lists' => $organizations,
                 'selected' => $organizationsSelected,
             ],
-            'application_id' => $application ? $application->id : null,
         ];
     }
 
     public function resetApplication()
     {
         $application = $this->file->book->applications()->OfMe()->withTrashed()->first();
+        $application->reject = false;
+        $application->save();
         $this->deleteApplication();
         $extBook = SurveyORM\Book::find($application->ext_book_id);
         Survey\RuleRepository::target($extBook)->deleteRule();
@@ -652,7 +653,7 @@ class SurveyFile extends CommFile
         $application = $this->file->book->applications()->OfMe()->first();
         if (is_null($application)) {
             return ['status' => null];
-        } else {            
+        } else {
             if ($application->extension ==  $application->reject) {
                 $status = '0';
             } else if ($application->reject) {
@@ -662,16 +663,6 @@ class SurveyFile extends CommFile
             }
             return ['status' => $status];
         }
-    }
-
-    public function rejectSetFalse()
-    {
-        $application_id = Input::get('application_id');
-        $application = $this->file->book->applications()->where('id', $application_id)->first();
-        $application->reject = false;
-        $application->save();
-
-        return ['application' => $application];
     }
 
 }

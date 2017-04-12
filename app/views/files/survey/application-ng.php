@@ -63,7 +63,7 @@
         </md-card>
         <md-button class="md-raised md-primary md-display-2" ng-click="setAppliedOptions()" ng-if="!edited" ng-disabled="disabled" style="width: 100%;height: 50px;font-size: 18px">送出</md-button>
         <md-button class="md-raised md-primary md-display-2" ng-click="toExtBook()" ng-if="edited" style="width: 100%;height: 50px;font-size: 18px">前往編製加掛問卷</md-button>
-        <md-button class="md-raised md-primary md-display-2" ng-click="rejectSetFalse()" ng-if="edited" ng-disabled="disabled" style="width: 100%;height: 50px;font-size: 18px">重新申請</md-button>
+        <md-button class="md-raised md-primary md-display-2" ng-click="resetApplication()" ng-if="edited" ng-disabled="disabled" style="width: 100%;height: 50px;font-size: 18px">重新申請</md-button>
     </div>
 </md-content>
 <style>
@@ -111,7 +111,6 @@
             $http({method: 'POST', url: 'getAppliedOptions', data:{}})
             .success(function(data, status, headers, config) {
                 $scope.book = data.book;
-                $scope.application_id = data.application_id;
                 angular.extend($scope, data);
             })
             .error(function(e){
@@ -198,14 +197,5 @@
 
         $scope.applicationStatus();
 
-        $scope.rejectSetFalse = function() {
-            $http({method: 'POST', url: 'rejectSetFalse', data:{application_id: $scope.application_id}})
-            .success(function(data, status, headers, config) {
-                $scope.resetApplication();
-            })
-            .error(function(e) {
-                console.log(e);
-            });
-        };
     });
 </script>
