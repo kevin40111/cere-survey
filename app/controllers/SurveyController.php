@@ -118,7 +118,7 @@ class SurveyController extends \BaseController {
         $nextPage && $nextPage->load('rule');
         $url = $lastPage ? $this->getNextUrl($book_id) : NULL;
 
-        return ['node' => $nextPage, 'answers' => $this->repository->all($this->user_id), 'url' => $url, 'missings' => $missings];
+        return ['node' => $nextPage, 'answers' => $answers, 'url' => $url, 'missings' => $missings];
     }
 
     private function getNextUrl($book_id)
