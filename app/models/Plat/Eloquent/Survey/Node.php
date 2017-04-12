@@ -112,7 +112,9 @@ class Node extends Eloquent {
 
         static::created(function($node) {
 
-            $node->questions()->save(new Question([]));
+            if ($node->type != 'explain' && $node->type != 'page') {
+                $node->questions()->save(new Question([]));
+            }
 
         });
 
