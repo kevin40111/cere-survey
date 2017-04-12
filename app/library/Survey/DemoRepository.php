@@ -30,7 +30,7 @@ class DemoRepository implements SurveyRepositoryInterface
 
         Session::put('answer.'.$this->book_id, $attributes);
 
-        return Session::get('answer.'.$this->book_id);
+        return $this->all($id);
     }
 
     /**
@@ -43,7 +43,7 @@ class DemoRepository implements SurveyRepositoryInterface
     {
         Session::forget('answer');
 
-        return Session::get('answer');
+        return (object)[];
     }
 
     /**
@@ -55,9 +55,9 @@ class DemoRepository implements SurveyRepositoryInterface
      */
     public function get($id, $key)
     {
-        $answers = Session::get('answer.'.$this->book_id.'.'.$key);
+        $answer = Session::get('answer.'.$this->book_id.'.'.$key);
 
-        return $answers;
+        return $answer;
     }
 
     /**
@@ -84,7 +84,7 @@ class DemoRepository implements SurveyRepositoryInterface
     {
         $answers = Session::get('answer.'.$this->book_id);
 
-        return $answers;
+        return (object)$answers;
     }
 
     /**

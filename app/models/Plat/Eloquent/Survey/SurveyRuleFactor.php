@@ -12,7 +12,7 @@ class SurveyRuleFactor extends Eloquent
 
     protected $fillable = ['rule_relation_factor', 'rule_id'];
 
-    public function rules()
+    public function rule()
     {
         return $this->belongsTo('Plat\Eloquent\Survey\Rule', 'rule_id', 'id');   
     }

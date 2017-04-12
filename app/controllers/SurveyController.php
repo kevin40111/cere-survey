@@ -99,87 +99,83 @@ class SurveyController extends \BaseController {
      * @param  int  $book_id
      * @return Response
      */
-    public function getNextNode($book_id, $has_missing = true)
+    public function getNextNode($book_id)
     {
-        $answers = (object)$this->repository->all($this->user_id);
-        $url = null;
-        $previous = is_null($answers->page_id) ? null : SurveyORM\Node::find($answers->page_id) ;//已填答頁數
-        $page = is_null($previous) ? SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first() : $previous->next;
+        $missings = [];
+        $answers = $this->repository->all($this->user_id);
+        $firstPage = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
+        $page = $answers->page_id ? SurveyORM\Node::find($answers->page_id)->next : $firstPage;
 
-        if (Input::get('next')) {
-            //撿查是否有漏答
-
-            if ($this->checkPage($page->id) == 'has_missing') {
-                return ['node' => $page->load('rule'), 'answers' => $this->repository->all($this->user_id), 'url' => $url, 'hasMissing' => $has_missing];
-            }  
-            
-            if ($page->next != '' && $this->checkPage($page->next->id) == 'has_jump') {
-                $this->repository->put($this->user_id, 'page_id', $page->next->id);
-                return $this->getNextNode($book_id, false);
-            }
-
-            $this->repository->put($this->user_id, 'page_id', $page->id); //update page
-            
-            $lastPage = is_null($page->next);
-            $nextPage = $lastPage ? null : $page->next->load('rule');
+        if (Input::get('next') && count($missings = $this->checkPage($page, (array)$answers)) == 0) {
+            $nextPage = $page->next ? $this->checkAndJump($page->next, (array)$answers) : NULL;
+            $complete = $nextPage ? $nextPage->previous : $page;
+            $this->repository->put($this->user_id, 'page_id', $complete->id);
         } else {
-            $lastPage = is_null($page);
-            $nextPage = $lastPage ? null : $page->load('rule');
+            $nextPage = $page;
         }
 
-        if ($lastPage) {
-            $extBooks = $this->getExtBook($book_id);
-            $extended = (count($extBooks) == 0) ? false : true;
-            if ($extended) {
-                if ($this->type == 'survey') {
-                    $book = SurveyORM\Book::find($book_id);
-                    $rowsFile = Files::find($book->rowsFile_id)->sheets()->first()->tables()->first();
-                    $userOrganization = DB::table('rows.dbo.'.$rowsFile->name)->where('C'.$book->loginRow_id, SurveySession::getLoginId())->select('C'.$book->column_id.' AS value')->first();
+        $lastPage = is_null($nextPage);
+        $nextPage && $nextPage->load('rule');
+        $url = $lastPage ? $this->getNextUrl($book_id) : NULL;
 
-                    $extBook = $extBooks->filter(function ($extBook) use($userOrganization){
-                        $values = array_fetch($extBook->rule->expressions[0]['conditions'], 'value');
-                        return in_array($userOrganization->value, $values);
-                    })->first();
-
-                    $extBook_id = $extBook->id;
-
-                    $encrypt_id = SurveySession::login($extBook_id, SurveySession::getLoginId());
-                    if (!DB::table($extBook_id)->where('created_by', $encrypt_id)->exists()) {
-                        DB::table($extBook_id)->insert(['page_id' => null, 'created_by' => $encrypt_id]);
-                    }
-
-                    $url = '/survey'.'/'.$extBook_id.'/survey/page';
-                }
-                if ($this->type == 'demo') {
-                    $url = '/surveyDemo'.'/'.$book_id.'/demo/demoLogin';
-                }
-            }
-        }
-
-        return ['node' => $nextPage, 'answers' => $this->repository->all($this->user_id), 'url' => $url];
+        return ['node' => $nextPage, 'answers' => $this->repository->all($this->user_id), 'url' => $url, 'missings' => $missings];
     }
 
-    public function checkPage($page_id)
+    private function getNextUrl($book_id)
     {
-        $answers = $this->repository->all($this->user_id);
+        $extBooks = $this->getExtBook($book_id);
+        $extended = (count($extBooks) == 0) ? false : true;
+        if ($extended) {
+            if ($this->type == 'survey') {
+                $book = SurveyORM\Book::find($book_id);
+                $rowsFile = Files::find($book->rowsFile_id)->sheets()->first()->tables()->first();
+                $userOrganization = DB::table('rows.dbo.'.$rowsFile->name)->where('C'.$book->loginRow_id, SurveySession::getLoginId())->select('C'.$book->column_id.' AS value')->first();
 
-        gettype($answers) == 'object' ? $answers = get_object_vars($answers) : '';
+                $extBook = $extBooks->filter(function ($extBook) use($userOrganization){
+                    $values = array_fetch($extBook->rule->expressions[0]['conditions'], 'value');
+                    return in_array($userOrganization->value, $values);
+                })->first();
 
-        $questions = SurveyORM\Node::find($page_id)->getQuestions();
-        $page_jump=0;
+                $extBook_id = $extBook->id;
+
+                $encrypt_id = SurveySession::login($extBook_id, SurveySession::getLoginId());
+                if (!DB::table($extBook_id)->where('created_by', $encrypt_id)->exists()) {
+                    DB::table($extBook_id)->insert(['page_id' => null, 'created_by' => $encrypt_id]);
+                }
+
+                return '/survey'.'/'.$extBook_id.'/survey/page';
+            }
+            if ($this->type == 'demo') {
+                return '/surveyDemo'.'/'.$book_id.'/demo/demoLogin';
+            }
+        }
+    }
+
+    private function checkPage($page, $answers)
+    {
+        $questions = $page->getQuestions();
+
+        $missings = array_filter($questions, function ($question) use ($answers) {
+            return ! isset($answers[$question['id']]);
+        });
+
+        return $missings;
+    }
+
+    private function checkAndJump($page, $answers)
+    {
+        $questions = $page->getQuestions();
+
+        $skips = 0;
         foreach ($questions as $question) {
-            if ($answers[$question['id']] == null) {
-                return 'has_missing';
-            }else if ($answers[$question['id']] == -8) {
-                $page_jump++;   
+            if (isset($answers[$question['id']]) && $answers[$question['id']] == -8) {
+                $skips++;
             }
         }
 
-        if ($page_jump == sizeof($questions)) {
-            return 'has_jump';
-        }
-
-        return 'has_next';
+        return $skips == sizeof($questions)
+            ? $page->next ? $this->checkAndJump($page->next, $answers) : NULL
+            : $page;
     }
 
     /**
@@ -278,30 +274,30 @@ class SurveyController extends \BaseController {
     }
 
     public function jumpQuestionController()
-    {   
-        $relates_rule = SurveyORM\SurveyRuleFactor::where('rule_relation_factor', Input::get('question.id'))->with('rules')->get();
-        foreach ($relates_rule as $rule) 
+    {
+        $factors = SurveyORM\SurveyRuleFactor::where('rule_relation_factor', Input::get('question.id'))->with('rule')->get();
+        foreach ($factors as $factor)
         {
-            if ($rule->effect_type == SurveyORM\Question::class) {
+            if ($factor->rule->effect_type == SurveyORM\Question::class) {
 
-                $this->initialJumpQuestion($rule);
+                $this->initialJumpQuestion($factor);
 
-            }else if ($rule->effect_type == SurveyORM\Node::class) {
+            }else if ($factor->rule->effect_type == SurveyORM\Node::class) {
 
-                $this->initialJumpNode($rule);
+                $this->initialJumpNode($factor);
 
             }
         }
 
     }
 
-    public function initialJumpQuestion($rule)
+    public function initialJumpQuestion($factor)
     {
-        $question = SurveyORM\Question::find($rule->rules['effect_id']);
+        $question = SurveyORM\Question::find($factor->rule->effect_id);
 
-        $answers = $this->getFactorsValue($rule->rule_id);
+        $answers = $this->getFactorsValue($factor->rule_id);
 
-        if ($this->compareRule($rule->rules['id'], $answers)) {
+        if ($this->compareRule($factor->rule_id, $answers)) {
 
             $this->initialParentListValue($question, 2);
 
@@ -310,15 +306,15 @@ class SurveyController extends \BaseController {
         } else {
 
             $this->initialParentListValue($question, 1);
-            
+
             $this->repository->put(SurveySession::getHashId(), $question->id, null);
         }
 
     }
 
-    public function initialJumpNode($rule)
-    {    
-        $node = SurveyORM\Node::find($rule->rules['effect_id']);
+    public function initialJumpNode($factor)
+    {
+        $node = SurveyORM\Node::find($factor->rule->effect_id);
         if ($node->type == 'page') {
             $nodes = SurveyORM\Node::find($node->id)->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions']);
             $node_questions = array();
@@ -333,9 +329,9 @@ class SurveyController extends \BaseController {
         //judge jumped node content's is answer or question
         sizeof(SurveyORM\Node::find($node->id)->answers) > 0 ? $root_list = SurveyORM\Node::find($node->id)->answers : $root_list = SurveyORM\Node::find($node->id)->questions;
 
-        $answers = $this->getFactorsValue($rule->rule_id);
-        
-        if ($this->compareRule($rule->rules['id'], $answers)) {
+        $answers = $this->getFactorsValue($factor->rule_id);
+
+        if ($this->compareRule($factor->rule_id, $answers)) {
 
             foreach ($root_list as $root) {
 
@@ -374,7 +370,6 @@ class SurveyController extends \BaseController {
      * @param  int  $root=>get parent child, $initial_type (1) :  need answer, (2) :  don't need answer
      * @return Response
      */
-
     public function initialParentListValue($root, $initial_type, $force = false)
     {
         $initial_list = array();

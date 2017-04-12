@@ -133,7 +133,7 @@ angular.module('ngSurvey.directives', [])
 
             $scope.getNextNode = function(next = false) {
                 surveyFactory.get('getNextNode', {next: next, book: $scope.book}, $scope.book).then(function(response) {console.log(response);
-                    if (response.hasMissing ) {
+                    if (response.missings.length > 0) {
                         alert('有尚未填答題目');
                     }
 
