@@ -13,14 +13,17 @@
             <!-- 題號 -->
             <td  ng-if="question.rowspan>=1"  rowspan="{{question.rowspan}}" style="text-align: center">
                 {{question.question_number}}
+                <span ng-if="question.node.rule.expressions.length > 0 " ng-click="showPassQuestion(question.node)" class="ui left pointing red basic label">
+                    {{question.node.rule.expressions.length}}個跳題條件
+                </span>
             </td>
 
             <!-- 題目 -->
             <td ng-if="question.rowspan>=1" rowspan="{{question.rowspan}}">
                 {{getParentNode(question,key)}}
                 {{question.question_title["title"]}}
-                <span ng-if="question.node.rule.expressions.length > 0" ng-click="showPassQuestion(question.node)" class="ui left pointing red basic label">
-                    {{question.node.rule.expressions.length}}個跳題條件
+                <span ng-if="question.rule.expressions.length > 0 " ng-click="showPassQuestion(question)" class="ui left pointing red basic label">
+                    {{question.rule.expressions.length}}個跳題條件
                 </span>
             </td>
 
