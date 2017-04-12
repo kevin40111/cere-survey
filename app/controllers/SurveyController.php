@@ -218,7 +218,7 @@ class SurveyController extends \BaseController {
                 $this->setChildQuestion(Input::get('parent.class'), Input::get('parent.node_id'), Input::get('parent.id'));
             }
 
-        $this->setJumpQuestion();
+        $this->jumpQuestionController();
         }
 
         return ['nodes' => $nodes, 'answers' => $this->repository->all(SurveySession::getHashId())];
@@ -262,71 +262,111 @@ class SurveyController extends \BaseController {
 
     }
 
-
-    public function setJumpQuestion()
+    // get all of the factor value in repository for compareRule function
+    public function getFactorsValue($rule_id)
     {
+        $answers =  array();
+
+        $factors = SurveyORM\SurveyRuleFactor::where('rule_id', $rule_id)->get();
+
+        foreach ($factors as $factor) {
+            $question = $factor->rule_relation_factor;
+            $answers[$question] = $this->repository->get(SurveySession::getHashId(), $factor->rule_relation_factor);
+        }
+
+        return $answers;
+    }
+
+    public function jumpQuestionController()
+    {   
         $relates_rule = SurveyORM\SurveyRuleFactor::where('rule_relation_factor', Input::get('question.id'))->with('rules')->get();
-        foreach ($relates_rule as $rule) {
+        foreach ($relates_rule as $rule) 
+        {
+            if ($rule->effect_type == SurveyORM\Question::class) {
 
-            $node = SurveyORM\Node::find($rule->rules['effect_id']);
-            
-            if ($node->type == 'page') {
-                $nodes = SurveyORM\Node::find($node->id)->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions']);
-                $node_questions = array();
-                foreach ($nodes as $node) {
-                    foreach ($node->questions as $question) {
-                        array_push($node_questions, $question);
-                    }
-                }
-            } else {
-                $node_questions = SurveyORM\Node::find($node->id)->questions;
+                $this->initialJumpQuestion($rule);
+
+            }else if ($rule->effect_type == SurveyORM\Node::class) {
+
+                $this->initialJumpNode($rule);
+
             }
-            //judge jumped node content's is answer or question
-            sizeof(SurveyORM\Node::find($node->id)->answers) > 0 ? $root_list = SurveyORM\Node::find($node->id)->answers : $root_list = SurveyORM\Node::find($node->id)->questions;
+        }
 
-            $answers =  array();
+    }
 
-            $factors = SurveyORM\SurveyRuleFactor::where('rule_id', $rule->rule_id)->get();
+    public function initialJumpQuestion($rule)
+    {
+        $question = SurveyORM\Question::find($rule->rules['effect_id']);
 
-            // get all of the factor value in repository for compareRule function
-            foreach ($factors as $factor) {
-                $question = $factor->rule_relation_factor;
-                $answers[$question] = $this->repository->get(SurveySession::getHashId(), $factor->rule_relation_factor);
-            }   
+        $answers = $this->getFactorsValue($rule->rule_id);
+
+        if ($this->compareRule($rule->rules['id'], $answers)) {
+
+            $this->initialParentListValue($question, 2);
+
+            $this->repository->put(SurveySession::getHashId(), $question->id, -8);
+
+        } else {
+
+            $this->initialParentListValue($question, 1);
             
-            if ($this->compareRule($rule->rules['id'], $answers)) {
+            $this->repository->put(SurveySession::getHashId(), $question->id, null);
+        }
 
-                foreach ($root_list as $root) {
+    }
 
-                    $this->initialParentListValue($root, 2);
-
+    public function initialJumpNode($rule)
+    {    
+        $node = SurveyORM\Node::find($rule->rules['effect_id']);
+        if ($node->type == 'page') {
+            $nodes = SurveyORM\Node::find($node->id)->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions']);
+            $node_questions = array();
+            foreach ($nodes as $node) {
+                foreach ($node->questions as $question) {
+                    array_push($node_questions, $question);
                 }
+            }
+        } else {
+            $node_questions = SurveyORM\Node::find($node->id)->questions;
+        }
+        //judge jumped node content's is answer or question
+        sizeof(SurveyORM\Node::find($node->id)->answers) > 0 ? $root_list = SurveyORM\Node::find($node->id)->answers : $root_list = SurveyORM\Node::find($node->id)->questions;
 
-                foreach ($node_questions as $node_question) {
+        $answers = $this->getFactorsValue($rule->rule_id);
+        
+        if ($this->compareRule($rule->rules['id'], $answers)) {
 
-                    $this->repository->put(SurveySession::getHashId(), $node_question->id, -8);
+            foreach ($root_list as $root) {
 
-                }
+                $this->initialParentListValue($root, 2);
+
+            }
+
+            foreach ($node_questions as $node_question) {
+
+                $this->repository->put(SurveySession::getHashId(), $node_question->id, -8);
+
+            }
 
 
-            } else {
+        } else {
 
-                foreach ($root_list as $root) {
+            foreach ($root_list as $root) {
 
-                    $this->initialParentListValue($root, 1);
+                $this->initialParentListValue($root, 1);
 
-                }
+            }
 
-                foreach ($node_questions as $node_question) {
+            foreach ($node_questions as $node_question) {
 
-                    $this->repository->put(SurveySession::getHashId(), $node_question->id, null);
-
-                }
+                $this->repository->put(SurveySession::getHashId(), $node_question->id, null);
 
             }
 
         }
     }
+
 
     /**
      * Initial select question and it's child question
