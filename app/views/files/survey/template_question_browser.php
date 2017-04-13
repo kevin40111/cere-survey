@@ -3,8 +3,8 @@
         <tr style="font-size: 18px;">
             <td><b>項目</b></td>
             <td><b>題目</b></td>
-            <td><b>題目代號</b></td>
             <td><b>題型</b></td>
+            <td><b>題目代號</b></td>
             <td><b>選項</b></td>
             <td><b>頁數</b></td>
         </tr>
@@ -26,15 +26,15 @@
                     {{question.rule.expressions.length}}個跳題條件
                 </span>
             </td>
-
-            <!-- 題目代號 -->
-            <td ng-if="question.rowspan>=1" rowspan="{{question.rowspan}}">
-                {{question.id}}
-            </td>
-
+            
             <!-- 題型 -->
             <td  ng-if="(question.rowspan>=1)"  rowspan="{{question.rowspan}}">
                 {{translateQustionType(question.node.type)}}
+            </td>
+
+            <!-- 題目代號 -->
+            <td >
+                <span>{{question.id}}</span>
             </td>
 
             <!-- 選項 -->

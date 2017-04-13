@@ -104,6 +104,10 @@ angular.module('ngBrowser', [])
                     return "下拉式選單";
                     break;
 
+                    case "number":
+                    return "數子題";
+                    break;
+
                     case "explain":
                     return "說明文字";
                     break;
@@ -170,6 +174,9 @@ angular.module('ngBrowser', [])
                 break;
                 case "explain":
                    question.question_title["title"] = question.node.title;
+                break; 
+                case "number":
+                   question.question_title["title"] = question.title;
                 break;
 
             }
