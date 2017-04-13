@@ -4,10 +4,10 @@ namespace Plat\Files;
 
 use DB;
 use Schema;
-use Input, View;
+use Input;
+use View;
 use User;
 use Files;
-use Auth;
 use Mail;
 use Plat\Survey;
 use Plat\Eloquent\Survey as SurveyORM;
@@ -281,91 +281,30 @@ class SurveyFile extends CommFile
         return Survey\ApplicationRepository::book($this->file->book)->resetApplication();
     }
 
-    private function setRowsFile($rows_file_id)
-    {
-        $this->file->book->update(['rowsFile_id' => $rows_file_id]);
-    }
-
-    private function setLoginFile($login_row_id)
-    {
-        $this->file->book->update(['loginRow_id' => $login_row_id]);
-    }
-
-    private function deleteRelatedApplications()
-    {
-        $this->file->book->applications->each(function($application){
-            $application->delete();
-        });
-    }
-
     public function setApplicableOptions()
     {
-        $this->file->book->optionColumns()->sync(Input::get('selected.columns'));
-        $this->file->book->optionQuestions()->sync(Input::get('selected.questions'));
-        $this->setConditionColumns(Input::get('selected.conditionColumn'));
-        $this->setRowsFile(Input::get('selected.tablesSelected'));
-        $this->setLoginFile(Input::get('selected.loginSelected.id'));
-        return $this->getApplicableOptions();
-    }
+        Survey\ApplicationRepository::book($this->file->book)->setApplicableOptions(Input::get('selected'));
 
-    private function getParentList()
-    {
-        return $this->file->select('id', 'title')->where('created_by', '=', Auth::user()->id)->where('type','=','5')->get();
+        return $this->getApplicableOptions();
     }
 
     public function getApplicableOptions()
     {
-        $conditionColumn = [];
-        $edited = !$this->file->book->optionColumns->isEmpty() || !$this->file->book->optionQuestions->isEmpty();
-        if ($edited) {
-            $columns = $this->file->book->optionColumns;
-            $questions = $this->file->book->optionQuestions;
-            $conditionColumn = $this->getConditionColumn();
-            $rowsFile_id = $this->file->book->rowsFile_id;
-            $loginConditionColumn = DB::table('row_columns')->where('id', $this->file->book->loginRow_id)->first();
-            $parentSelected = Files::find($rowsFile_id);
-            $parentList = [];
-        } else {
-            $file = Files::find(Input::get('rowsFileId'));
-            $columns = !is_null($file) ? $file->sheets->first()->tables->first()->columns : [];
-            $questions = $this->file->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
-                return array_merge($carry, $page->getQuestions());
-            }, []);
-            $loginConditionColumn = DB::table('row_columns')->where('id', $this->file->book->loginRow_id)->first();
-            $parentSelected = [];
-            $parentList = $this->getParentList();
-        }
-
-        return [
-            'columns' => $columns,
-            'questions' => $questions,
-            'edited' => $edited,
-            'conditionColumn' => $conditionColumn,
-            'loginConditionColumn' => $loginConditionColumn,
-            'tables' => [
-                'list' => $parentList,
-                'selected' => $parentSelected,
-            ],
-        ];
+        return Survey\ApplicationRepository::book($this->file->book)->getApplicableOptions(Input::get('rowsFileId'));
     }
 
     public function getApplications()
     {
         $applications = $this->file->book->applications->load('members.organizations.now', 'members.user', 'members.contact');
+
         return ['applications' => $applications];
     }
 
     public function resetApplicableOptions()
     {
-        $this->deleteRelatedApplications();
-        $this->deleteApplicableOptions();
-        $this->deleteCondition();
-        return $this->getApplicableOptions();
-    }
+        Survey\ApplicationRepository::book($this->file->book)->resetApplicableOptions();
 
-    private function deleteApplicableOptions()
-    {
-        $this->file->book->applicableOptions()->delete();
+        return $this->getApplicableOptions();
     }
 
     public function activeExtension()
@@ -428,27 +367,6 @@ class SurveyFile extends CommFile
         $pagination = Survey\ApplicationRepository::book($this->file->book)->getApplicationPages();
 
         return ['currentPage' => $pagination->getCurrentPage(), 'lastPage' => $pagination->getLastPage()];
-    }
-
-    private function getConditionColumn()
-    {
-        $column_id = $this->file->book->column_id;
-        return \Row\Column::find($column_id);
-    }
-
-    private function setConditionColumns($conditionColumn)
-    {
-        $book = $this->file->book;
-        $book->column_id = $conditionColumn['id'];
-        $book->save();
-    }
-
-    private function deleteCondition()
-    {
-        $book = $this->file->book;
-        $book->column_id = NULL;
-        $book->rowsFile_id = NULL;
-        $book->save();
     }
 
     public function saveRule()
