@@ -159,7 +159,7 @@ class SurveyController extends \BaseController {
             return ! isset($answers[$question['id']]);
         });
 
-        return $missings;
+        return array_values($missings);
     }
 
     private function checkAndJump($page, $answers)
@@ -206,6 +206,8 @@ class SurveyController extends \BaseController {
 
         Input::has('value') && $this->repository->put($this->user_id, Input::get('question.id'), Input::get('value'));
 
+        $this->jumpQuestionController();
+
         if(Input::has('value')){
 
             if (Input::get('parent.class') == '') {
@@ -213,8 +215,6 @@ class SurveyController extends \BaseController {
             } else {
                 $this->setChildQuestion(Input::get('parent.class'), Input::get('parent.node_id'), Input::get('parent.id'));
             }
-
-        $this->jumpQuestionController();
         }
 
         return ['nodes' => $nodes, 'answers' => $this->repository->all(SurveySession::getHashId())];
@@ -286,7 +286,28 @@ class SurveyController extends \BaseController {
 
                 $this->initialJumpNode($factor);
 
+            }else if ($factor->rule->effect_type == SurveyORM\Answer::class) {
+
+                $this->initialJumpAnswer($factor);
+
             }
+        }
+
+    }
+
+    public function initialJumpAnswer($factor)
+    {
+        $answer = SurveyORM\Answer::find($factor->rule->effect_id);
+
+        $answers = $this->getFactorsValue($factor->rule_id);
+
+         if ($this->compareRule($factor->rule_id, $answers)) {
+
+            $this->initialParentListValue($answer, 2);
+
+        } else {
+
+            $this->initialParentListValue($answer, 1);
         }
 
     }
@@ -398,8 +419,6 @@ class SurveyController extends \BaseController {
                 $this->repository->put(SurveySession::getHashId(), $key, $value);
             }
         }
-
-        return $initial_list;
     }
 
     /**可能用不到，確定用不到再移除
