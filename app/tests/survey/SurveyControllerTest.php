@@ -8,6 +8,7 @@ class SurveyControllerTest extends TestCase
     {
         parent::setUp();
         $this->app->make('artisan')->call('migrate');
+        $this->be(new User());
 
         $user = new User();
         $this->be($user);

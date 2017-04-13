@@ -46,8 +46,8 @@ class SurveyFileTest extends TestCase {
 
     private function setUpRowsFile()
     {
-        $rows_file = Files::create(['type' => 5, 'title' => '', 'created_by' => 1]);
-        $sheet = $rows_file->sheets()->create(['title' => '', 'editable' => true, 'fillable' => true]);
+        $this->rows_file = Files::create(['type' => 5, 'title' => '', 'created_by' => 1]);
+        $sheet = $this->rows_file->sheets()->create(['title' => '', 'editable' => true, 'fillable' => true]);
         $table = $sheet->tables()->create(['database' => 'rows', 'name' => 'row_20150817_202236_1_0lzuu', 'lock' => false, 'construct_at' => Carbon\Carbon::now()->toDateTimeString()]);
         $column = $table->columns()->create([
             'name' => 'stdidno',
@@ -416,11 +416,59 @@ class SurveyFileTest extends TestCase {
         $this->assertArrayHasKey('organizations', $appliedOptions);
     }
 
+    public function testSetApplicableOptions()
+    {
+        Input::replace([
+            'selected' => [
+                'questions' => [],
+                'columns' => [],
+                'conditionColumn' => $this->rows_file->sheets()->first()->tables()->first()->columns()->first()->toArray(),
+                'tablesSelected' => $this->rows_file->id,
+                'loginSelected' => [],
+            ],
+        ]);
+
+        $applicableOptions = $this->surveyFile->setApplicableOptions();
+
+        $this->assertCount(6, $applicableOptions);
+    }
+
+    public function testGetApplicableOptions()
+    {
+        $applicableOptions = $this->surveyFile->getApplicableOptions();
+
+        $this->assertCount(6, $applicableOptions);
+    }
+
     public function testGetApplications()
     {
         $applications = $this->surveyFile->getApplications()['applications'];
 
         $this->assertCount(0, $applications);
+    }
+
+    public function testResetApplicableOptions()
+    {
+        Input::replace([
+            'selected' => [
+                'questions' => [$this->question->id],
+                'columns' => [],
+                'conditionColumn' => $this->rows_file->sheets()->first()->tables()->first()->columns()->first()->toArray(),
+                'tablesSelected' => $this->rows_file->id,
+                'loginSelected' => [],
+            ],
+        ]);
+
+        $this->surveyFile->setApplicableOptions();
+        $this->surveyFile->file->book->column_id = 1;
+        $this->surveyFile->file->book->rowsFile_id = 1;
+        $this->surveyFile->file->book->save();
+
+        $applicableOptions = $this->surveyFile->resetApplicableOptions();
+
+        $this->assertNull($this->surveyFile->file->book->column_id);
+        $this->assertNull($this->surveyFile->file->book->rowsFile_id);
+        $this->assertCount(0, $this->applicationRepository->book->applicableOptions);
     }
 
     public function testReject()
@@ -495,35 +543,6 @@ class SurveyFileTest extends TestCase {
         $this->assertEquals(1, $paginate['lastPage']);
     }
 
-    public function testGetConditionColumn()
-    {
-        $this->surveyFile->file->book->column_id = 1;
-        $this->surveyFile->file->book->save();
-
-        $column = $this->surveyFile->getConditionColumn();
-
-        $this->assertInstanceOf(Row\Column::class, $column);
-    }
-
-    public function testSetConditionColumns()
-    {
-        $this->surveyFile->setConditionColumns(['id' => 1]);
-
-        $this->assertEquals(1, $this->surveyFile->file->book->column_id);
-    }
-
-    public function testDeleteCondition()
-    {
-        $this->surveyFile->file->book->column_id = 1;
-        $this->surveyFile->file->book->rowsFile_id = 1;
-        $this->surveyFile->file->book->save();
-
-        $this->surveyFile->deleteCondition();
-
-        $this->assertNull($this->surveyFile->file->book->column_id);
-        $this->assertNull($this->surveyFile->file->book->rowsFile_id);
-    }
-
     public function testSaveRule()
     {
         Input::replace([
@@ -577,9 +596,9 @@ class SurveyFileTest extends TestCase {
 
     public function testLockBook()
     {
-        //$locked = $this->surveyFile->lockBook()['lock'];
+        // $this->surveyFile->lockBook();
 
-        //$this->assertTrue($locked);
+        // $this->assertTrue($this->applicationRepository->book->lock);
     }
 
     public function testCheckExtBookLocked()
@@ -607,6 +626,8 @@ class SurveyFileTest extends TestCase {
 
     public function testApplicationStatus()
     {
+        $response = $this->surveyFile->applicationStatus();
 
+        $this->assertArrayHasKey('status', $response);
     }
 }

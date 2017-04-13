@@ -281,17 +281,17 @@ class SurveyFile extends CommFile
         return Survey\ApplicationRepository::book($this->file->book)->resetApplication();
     }
 
-    public function setRowsFile($rows_file_id)
+    private function setRowsFile($rows_file_id)
     {
         $this->file->book->update(['rowsFile_id' => $rows_file_id]);
     }
 
-    public function setLoginFile($login_row_id)
+    private function setLoginFile($login_row_id)
     {
         $this->file->book->update(['loginRow_id' => $login_row_id]);
     }
 
-    public function deleteRelatedApplications()
+    private function deleteRelatedApplications()
     {
         $this->file->book->applications->each(function($application){
             $application->delete();
@@ -308,15 +308,9 @@ class SurveyFile extends CommFile
         return $this->getApplicableOptions();
     }
 
-    public function getParentList()
+    private function getParentList()
     {
         return $this->file->select('id', 'title')->where('created_by', '=', Auth::user()->id)->where('type','=','5')->get();
-    }
-
-    public function getMotherList()
-    {
-        $motherList = $this->file->select('id', 'title')->where('created_by', '=', Auth::user()->id)->where('type','=','5')->get();
-        return ['motherList' =>  $motherList];
     }
 
     public function getApplicableOptions()
@@ -369,7 +363,7 @@ class SurveyFile extends CommFile
         return $this->getApplicableOptions();
     }
 
-    public function deleteApplicableOptions()
+    private function deleteApplicableOptions()
     {
         $this->file->book->applicableOptions()->delete();
     }
@@ -436,20 +430,20 @@ class SurveyFile extends CommFile
         return ['currentPage' => $pagination->getCurrentPage(), 'lastPage' => $pagination->getLastPage()];
     }
 
-    public function getConditionColumn()
+    private function getConditionColumn()
     {
         $column_id = $this->file->book->column_id;
         return \Row\Column::find($column_id);
     }
 
-    public function setConditionColumns($conditionColumn)
+    private function setConditionColumns($conditionColumn)
     {
         $book = $this->file->book;
         $book->column_id = $conditionColumn['id'];
         $book->save();
     }
 
-    public function deleteCondition()
+    private function deleteCondition()
     {
         $book = $this->file->book;
         $book->column_id = NULL;
