@@ -24,11 +24,12 @@ class DemoRepository implements SurveyRepositoryInterface
      * @param  array   $default
      * @return int|bool
      */
-    public function increment($id, $default = [])
+    public function increment($id, $attributes = [])
     {
-        $attributes = array_add($default, 'created_by', $id);
+        $attributes = array_add($attributes, 'created_by', $id);
+        $attributes = array_add($attributes, 'page_id', NULL);
 
-        Session::put('answer.'.$this->book_id, $attributes);
+        Session::put('answer.'.$this->book_id, (object)$attributes);
 
         return $this->all($id);
     }
@@ -43,7 +44,7 @@ class DemoRepository implements SurveyRepositoryInterface
     {
         Session::forget('answer');
 
-        return (object)[];
+        return $this->all($id);
     }
 
     /**
@@ -55,9 +56,9 @@ class DemoRepository implements SurveyRepositoryInterface
      */
     public function get($id, $key)
     {
-        $answer = Session::get('answer.'.$this->book_id.'.'.$key);
+        $answers = $this->all($id);
 
-        return $answer;
+        return isset($answers->{$key}) ? $answers->{$key} : NULL;
     }
 
     /**
@@ -70,9 +71,11 @@ class DemoRepository implements SurveyRepositoryInterface
      */
     public function put($id, $key, $value)
     {
-        $answers = Session::put('answer.'.$this->book_id.'.'.$key, $value);
+        $answers = $this->all($id);
 
-        return Session::has('answer.'.$this->book_id.'.'.$key);
+        $answers->{$key} = $value;
+
+        Session::put('answer.'.$this->book_id, $answers);
     }
 
     /**
@@ -84,7 +87,7 @@ class DemoRepository implements SurveyRepositoryInterface
     {
         $answers = Session::get('answer.'.$this->book_id);
 
-        return (object)$answers;
+        return $answers;
     }
 
     /**

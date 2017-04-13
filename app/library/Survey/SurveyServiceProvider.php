@@ -24,13 +24,12 @@ class SurveyServiceProvider extends ServiceProvider
 
                 $repository = new DemoRepository($book_id);
                 if (!$repository->exist('answers')) {
-                    $repository->increment($user_id, ['page_id' => null]);
+
                     $questions = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
-                        return array_merge($carry, $page->getQuestions());
+                        return array_merge($carry, array_fetch($page->getQuestions(), 'id'));
                     }, []);
-                    array_map(function ($question) use ($repository, $user_id) {
-                        $repository->put($user_id, $question['id'], null);
-                    }, $questions);
+
+                    $repository->increment($user_id, array_fill_keys($questions, NULL));
                 }
             }
 

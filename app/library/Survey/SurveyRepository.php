@@ -69,8 +69,6 @@ class SurveyRepository implements SurveyRepositoryInterface
     public function put($id, $key, $value)
     {
         $answers = DB::table($this->book_id)->where('created_by', $id)->update(array($key => $value));
-
-        return $answers;
     }
 
     /**
