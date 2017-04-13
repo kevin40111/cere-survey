@@ -9,6 +9,8 @@ class SurveyControllerTest extends TestCase
         parent::setUp();
         $this->app->make('artisan')->call('migrate');
 
+        $user = new User();
+        $this->be($user);
         $rows_file = Files::create(['id' => 2, 'type' => 5, 'title' => '', 'created_by' => 1]);
         $sheet = $rows_file->sheets()->create(['title' => '', 'editable' => true, 'fillable' => true]);
         $table = $sheet->tables()->create(['database' => 'rows', 'name' => 'row_20150817_202236_1_0lzuu', 'lock' => false, 'construct_at' => Carbon\Carbon::now()->toDateTimeString()]);
