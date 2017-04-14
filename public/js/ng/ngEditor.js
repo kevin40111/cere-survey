@@ -703,13 +703,16 @@ angular.module('ngEditor.directives', [])
 
             $scope.removeCondition = function(expression, index) {
                 expression.conditions.splice(index, 1);
+                if (index == 0 && expression.conditions[0]) {
+                    delete expression.conditions[0].compareOperator;
+                }
             };
 
             $scope.removeExpression = function(index) {
-                if (index == 0) {
-                    delete $scope.rule.expressions[index].compareLogic;
-                }
                 $scope.rule.expressions.splice(index, 1);
+                if (index == 0 && $scope.rule.expressions[0]) {
+                    delete $scope.rule.expressions[0].compareLogic;
+                }
             };
 
             $scope.createExpression = function(index, logic) {
