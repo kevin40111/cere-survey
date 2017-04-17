@@ -212,7 +212,7 @@ class SurveyController extends \BaseController {
 
             if (Input::get('parent.class') == '') {
                 $this->setChildQuestion(Input::get('parent.class'), Input::get('question.node_id'), Input::get('question.id'));
-                $this->initialCheckBoxValue(Input::get('question.node_id'));
+                SurveyORM\Node::find(Input::get('question.node_id'))->type == 'checkbox' && $this->initialCheckBoxValue(Input::get('question.node_id'));
             } else {
                 $this->setChildQuestion(Input::get('parent.class'), Input::get('parent.node_id'), Input::get('parent.id'));
             }
@@ -232,7 +232,7 @@ class SurveyController extends \BaseController {
             if ($answers->{$question['id']} == '1') {
                 return [];
             }
-        }        
+        }
 
         foreach ($check_box_questions as $question) {
             $answers->{$question['id']} != '-8' && $this->repository->put($this->user_id, $question['id'], null);
