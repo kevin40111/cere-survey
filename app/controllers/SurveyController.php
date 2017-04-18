@@ -212,7 +212,8 @@ class SurveyController extends \BaseController {
 
             if (Input::get('parent.class') == '') {
                 $this->setChildQuestion(Input::get('parent.class'), Input::get('question.node_id'), Input::get('question.id'));
-                SurveyORM\Node::find(Input::get('question.node_id'))->type == 'checkbox' && $this->initialCheckBoxValue(Input::get('question.node_id'));
+                $node = SurveyORM\Node::find(Input::get('question.node_id'));
+                $node->type == 'checkbox' && $this->initialCheckBoxValue($node);
             } else {
                 $this->setChildQuestion(Input::get('parent.class'), Input::get('parent.node_id'), Input::get('parent.id'));
             }
@@ -222,20 +223,20 @@ class SurveyController extends \BaseController {
 
     }
 
-    public function initialCheckBoxValue($node_id)
+    private function initialCheckBoxValue($node)
     {
-        $check_box_questions = SurveyORM\Node::find($node_id)->questions;
+        $check_box_questions = $node->questions;
 
         $answers = $this->repository->all($this->user_id);
 
         foreach ($check_box_questions  as $question) {
-            if ($answers->{$question['id']} == '1') {
+            if ($answers->{$question->id} == '1') {
                 return [];
             }
         }
 
         foreach ($check_box_questions as $question) {
-            $answers->{$question['id']} != '-8' && $this->repository->put($this->user_id, $question['id'], null);
+            $answers->{$question->id} != '-8' && $this->repository->put($this->user_id, $question->id, null);
         }
     }
 
