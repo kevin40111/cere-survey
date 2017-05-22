@@ -32,7 +32,7 @@
                         </div>
                     </md-list-item>
                     <md-divider ></md-divider>
-                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>使用主題本題目</h4></md-subheader>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>主題本資料串聯申請</h4></md-subheader>
                     <md-list-item ng-repeat="question in questions">
                         <p>{{question.survey_applicable_option.title}}</p>
                         <md-checkbox class="md-secondary" ng-model="question.selected" ng-true-value="true" ng-false-value="false" aria-label="{}"></md-checkbox>
@@ -54,7 +54,7 @@
                         <p>{{column.survey_applicable_option.title}}</p>
                     </md-list-item>
                     <md-divider ></md-divider>
-                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>使用主題本題目</h4></md-subheader>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>主題本資料串聯申請</h4></md-subheader>
                     <md-list-item ng-repeat="question in questions">
                         <p>{{question.survey_applicable_option.title}}</p>
                     </md-list-item>

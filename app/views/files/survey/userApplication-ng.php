@@ -17,7 +17,7 @@
                             <p>無申請項目</p>
                         </md-list-item>
                         <md-divider ></md-divider>
-                        <md-subheader class="md-no-sticky"><h4>使用主題本題目</h4></md-subheader>
+                        <md-subheader class="md-no-sticky"><h4>主題本資料串聯申請</h4></md-subheader>
                         <md-list-item ng-repeat="question in questions" ng-if="edited">
                             <p>{{question.survey_applicable_option.title}}</p>
                         </md-list-item>
