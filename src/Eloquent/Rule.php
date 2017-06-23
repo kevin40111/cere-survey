@@ -12,6 +12,11 @@ class Rule extends Eloquent {
 
     protected $fillable = array('expressions', 'answer_id', 'warning');
 
+    public function effect()
+    {
+        return $this->morphTo();
+    }
+
     public function questions()
     {
         return $this->morphedByMany('Cere\Survey\Eloquent\Question', 'survey_rule_effect');
