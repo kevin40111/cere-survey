@@ -4,12 +4,15 @@ namespace Cere\Survey;
 
 use DB;
 use Cere\Survey\SurveySession;
+use Cere\Survey\Field\FieldRepository;
 
 class SurveyRepository implements SurveyRepositoryInterface
 {
     function __construct($book_id)
     {
-        $this->book_id = $book_id;
+        $book = \Plat\Eloquent\Survey\Book::find($book_id);
+
+        $this->fieldRepository = FieldRepository::target(\Files::find($book->file_id)->sheets()->first()->tables()->first());
     }
 
     public static function create($book_id)
@@ -26,11 +29,7 @@ class SurveyRepository implements SurveyRepositoryInterface
      */
     public function increment($id, $default = [])
     {
-        $attributes = array_add($default, 'created_by', $id);
-
-        DB::table($this->book_id)->insert($attributes);
-
-        return $attributes;
+        $this->fieldRepository->insert(array_merge(['encrypt_id' => $id], $default));
     }
 
     /**
@@ -41,7 +40,7 @@ class SurveyRepository implements SurveyRepositoryInterface
      */
     public function decrement($id)
     {
-        DB::table($this->book_id)->where('created_by', $id)->delete();
+        $this->fieldRepository->deleteRow(['encrypt_id' => $id]);
     }
 
     /**
@@ -53,7 +52,7 @@ class SurveyRepository implements SurveyRepositoryInterface
      */
     public function get($id, $key)
     {
-        $answer = DB::table($this->book_id)->where('created_by', $id)->select($key.' as value')->first();
+        $answer = $this->fieldRepository->getFieldData(['encrypt_id' => $id], $key);
 
         return $answer->value;
     }
@@ -68,7 +67,14 @@ class SurveyRepository implements SurveyRepositoryInterface
      */
     public function put($id, $key, $value)
     {
-        $answers = DB::table($this->book_id)->where('created_by', $id)->update(array($key => $value));
+        $values = $this->fieldRepository->setAttributesFieldName([$key => $value]);
+
+        $this->fieldRepository->put(['encrypt_id' => $id], $values);
+    }
+
+    public function setPage($id, $value)
+    {
+        $this->put($id, 'page_id', $value);
     }
 
     /**
@@ -78,7 +84,7 @@ class SurveyRepository implements SurveyRepositoryInterface
      */
     public function all($id)
     {
-        $answers = DB::table($this->book_id)->where('created_by', $id)->first();
+        $answers = $this->fieldRepository->getRow(['encrypt_id' => $id]);
 
         return $answers;
     }
@@ -90,7 +96,8 @@ class SurveyRepository implements SurveyRepositoryInterface
      */
     public function exist($id)
     {
-        $existed = DB::table($this->book_id)->where('created_by', $id)->exists();
+        $existed = $this->fieldRepository->rowExists(['encrypt_id' => $id]);
+
         return $existed;
     }
 
@@ -113,7 +120,6 @@ class SurveyRepository implements SurveyRepositoryInterface
      */
     public function getType()
     {
-
         return 'survey';
     }
 }

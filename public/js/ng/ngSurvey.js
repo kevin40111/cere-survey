@@ -246,7 +246,7 @@ angular.module('ngSurvey.directives', [])
                 });
             };
 
-            var oldAnswer = surveyFactory.answers[$scope.question.id] ? surveyFactory.answers[$scope.question.id] : null;
+            var oldAnswer = surveyFactory.answers[$scope.question.name] ? surveyFactory.answers[$scope.question.name] : null;
 
             $scope.answer = $scope.node.answers.length > 0 ? $scope.node.answers.find(function(answer) {
                 return answer.value == oldAnswer;

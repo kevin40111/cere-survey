@@ -3,9 +3,21 @@
 namespace Cere\Survey;
 
 use Cere\Survey\Eloquent as SurveyORM;
+use Cere\Survey\Eloquent\Field\Field as Question;
 
 class EditorRepository
 {
+    function __construct($sheetRepository)
+    {
+        $this->sheetRepository = $sheetRepository;
+    }
+
+    public function create()
+    {
+        $this->sheetRepository->field()->update_column(null, ['name' => 'page_id', 'rules' => 'gender']);
+        $this->sheetRepository->field()->update_column(null, ['name' => 'encrypt_id', 'rules' => 'gender']);
+    }
+
     public function getNodes($root)
     {
         if ($root->childrenNodes->isEmpty()) {
@@ -37,14 +49,21 @@ class EditorRepository
 
     public function createNode($root, array $node, $previous_id)
     {
-        $node = $root->childrenNodes()->save(new SurveyORM\Node($node))->after($previous_id)->load(['questions', 'answers']);
+        $node = $root->childrenNodes()->save(new SurveyORM\Node($node))->after($previous_id);
 
-        return $node;
+        if ($node->type != 'explain' && $node->type != 'page') {
+
+            $this->createQuestion($node->id, null);
+        }
+
+        return $node->load(['questions', 'answers']);
     }
 
     public function createQuestion($node_id, $previous_id)
     {
-        $question = SurveyORM\Node::find($node_id)->questions()->save(new SurveyORM\Question([]))->after($previous_id);
+        $column = $this->sheetRepository->field()->update_column(null, ['rules' => 'gender']);
+
+        $question = SurveyORM\Node::find($node_id)->questions()->save($column)->after($previous_id);
 
         return $question;
     }
@@ -79,7 +98,7 @@ class EditorRepository
 
     public function removeQuestion($question_id)
     {
-        $question = SurveyORM\Question::find($question_id);
+        $question = Question::find($question_id);
 
         $node = $question->node;
 
@@ -91,6 +110,8 @@ class EditorRepository
         $question->childrenNodes->each(function ($subNode) {
             $subNode->deleteNode();
         });
+
+        $this->sheetRepository->field()->remove_column($question_id);
 
         return [$question->delete(), $node->questions];
     }

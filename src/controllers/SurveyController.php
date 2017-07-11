@@ -5,6 +5,7 @@ use Cere\Survey\SurveySession;
 use Cere\Survey\SurveyRepositoryInterface;
 use Cere\Survey;
 use Cere\Survey\Writer\Fill;
+use Cere\Survey\Field\FieldRepository;
 
 class SurveyController extends \BaseController {
     /**
@@ -73,7 +74,8 @@ class SurveyController extends \BaseController {
 
         $table = Files::find($file_book->rowsFile_id)->sheets->first()->tables->first();
 
-        $in_rows  = DB::table('rows.dbo.'.$table->name)->where('C'.$file_book->loginRow_id, $login_id)->exists();
+        $attributes = FieldRepository::target($table)->setAttributesFieldName([$file_book->loginRow_id => $login_id]);
+        $in_rows  = FieldRepository::target($table)->rowExists($attributes);
 
         if (!$in_rows) {
             if ($file_book->no_population) {
@@ -121,7 +123,7 @@ class SurveyController extends \BaseController {
         if (Input::get('next') && count($missings = $this->checkPage($page, $answers)) == 0) {
             $nextPage = $page->next ? $this->checkAndJump($page->next, $answers) : NULL;
             $complete = $nextPage ? $nextPage->previous : $page;
-            $this->repository->put($this->user_id, 'page_id', $complete->id);
+            $this->repository->setPage($this->user_id, $complete->id);
         } else {
             $nextPage = $page;
         }
@@ -168,7 +170,7 @@ class SurveyController extends \BaseController {
         $questions = $page->getQuestions();
 
         $missings = array_filter($questions, function ($question) use ($answers) {
-            return ! isset($answers->{$question['id']});
+            return ! isset($answers->{$question['name']});
         });
 
         return array_values($missings);
@@ -180,7 +182,7 @@ class SurveyController extends \BaseController {
 
         $skips = 0;
         foreach ($questions as $question) {
-            if (isset($answers->{$question['id']}) && $answers->{$question['id']} == -8) {
+            if (isset($answers->{$question['name']}) && $answers->{$question['name']} == -8) {
                 $skips++;
             }
         }

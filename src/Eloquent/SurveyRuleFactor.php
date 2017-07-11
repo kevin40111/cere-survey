@@ -3,6 +3,7 @@
 namespace Cere\Survey\Eloquent;
 
 use Eloquent;
+use Cere\Survey\Eloquent\Field\Field;
 
 class SurveyRuleFactor extends Eloquent
 {
@@ -17,8 +18,8 @@ class SurveyRuleFactor extends Eloquent
         return $this->belongsTo('Cere\Survey\Eloquent\Rule', 'rule_id', 'id');
     }
 
-    public function questions()
+    public function question()
     {
-        return $this->belongsTo('Cere\Survey\Eloquent\Question', 'rule_relation_factor', 'id');
+        return $this->belongsTo(Field::class, 'rule_relation_factor', 'id');
     }
 }
