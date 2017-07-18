@@ -18,11 +18,11 @@ class Fill
         return new static($answers);
     }
 
-    public function question($question)
+    public function node($node)
     {
-        $type = 'Plat\Survey\Writer\Filler\\' . ($question->node->type == 'checkbox' ? ucfirst($question->node->type) : 'Radio');
+        $type = 'Plat\Survey\Writer\Filler\\' . ($node->type == 'checkbox' ? ucfirst($node->type) : 'Radio');
 
-        $filler = new $type($question, $this->answers);
+        $filler = new $type($node, $this->answers);
 
         $this->add($filler);
 

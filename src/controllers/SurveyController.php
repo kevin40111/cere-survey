@@ -194,6 +194,7 @@ class SurveyController extends \BaseController {
     public function getNextNodes()
     {
         $nodes = SurveyORM\Node::find(Input::get('page.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.rule', 'answers.rule', 'rule']);
+        // Fill::answers($answers)
 
         return ['nodes' => $nodes];
     }
@@ -207,10 +208,10 @@ class SurveyController extends \BaseController {
     {
         $question = SurveyORM\Question::find(Input::get('question.id'));
         $answers = $this->repository->all(SurveySession::getHashId());
-        $filler = Fill::answers($answers)->question($question);
+        $filler = Fill::answers($answers)->node($question->node);
 
         if (Input::has('value')) {
-            $filler->set(Input::get('value'));
+            $filler->set($question, Input::get('value'));
             if (!empty($filler->messages)) {
                 return ;
             }
@@ -220,7 +221,7 @@ class SurveyController extends \BaseController {
             }
         }
 
-        return ['nodes' => $filler->childrens(), 'answers' => $this->repository->all(SurveySession::getHashId()), 'message' => $filler->messages, 'logs' => DB::getQueryLog()];
+        return ['nodes' => $filler->childrens($question), 'answers' => $this->repository->all(SurveySession::getHashId()), 'message' => $filler->messages, 'logs' => DB::getQueryLog()];
     }
 
     /**

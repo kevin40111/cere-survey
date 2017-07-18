@@ -10,9 +10,9 @@ class Checkbox
 {
     public $messages;
 
-    public $filled = false;
+    private $node;
 
-    public $answers;
+    private $answers;
 
     private $contents = [];
 
@@ -20,28 +20,28 @@ class Checkbox
 
     private $fill;
 
-    function __construct($question, $answers)
+    function __construct($node, $answers)
     {
-        $this->question = $question;
+        $this->node = $node;
         $this->answers = $answers;
 
         $this->fillOriginal();
 
         $this->fillContents();
 
-        $this->filled = $this->isChecked();
+        $this->fill = new Fill($this->answers);
     }
 
-    public function set($value)
+    public function set($question, $value)
     {
-        if ($value === '1' && Rule::answers($this->answers)->checkLimit($this->question)) {
+        if ($value === '1' && Rule::answers($this->answers)->checkLimit($question)) {
             return ['已達選擇數量上限'];
         }
 
-        $this->contents[$this->question->id] = $value;
+        $this->contents[$question->id] = $value;
 
-        if ($this->question->rule()->where('type', 'noneAbove')->exists() && $value === '1') {
-            $this->resetChecked($excepts = [$this->question->id]);
+        if ($question->rule()->where('type', 'noneAbove')->exists() && $value === '1') {
+            $this->resetChecked($excepts = [$question->id]);
         }
 
         if (in_array('1', $this->contents)) {
@@ -52,44 +52,37 @@ class Checkbox
 
         $this->syncAnswers();
 
-        $this->fill = new Fill($this->answers);
+        $this->setRules($question);
 
-        $rules = Rule::answers($this->answers)->effect($this->question->id);
-
-        foreach ($rules as $rule) {
-            foreach ($rule['questions'] as $question) {
-                if ($rule['type'] === 'noneAbove') {
-                    $this->contents[$question->id] = '0';
-                } else {
-                    $this->fill->question($question)->affected($rule['pass']);
-                }
-            }
-        }
-
-        $this->setChildrens();
-
-        $this->filled = $this->isChecked();
+        $this->setChildrens($question);
 
         return $this;
     }
 
-    public function affected($pass)
+    public function affected($question, $pass)
     {
         if ($pass) {
-            $this->skip();
+            $this->skip($question);
         } else {
-            $this->clean();
+            $this->clean($question);
         }
     }
 
-    public function clean()
+    public function clean($question)
     {
-        $this->set(null);
+        $this->set($question, null);
     }
 
-    public function skip()
+    public function skip($question)
     {
-        $this->set('-8');
+        $this->set($question, '-8');
+    }
+
+    public function reset($pass)
+    {
+        $this->node->questions->each(function ($question) use ($pass) {
+            $this->affected($question, $pass);
+        });
     }
 
     public function getDirty()
@@ -109,36 +102,51 @@ class Checkbox
         return $dirty;
     }
 
-    private function setChildrens()
+    private function setRules($question)
+    {
+        $rules = Rule::answers($this->answers)->effect($question->id);
+
+        foreach ($rules as $rule) {
+            foreach ($rule['questions'] as $question) {
+                if ($rule['type'] === 'noneAbove') {
+                    $this->contents[$question->id] = '0';
+                } else {
+                    $this->fill->node($question->node)->affected($question, $rule['pass']);
+                }
+            }
+        }
+    }
+
+    private function setChildrens($question)
     {
         $this->getEffects()->load(['childrenNodes.questions', 'childrenNodes.answers'])->each(function ($question) {
-            $question->childrenNodes->each(function ($node) use ($question) {
-                $node->questions->each(function ($children) use ($question) {
-                    $pass = $this->contents[$question->id] !== '1';
-                    $this->fill->question($children)->affected($pass);
-                });
+
+            $pass = $this->contents[$question->id] !== '1';
+
+            $question->childrenNodes->each(function ($node) use ($pass) {
+                $this->fill->node($node)->reset($pass);
             });
         });
     }
 
     private function getEffects()
 	{
-        return $this->question->node->questions->filter(function ($question) {
+        return $this->node->questions->filter(function ($question) {
             return $this->contents[$question->id] !== $this->original[$question->id];
         });
     }
 
     private function syncAnswers()
 	{
-        $this->question->node->questions->each(function ($question) {
+        $this->node->questions->each(function ($question) {
             $this->answers->{$question->id} = $this->contents[$question->id];
         });
     }
 
     private function fillOriginal()
 	{
-        $this->question->node->questions->each(function ($question) {
-            $this->original[$question->id] = $this->answers->{$question->id};
+        $this->node->questions->each(function ($question) {
+            $this->original[$question->id] = isset($this->answers->{$question->id}) ? $this->answers->{$question->id} : null;
         });
     }
 
@@ -174,13 +182,13 @@ class Checkbox
         }
     }
 
-    private function isChecked()
+    private function isChecked($question)
     {
-        return $this->contents[$this->question->id] === '1';
+        return $this->contents[$question->id] === '1';
     }
 
-    public function childrens()
+    public function childrens($question)
     {
-        return $this->isChecked() ? $this->question->childrenNodes->load(['questions.rule', 'answers.rule', 'rule']) : [];
+        return $this->isChecked($question) ? $question->childrenNodes->load(['questions.rule', 'answers.rule', 'rule']) : [];
     }
 }

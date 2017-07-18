@@ -10,9 +10,9 @@ class Radio
 {
     public $messages;
 
-    public $filled = false;
+    private $node;
 
-    public $answers;
+    private $answers;
 
     private $contents = [];
 
@@ -20,62 +20,55 @@ class Radio
 
     private $fill;
 
-    function __construct($question, $answers)
+    function __construct($node, $answers)
     {
-        $this->question = $question;
+        $this->node = $node;
         $this->answers = $answers;
 
         $this->fillOriginal();
 
         $this->fillContents();
 
-        $this->setAnswer();
-
-        $this->filled = $this->isChecked();
+        $this->fill = new Fill($this->answers);
     }
 
-    public function set($value)
+    public function set($question, $value)
     {
-        $this->contents[$this->question->id] = $value;
+        $this->contents[$question->id] = $value;
 
         $this->syncAnswers();
 
-        $this->fill = new Fill($this->answers);
+        $this->setRules($question);
 
-        $rules = Rule::answers($this->answers)->effect($this->question->id);
-
-        foreach ($rules as $rule) {
-            foreach ($rule['questions'] as $question) {
-                $this->fill->question($question)->affected($rule['pass']);
-            }
-        }
-
-        $this->setChildrens();
-
-        $this->setAnswer();
-
-        $this->filled = $this->isChecked();
+        $this->setChildrens($question);
 
         return $this;
     }
 
-    public function affected($pass)
+    public function affected($question, $pass)
     {
         if ($pass) {
-            $this->skip();
+            $this->skip($question);
         } else {
-            $this->clean();
+            $this->clean($question);
         }
     }
 
-    public function clean()
+    public function clean($question)
     {
-        $this->set(null);
+        $this->set($question, null);
     }
 
-    public function skip()
+    public function skip($question)
     {
-        $this->set('-8');
+        $this->set($question, '-8');
+    }
+
+    public function reset($pass)
+    {
+        $this->node->questions->each(function ($question) use ($pass) {
+            $this->affected($question, $pass);
+        });
     }
 
     public function getDirty()
@@ -95,34 +88,45 @@ class Radio
         return $dirty;
     }
 
-    private function setChildrens()
+    private function setRules($question)
     {
-        $this->getEffects()->load(['childrenNodes.questions', 'childrenNodes.answers'])->each(function ($answer) {
-            $answer->childrenNodes->each(function ($node) use ($answer) {
-                $node->questions->each(function ($children) use ($answer) {
-                    $pass = $this->contents[$this->question->id] !== $answer->value;
-                    $this->fill->question($children)->affected($pass);
-                });
+        $rules = Rule::answers($this->answers)->effect($question->id);
+
+        foreach ($rules as $rule) {
+            foreach ($rule['questions'] as $question) {
+                $this->fill->node($question->node)->affected($question, $rule['pass']);
+            }
+        }
+    }
+
+    private function setChildrens($question)
+    {
+        $this->getEffects()->load(['childrenNodes.questions', 'childrenNodes.answers'])->each(function ($answer) use ($question) {
+
+            $pass = $this->contents[$question->id] !== $answer->value;
+
+            $answer->childrenNodes->each(function ($node) use ($pass) {
+                $this->fill->node($node)->reset($pass);
             });
         });
     }
 
     private function getEffects()
 	{
-        return $this->question->node->answers;
+        return $this->node->answers;
     }
 
     private function syncAnswers()
 	{
-        $this->question->node->questions->each(function ($question) {
+        $this->node->questions->each(function ($question) {
             $this->answers->{$question->id} = $this->contents[$question->id];
         });
     }
 
     private function fillOriginal()
 	{
-        $this->question->node->questions->each(function ($question) {
-            $this->original[$question->id] = $this->answers->{$question->id};
+        $this->node->questions->each(function ($question) {
+            $this->original[$question->id] = isset($this->answers->{$question->id}) ? $this->answers->{$question->id} : null;
         });
     }
 
@@ -131,20 +135,18 @@ class Radio
         $this->contents = $this->original;
     }
 
-    private function isChecked()
+    private function isChecked($question)
     {
-        return $this->contents[$this->question->id] !== null && $this->contents[$this->question->id] !== '-8';
+        return $this->contents[$question->id] !== null && $this->contents[$question->id] !== '-8';
     }
 
-    private function setAnswer()
+    private function getAnswer($question)
     {
-        if ($this->isChecked()) {
-            $this->answer = $this->question->node->answers()->where('value', $this->contents[$this->question->id])->first();
-        }
+        return $this->node->answers()->where('value', $this->contents[$question->id])->first();
     }
 
-    public function childrens()
+    public function childrens($question)
     {
-        return $this->answer ? $this->answer->childrenNodes->load(['questions.rule', 'answers.rule', 'rule']) : [];
+        return $this->isChecked($question) ? $this->getAnswer($question)->childrenNodes->load(['questions.rule', 'answers.rule', 'rule']) : [];
     }
 }
