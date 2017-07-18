@@ -75,7 +75,7 @@ class SurveyController extends \BaseController {
                 $user_id = Files::find($file_book->rowsFile_id)->created_by;
                 $current_time = Carbon\Carbon::now()->toDateTimeString();
                 $query = DB::table($table->database . '.dbo.' . $table->name);
-                $query->insert(['C'.$file_book->loginRow_id => $login_id, 'file_id' => 1, 'updated_at' => $current_time, 'created_at' => $current_time, 'updated_by' => $user_id, 'created_by' => $user_id]);
+                $query->insert(['C'.$file_book->loginRow_id => $login_id, 'file_id' => $file_book->rowsFile_id, 'updated_at' => $current_time, 'created_at' => $current_time, 'updated_by' => $user_id, 'created_by' => $user_id]);
             } else {
                 return Redirect::to('survey/'.$book_id.'/survey/surveyLogin');
             }
