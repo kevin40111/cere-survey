@@ -194,7 +194,6 @@ class SurveyController extends \BaseController {
     public function getNextNodes()
     {
         $nodes = SurveyORM\Node::find(Input::get('page.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.rule', 'answers.rule', 'rule']);
-        // Fill::answers($answers)
 
         return ['nodes' => $nodes];
     }
