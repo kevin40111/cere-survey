@@ -283,14 +283,13 @@ class SurveyFile extends CommFile
 
     public function setApplicableOptions()
     {
-        Survey\ApplicationRepository::book($this->file->book)->setApplicableOptions(Input::get('selected'));
-
+        Survey\ApplicationRepository::book($this->file->book)->setApplicableOptions(Input::get('selected'), Input::get('noPopulation'));
         return $this->getApplicableOptions();
     }
 
     public function getApplicableOptions()
     {
-        return Survey\ApplicationRepository::book($this->file->book)->getApplicableOptions(Input::get('rowsFileId'));
+        return Survey\ApplicationRepository::book($this->file->book)->getApplicableOptions(Input::get('rowsFileId'), Input::get('noPopulation'));
     }
 
     public function getApplications()
@@ -448,6 +447,10 @@ class SurveyFile extends CommFile
             }
             return ['status' => $status];
         }
+    }
+    public function setNoPopulationColumn()
+    {
+        return Survey\ApplicationRepository::book($this->file->book)->setNoPopulationColumn(Input::get('column'));
     }
 
 }

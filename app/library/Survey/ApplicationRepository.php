@@ -28,12 +28,16 @@ class ApplicationRepository
         return $instance;
     }
 
-    public function setApplicableOptions($selected)
+    public function setApplicableOptions($selected, $noPopulation)
     {
         $this->book->optionColumns()->sync($selected['columns']);
         $this->book->optionQuestions()->sync($selected['questions']);
         $this->setConditionColumns($selected['conditionColumn']);
-        $this->setRowsFile($selected['tablesSelected']);
+        if ($noPopulation) {
+            $this->book->no_population = 1;
+            $this->book->save();
+        }
+        $this->setRowsFile($noPopulation ? $this->book->no_pop_id : $selected['tablesSelected']);
         $this->setLoginFile(array_get($selected, 'loginSelected.id'));
     }
 
@@ -53,7 +57,7 @@ class ApplicationRepository
         $this->book->update(['loginRow_id' => $login_row_id]);
     }
 
-    public function getApplicableOptions($rowsFileId)
+    public function getApplicableOptions($rowsFileId, $noPopulation)
     {
         $conditionColumn = [];
         $edited = !$this->book->optionColumns->isEmpty() || !$this->book->optionQuestions->isEmpty();
@@ -64,9 +68,12 @@ class ApplicationRepository
             $rowsFile_id = $this->book->rowsFile_id;
             $loginConditionColumn = DB::table('row_columns')->where('id', $this->book->loginRow_id)->first();
             $parentSelected = \Files::find($rowsFile_id);
+            if ($this->book->no_population) {
+                $parentSelected->title = "無母體名單".$this->book->no_pop_id;
+            }
             $parentList = [];
         } else {
-            $file = \Files::find($rowsFileId);
+            $file = $noPopulation ? \Files::find($this->book->no_pop_id) : \Files::find($rowsFileId);
             $columns = !is_null($file) ? $file->sheets->first()->tables->first()->columns : [];
             $questions = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
                 return array_merge($carry, $page->getQuestions());
@@ -77,6 +84,7 @@ class ApplicationRepository
         }
 
         return [
+            'rules' => (new \Plat\Files\RowsFile(\Files::first(),Auth::user()))->rules,
             'columns' => $columns,
             'questions' => $questions,
             'edited' => $edited,
@@ -96,7 +104,12 @@ class ApplicationRepository
 
     private function getParentList()
     {
-        return $this->book->file->select('id', 'title')->where('created_by', '=', Auth::user()->id)->where('type', '=', '5')->get();
+        $no_population = \Files::all()->filter(function ($file) {
+            return ($file->created_by ==  Auth::user()->id) ? (is_null($file->book) ? false : $file->book->no_pop_id) : false;
+        })->map(function($file) {
+            return $file->book->no_pop_id;
+        })->toArray();
+        return $this->book->file->select('id', 'title')->where('created_by', '=', Auth::user()->id)->where('type','=','5')->whereNotIn('id', $no_population)->get();
     }
 
     public function resetApplicableOptions()
@@ -123,6 +136,7 @@ class ApplicationRepository
         $book = $this->book;
         $book->column_id = NULL;
         $book->rowsFile_id = NULL;
+        $book->no_population = 0;
         $book->save();
     }
 
@@ -243,5 +257,24 @@ class ApplicationRepository
         $this->application->save();
 
         return $this->application;
+    }
+
+    public function setNoPopulationColumn($column)
+    {
+        $input = ['name' => $column['name'], 'title' => $column['title'], 'rules' => $column['rules'], 'unique'  => true, 'encrypt' => false, 'isnull'  => false, 'readonly'=> false];
+        if (is_null($this->book->no_pop_id)) {
+            $file = new \Files(['type' => 5, 'title' => "noPopulation"]);
+            $rows_file = new \Plat\Files\RowsFile($file,Auth::user());
+            $rows_file->create();
+            $this->book->update(['no_pop_id' => $file->id]);
+            $table = $file->sheets->first()->tables->first();
+            $column = $table->columns()->create($input);
+            $rows_file->get_file();
+            return $column;
+        } else {
+            $column = \Files::find($this->book->no_pop_id)->sheets->first()->tables->first()->columns->first();
+            $column->update($input);
+            return $column;
+        }
     }
 }
