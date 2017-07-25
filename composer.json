@@ -1,0 +1,22 @@
+{
+    "name": "cere/survey",
+    "description": "",
+    "authors": [
+        {
+            "name": "tim72117",
+            "email": "tim72117@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0"
+    },
+    "autoload": {
+        "classmap": [
+            ""
+        ],
+        "psr-4": {
+            "Cere\\Survey\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
