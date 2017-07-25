@@ -27,7 +27,7 @@ class SurveyControllerTest extends TestCase
         ]);
 
         $file = Files::create(['id' => 1, 'type' => 6, 'title' => '', 'created_by' => 1]);
-        $this->book = SurveyORM\Book::create(['file_id' => $file->id, 'title' => '', 'lock' => false, 'column_id' => $column->id, 'rowsFile_id' => $rows_file->id]);
+        $this->book = SurveyORM\Book::create(['file_id' => $file->id, 'title' => '', 'lock' => false, 'column_id' => $column->id, 'rowsFile_id' => $rows_file->id, 'no_population' => false]);
     }
 
     public function testPage()
