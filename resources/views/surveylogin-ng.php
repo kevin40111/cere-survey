@@ -1,5 +1,5 @@
 <md-content ng-cloak layout="column" ng-controller="surveylogin" layout-align="start center">
-<form action="checkInRows" class="ui large form" method="post">
+<form action="checkInRows" class="ui large form <?=$errors->isEmpty() ? '' : 'error'?>" method="post">
     <div class="ui middle aligned center aligned grid">
       <div class="column">
         <h2 class="ui teal image header">
@@ -17,6 +17,9 @@
             <input type="submit" class="ui fluid large teal submit button" value="登入">
         </div>
       </div>
+    </div>
+    <div class="ui error message secondary inverted red segment">
+        <p><?=$errors->first("fail")?></p>
     </div>
 </form>
 </md-content>
