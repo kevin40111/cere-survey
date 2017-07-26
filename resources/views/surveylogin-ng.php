@@ -1,4 +1,4 @@
-<md-content ng-cloak layout="column" ng-controller="surveylogin" layout-align="start center">
+<md-content ng-cloak layout="column" ng-controller="surveylogin" layout-align="start center" layout-padding>
 <form action="checkInRows" class="ui large form <?=$errors->isEmpty() ? '' : 'error'?>" method="post">
     <div class="ui middle aligned center aligned grid">
       <div class="column">
