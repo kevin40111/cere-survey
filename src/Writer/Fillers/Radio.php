@@ -21,7 +21,7 @@ class Radio extends Filler
 	{
         return $this->node->answers->load(['childrenNodes.questions', 'childrenNodes.answers'])->map(function($answer) use ($question) {
             $pass = $this->contents[$question->id] !== $answer->value;
-            return ['target' => $question, 'pass' => $pass];
+            return ['target' => $answer, 'pass' => $pass];
         });
     }
 
