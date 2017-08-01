@@ -201,7 +201,7 @@ angular.module('ngSurvey.directives', [])
                 <md-card>
                     <md-card-title>
                         <md-card-title-text>
-                        <span class="md-headline" ng-bind-html="node.title"></span>
+                        <span class="md-headline" ng-bind-html="node.title.split('\n').join('<br/>')"></span>
                         </md-card-title-text>
                     </md-card-title>
                     <md-card-content>
