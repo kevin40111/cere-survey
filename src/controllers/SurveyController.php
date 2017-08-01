@@ -4,7 +4,7 @@ use Cere\Survey\Eloquent as SurveyORM;
 use Cere\Survey\SurveySession;
 use Cere\Survey\SurveyRepositoryInterface;
 use Cere\Survey;
-use Plat\Survey\Writer\Fill;
+use Cere\Survey\Writer\Fill;
 
 class SurveyController extends \BaseController {
     /**

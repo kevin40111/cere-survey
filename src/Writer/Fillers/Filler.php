@@ -1,10 +1,10 @@
 <?php
 
-namespace Plat\Survey\Writer\Fillers;
+namespace Cere\Survey\Writer\Fillers;
 
-use Plat\Eloquent\Survey as SurveyORM;
-use Plat\Survey\Writer\Fill;
-use Plat\Survey\Writer\Rule;
+use Cere\Survey\Eloquent as SurveyORM;
+use Cere\Survey\Writer\Fill;
+use Cere\Survey\Writer\Rule;
 
 abstract class Filler
 {

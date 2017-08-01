@@ -1,6 +1,6 @@
 <?php
 
-namespace Plat\Survey\Writer\Fillers;
+namespace Cere\Survey\Writer\Fillers;
 
 class Radio extends Filler
 {

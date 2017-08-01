@@ -1,9 +1,9 @@
 <?php
 
-namespace Plat\Survey\Writer;
+namespace Cere\Survey\Writer;
 
-use Plat\Eloquent\Survey as SurveyORM;
-use Plat\Survey;
+use Cere\Survey\Eloquent as SurveyORM;
+use Cere\Survey;
 
 class Rule
 {

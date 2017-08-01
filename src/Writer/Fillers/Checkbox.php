@@ -1,8 +1,8 @@
 <?php
 
-namespace Plat\Survey\Writer\Fillers;
+namespace Cere\Survey\Writer\Fillers;
 
-use Plat\Survey\Writer\Rule;
+use Cere\Survey\Writer\Rule;
 
 class Checkbox extends Filler
 {

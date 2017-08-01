@@ -1,6 +1,6 @@
 <?php
 
-namespace Plat\Survey\Writer;
+namespace Cere\Survey\Writer;
 
 class Fill
 {
@@ -20,7 +20,7 @@ class Fill
 
     public function node($node)
     {
-        $type = 'Plat\Survey\Writer\Fillers\\' . ($node->type == 'checkbox' ? ucfirst($node->type) : 'Radio');
+        $type = 'Cere\Survey\Writer\Fillers\\' . ($node->type == 'checkbox' ? ucfirst($node->type) : 'Radio');
 
         $filler = new $type($node, $this->answers);
 
