@@ -153,7 +153,7 @@
     </md-content>
     </md-sidenav>
     </md-content>
-<script src="/js/ng/ngBrowser.js"></script>
+<script src="/packages/cere/survey/js/ng/ngBrowser.js"></script>
 <script>
     app.requires.push('ngBrowser');
     app.controller('confirm', function ($scope, $http, $filter, $q, $mdDialog, $mdPanel, $mdSidenav, $mdToast){

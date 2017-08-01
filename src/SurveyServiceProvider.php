@@ -4,10 +4,10 @@ namespace Cere\Survey;
 
 use Illuminate\Support\ServiceProvider;
 use Cere\Survey\Eloquent as SurveyORM;
-use Plat\Survey\SurveyRepositoryInterface;
-use Plat\Survey\SurveyRepository;
-use Plat\Survey\DemoRepository;
-use Plat\Survey\SurveySession;
+use Cere\Survey\SurveyRepositoryInterface;
+use Cere\Survey\SurveyRepository;
+use Cere\Survey\DemoRepository;
+use Cere\Survey\SurveySession;
 use Auth;
 
 class SurveyServiceProvider extends ServiceProvider {

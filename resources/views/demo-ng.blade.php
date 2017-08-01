@@ -11,28 +11,28 @@
 </md-content>
 
 <script type="text/ng-template" id="list">
-    @include('files.survey.template_question_list')
+    @include('survey::template_question_list')
 </script>
 <script type="text/ng-template" id="checkbox">
-    @include('files.survey.template_question_checkbox')
+    @include('survey::template_question_checkbox')
 </script>
 <script type="text/ng-template" id="select">
-    @include('files.survey.template_question_select')
+    @include('survey::template_question_select')
 </script>
 <script type="text/ng-template" id="radio">
-    @include('files.survey.template_question_radio')
+    @include('survey::template_question_radio')
 </script>
 <script type="text/ng-template" id="scale">
-    @include('files.survey.template_question_scale')
+    @include('survey::template_question_scale')
 </script>
 <script type="text/ng-template" id="text">
-    @include('files.survey.template_question_text')
+    @include('survey::template_question_text')
 </script>
 <script type="text/ng-template" id="number">
-    @include('files.survey.template_question_number')
+    @include('survey::template_question_number')
 </script>
 
-<script src="/js/ng/ngSurvey.js"></script>
+<script src="/packages/cere/survey/js/ng/ngSurvey.js"></script>
 
 <script>
 app.requires.push('ngSurvey');

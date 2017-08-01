@@ -11,7 +11,7 @@
         background-color: seagreen;
     }
 </style>
-<script src="/js/ng/ngBrowser.js"></script>
+<script src="/packages/cere/survey/js/ng/ngBrowser.js"></script>
 
 <script>
 app.requires.push('ngBrowser');

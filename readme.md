@@ -1,6 +1,6 @@
 ## Installation
 
-Set local repositories, Modify composer/config.js
+Set local repositories, Modify composer/config.json
 ```
 {
     "config": {

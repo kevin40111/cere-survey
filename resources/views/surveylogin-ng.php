@@ -20,7 +20,7 @@
     </div>
 </form>
 </md-content>
-<script src="/js/ng/ngSurvey.js"></script>
+<script src="/packages/cere/survey/js/ng/ngSurvey.js"></script>
 <script >
     app.controller('surveylogin', function ($scope, $http){});
 </script>

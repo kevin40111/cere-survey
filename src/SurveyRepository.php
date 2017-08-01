@@ -1,9 +1,9 @@
 <?php
 
-namespace Plat\Survey;
+namespace Cere\Survey;
 
 use DB;
-use Plat\Survey\SurveySession;
+use Cere\Survey\SurveySession;
 
 class SurveyRepository implements SurveyRepositoryInterface
 {

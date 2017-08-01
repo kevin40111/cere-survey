@@ -27,7 +27,7 @@ class SurveyController extends \BaseController {
      */
     public function page()
     {
-        return View::make('layout-survey')->nest('context', 'files.survey.demo-ng');
+        return View::make('survey::layout-survey')->nest('context', 'survey::demo-ng');
     }
 
     /**
@@ -39,7 +39,7 @@ class SurveyController extends \BaseController {
     {
         SurveySession::logout();
 
-        return View::make('layout-survey')->nest('context', 'files.survey.surveylogin-ng');
+        return View::make('survey::layout-survey')->nest('context', 'survey::surveylogin-ng');
     }
 
     /**
@@ -49,7 +49,7 @@ class SurveyController extends \BaseController {
      */
     public function demoLogin()
     {
-        return View::make('layout-survey')->nest('context', 'files.survey.demologin-ng');
+        return View::make('survey::layout-survey')->nest('context', 'survey::demologin-ng');
     }
 
     /**

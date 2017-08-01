@@ -1,6 +1,6 @@
 <?php
 
-namespace Plat\Survey;
+namespace Cere\Survey;
 
 use Plat\Eloquent\Files\Survey\Set;
 use Plat\Eloquent\Files\Survey\Origin;

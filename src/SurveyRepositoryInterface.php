@@ -1,6 +1,6 @@
 <?php
 
-namespace Plat\Survey;
+namespace Cere\Survey;
 
 interface SurveyRepositoryInterface
 {
