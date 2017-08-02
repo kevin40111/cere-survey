@@ -1,52 +1,27 @@
 <?php
 
-namespace Plat\Files;
+namespace Cere\Survey;
 
 use DB;
 use Schema;
 use Input;
 use View;
-use User;
-use Files;
-use Mail;
 use Cere\Survey;
 use Cere\Survey\Eloquent as SurveyORM;
 
-class SurveyFile extends CommFile
+trait SurveyEditor
 {
-    function __construct(Files $file, User $user)
+    function __construct()
     {
-        parent::__construct($file, $user);
-
-        $this->configs = $this->file->configs->lists('value', 'name');
-
         $this->editorRepository = new Survey\EditorRepository();
     }
 
-    public function is_full()
+    /*
+     * create
+     */
+    public function createBook($title)
     {
-        return false;
-    }
-
-    public function get_views()
-    {
-        return ['open', 'demo', 'application','confirm', 'applicableList', 'browser'];
-    }
-
-    public static function tools()
-    {
-        return [
-            ['name' => 'confirm', 'title' => '加掛審核', 'method' => 'confirm', 'icon' => 'list'],
-            ['name' => 'applicableList', 'title' => '加掛項目', 'method' => 'applicableList', 'icon' => 'list'],
-            ['name' => 'browser', 'title' => '題目瀏覽', 'method' => 'browser', 'icon' => 'list'],
-        ];
-    }
-
-    public function create()
-    {
-        $commFile = parent::create();
-
-        $book = $this->file->book()->create(['title' => $this->file->title, 'lock' => false, 'no_population' => false]);
+        return ['title' => $title, 'lock' => false, 'no_population' => false];
     }
 
     public function open()
@@ -91,7 +66,7 @@ class SurveyFile extends CommFile
 
     public function getBook()
     {
-        return ['book' => $this->file->book];
+        return ['book' => $this->book];
     }
 
     public function getQuestion()
@@ -121,11 +96,11 @@ class SurveyFile extends CommFile
 
     public function createTable()
     {
-        DB::table('INFORMATION_SCHEMA.COLUMNS')->where('TABLE_NAME', $this->file->book->id)->exists() && Schema::drop($this->file->book->id);
+        DB::table('INFORMATION_SCHEMA.COLUMNS')->where('TABLE_NAME', $this->book->id)->exists() && Schema::drop($this->book->id);
 
-        Schema::create($this->file->book->id, function ($table) {
+        Schema::create($this->book->id, function ($table) {
             $table->increments('id');
-            $questions = $this->file->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function($carry, $page) {
+            $questions = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function($carry, $page) {
                 return array_merge($carry, $page->getQuestions());
             }, []);
 
@@ -266,42 +241,42 @@ class SurveyFile extends CommFile
     {
         $selected = Input::get('selected');
 
-        return Survey\ApplicationRepository::book($this->file->book)->setAppliedOptions($selected);
+        return Survey\ApplicationRepository::book($this->book)->setAppliedOptions($selected);
     }
 
     public function getAppliedOptions()
     {
         $member_id = Input::get('member_id');
 
-        return Survey\ApplicationRepository::book($this->file->book)->getAppliedOptions($member_id);
+        return Survey\ApplicationRepository::book($this->book)->getAppliedOptions($member_id);
     }
 
     public function resetApplication()
     {
-        return Survey\ApplicationRepository::book($this->file->book)->resetApplication();
+        return Survey\ApplicationRepository::book($this->book)->resetApplication();
     }
 
     public function setApplicableOptions()
     {
-        Survey\ApplicationRepository::book($this->file->book)->setApplicableOptions(Input::get('selected'), Input::get('noPopulation'));
+        Survey\ApplicationRepository::book($this->book)->setApplicableOptions(Input::get('selected'), Input::get('noPopulation'));
         return $this->getApplicableOptions();
     }
 
     public function getApplicableOptions()
     {
-        return Survey\ApplicationRepository::book($this->file->book)->getApplicableOptions(Input::get('rowsFileId'), Input::get('noPopulation'));
+        return Survey\ApplicationRepository::book($this->book)->getApplicableOptions(Input::get('rowsFileId'), Input::get('noPopulation'));
     }
 
     public function getApplications()
     {
-        $applications = $this->file->book->applications->load('members.organizations.now', 'members.user', 'members.contact');
+        $applications = $this->book->applications->load('members.organizations.now', 'members.user', 'members.contact');
 
         return ['applications' => $applications];
     }
 
     public function resetApplicableOptions()
     {
-        Survey\ApplicationRepository::book($this->file->book)->resetApplicableOptions();
+        Survey\ApplicationRepository::book($this->book)->resetApplicableOptions();
 
         return $this->getApplicableOptions();
     }
@@ -309,7 +284,7 @@ class SurveyFile extends CommFile
     public function activeExtension()
     {
         $application_id = Input::get('application_id');
-        $application = $this->file->book->applications()->where('id', $application_id)->first();
+        $application = $this->book->applications()->where('id', $application_id)->first();
         if (!$application->reject) {
             SurveyORM\Book::find($application->ext_book_id)->update(array('lock' => true));
         }
@@ -321,49 +296,16 @@ class SurveyFile extends CommFile
 
     public function reject()
     {
-        $application = $this->file->book->applications()->where('id', Input::get('application_id'))->first();
+        $application = $this->book->applications()->where('id', Input::get('application_id'))->first();
 
         $application = Survey\ApplicationRepository::application($application)->reject();
 
         return ['application' => $application];
     }
 
-    public function queryOrganizations()
-    {
-        $organizationDetails = \Plat\Project\OrganizationDetail::where(function($query) {
-            $query->where('name', 'like', '%' . Input::get('query') . '%')->orWhere('id', Input::get('query'));
-        })->limit(2000)->lists('organization_id');
-
-        $organizations = \Plat\Project\Organization::find($organizationDetails)->load('now');
-
-        return ['organizations' => $organizations];
-    }
-
-    public function queryUsernames()
-    {
-        $members_id = $this->file->book->applications->load('members')->fetch('members.id')->all();
-
-        $usernames = \Plat\Member::with('user')->whereIn('id', $members_id)->whereHas('user', function($query) {
-            $query->where('users.username', 'like', '%' . Input::get('query') . '%')->groupBy('users.username');
-        })->limit(1000)->get()->fetch('user.username')->all();
-
-        return ['usernames' => $usernames];
-    }
-
-    public function queryEmails()
-    {
-        $members_id = $this->file->book->applications->load('members')->fetch('members.id')->all();
-
-        $emails = \Plat\Member::with('user')->whereIn('id', $members_id)->whereHas('user', function($query) {
-            $query->where('users.email', 'like', '%' . Input::get('query') . '%');
-        })->limit(1000)->get()->fetch('user.email');
-
-        return ['emails' => $emails];
-    }
-
     public function getApplicationPages()
     {
-        $pagination = Survey\ApplicationRepository::book($this->file->book)->getApplicationPages();
+        $pagination = Survey\ApplicationRepository::book($this->book)->getApplicationPages();
 
         return ['currentPage' => $pagination->getCurrentPage(), 'lastPage' => $pagination->getLastPage()];
     }
@@ -401,7 +343,7 @@ class SurveyFile extends CommFile
     public function lockBook()
     {
         $this->createTable();
-        $this->file->book->update(['lock' => true]);
+        $this->book->update(['lock' => true]);
 
         return ['lock' => true];
     }
@@ -420,21 +362,9 @@ class SurveyFile extends CommFile
         return ['explanation' => $explanation];
     }
 
-    public function sendMail()
-    {
-        try {
-            Mail::send('emails.empty', ['context' => Input::get('context')], function($message) {
-                $message->to(Input::get('email'))->subject(Input::get('title'));
-            });
-            return ['sended' => true];
-        } catch (Exception $e){
-            return ['sended' => false];
-        }
-    }
-
     public function applicationStatus()
     {
-        $application = $this->file->book->applications()->OfMe()->first();
+        $application = $this->book->applications()->OfMe()->first();
         if (is_null($application)) {
             return ['status' => null];
         } else {
@@ -448,9 +378,9 @@ class SurveyFile extends CommFile
             return ['status' => $status];
         }
     }
+
     public function setNoPopulationColumn()
     {
-        return Survey\ApplicationRepository::book($this->file->book)->setNoPopulationColumn(Input::get('column'));
+        return Survey\ApplicationRepository::book($this->book)->setNoPopulationColumn(Input::get('column'));
     }
-
 }
