@@ -7,8 +7,10 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
     var book = {};
     var record = {};
     var types = {};
+    var skips = {};
     return {
         types: types,
+        skips: skips,
         get: function(url, data, node = {}) {
             var deferred = $q.defer();
 
@@ -170,19 +172,22 @@ angular.module('ngSurvey.directives', [])
         },
         template:  `
             <div>
-                <survey-node ng-repeat="node in nodes" node="node" ng-hide="compareRule(node)"></survey-node>
+                <survey-node ng-repeat="node in nodes" node="node" ng-hide="compareRule(node)" ng-if="!skips[node.id]"></survey-node>
             </div>
         `,
         controller: function($scope, $http) {
 
+            $scope.skips = surveyFactory.skips;
+
             $scope.$watch('page', function() {
                 surveyFactory.get('getNextNodes', {page: $scope.page}, $scope.page).then(function(response) {
                     $scope.nodes = response.nodes;
+                    angular.extend(surveyFactory.skips, response.skips);
                 });
             });
-            $scope.compareRule = function(target) {
-                return surveyFactory.compareRule(target);
-            };
+            // $scope.compareRule = function(target) {
+            //     return surveyFactory.compareRule(target);
+            // };
         }
     };
 })
@@ -224,9 +229,9 @@ angular.module('ngSurvey.directives', [])
                 $scope.childrens = childrens;
             };
 
-            $scope.compareRule = function(target) {
-                return surveyFactory.compareRule(target);
-            };
+            // $scope.compareRule = function(target) {
+            //     return surveyFactory.compareRule(target);
+            // };
 
         }
     };
@@ -243,6 +248,7 @@ angular.module('ngSurvey.directives', [])
                 surveyFactory.get('getChildren', {question: $scope.question, parent: parent, value: value, trigger: 'saveAnswer'}, $scope.node).then(function(response) {
                     $scope.question.childrens = response.nodes;
                     angular.extend(surveyFactory.answers, response.answers);
+                    angular.extend(surveyFactory.skips, response.skips);
                 });
             };
 

@@ -51,4 +51,15 @@ class Fill
 
         return $dirty;
     }
+
+    public function getSkips()
+    {
+        $skips = [];
+
+        foreach ($this->fillers as $filler) {
+            $skips = $skips + $filler->getSkips();
+        }
+
+        return $skips;
+    }
 }

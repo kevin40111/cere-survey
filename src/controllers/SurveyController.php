@@ -3,6 +3,7 @@
 use Cere\Survey\Eloquent as SurveyORM;
 use Cere\Survey\Writer\WriterInterface;
 use Cere\Survey\Writer\Fill;
+use Cere\Survey\Writer\Rule;
 
 class SurveyController extends \BaseController {
     /**
@@ -182,7 +183,9 @@ class SurveyController extends \BaseController {
     {
         $nodes = SurveyORM\Node::find(Input::get('page.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.rule', 'answers.rule', 'rule']);
 
-        return ['nodes' => $nodes];
+        $skips = Rule::answers($this->repository->all(SurveySession::getHashId()))->skips($nodes);
+
+        return ['nodes' => $nodes, 'skips' => $skips];
     }
 
     /**
@@ -195,6 +198,7 @@ class SurveyController extends \BaseController {
         $question = SurveyORM\Field\Field::find(Input::get('question.id'));
         $answers = $this->writer->all();
         $filler = Fill::answers($answers)->node($question->node);
+        $skips = [];
 
         if (Input::has('value')) {
             $filler->set($question, Input::get('value'));
@@ -205,9 +209,11 @@ class SurveyController extends \BaseController {
             foreach ($filler->getDirty() as $id => $value) {
                 $this->writer->put($id, $value);
             }
+
+            $skips = $filler->getSkips();
         }
 
-        return ['nodes' => $filler->childrens($question), 'answers' => $this->writer->all(), 'message' => $filler->messages, 'logs' => DB::getQueryLog()];
+        return ['nodes' => $filler->childrens($question), 'answers' => $this->writer->all(), 'message' => $filler->messages, 'logs' => DB::getQueryLog(), 'skips' => $skips];
     }
 
     /**

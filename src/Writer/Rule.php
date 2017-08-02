@@ -67,4 +67,16 @@ class Rule
             return ['pass' => $pass, 'type' => $rule->type, 'questions' => $questions];
         });
     }
+
+    public function skips($nodes)
+    {
+        return $nodes->map(function ($node) {
+            $ruleRepository = Survey\RuleRepository::target($node);
+            $pass = $node->rule->reduce(function ($carry, $rule) {
+                return $carry || Survey\RuleRepository::target($rule)->compareRule($rule->id, $this->answers);
+            }, false);
+
+            return ['id' => $node->id, 'pass' => $pass];
+        })->lists('pass', 'id');
+    }
 }

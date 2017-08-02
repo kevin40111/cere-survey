@@ -135,4 +135,22 @@ abstract class Filler
 	{
         return Rule::answers($this->answers)->effect($question->id);
     }
+
+    private function isSkip($value)
+    {
+        return $value === '-8';
+    }
+
+    public function getSkips()
+    {
+        $skips = [];
+
+        foreach ($this->contents as $id => $value) {
+            $skips[$this->question->node->id] = $this->isSkip($value);
+        }
+
+        $skips = $skips + $this->fill->getSkips();
+
+        return $skips;
+    }
 }
