@@ -156,6 +156,7 @@ angular.module('ngEditor.directives', [])
                     </md-input-container>
                     <div ng-if="type.editor.questions.amount" questions="node.questions" node="node"></div>
                     <div ng-if="type.editor.answers" answers="node.answers" node="node"></div>
+                    <div ng-if="type.editor.uploadFile" gear-bar node="node"></div>
                 </md-card-content>
                 <md-card-actions>
                     <md-menu>
@@ -195,6 +196,48 @@ angular.module('ngEditor.directives', [])
             };
 
         }
+    };
+})
+.directive('gearBar', function(editorFactory){
+    return {
+        restrict: 'A',
+        replace: true,
+        transclude: false,
+        scope: {
+            node: '=',
+        },
+        template:`
+                <div >
+                    <form style="display:none">
+                        <input type="file" id="file_upload" nv-file-select uploader="uploader" />
+                    </form>
+                    <label for="file_upload" class="ui basic mini button" ng-class="{loading: uploading}"><i class="icon upload"></i>檔案上傳</label>
+                </div>
+                     `
+         ,
+         require: '^surveyBook',
+         controller: function($scope, FileUploader) {
+              $scope.uploader = new FileUploader({
+                 alias: 'file_upload',
+                 url: 'ajax/saveGearQuestion',
+                 autoUpload: true,
+                 removeAfterUpload: true
+             });
+
+             $scope.uploader.onBeforeUploadItem = function(item) {
+                 $scope.loading = true;
+                 var formData = [{
+                     node_id: $scope.node.id
+                 }];
+                 Array.prototype.push.apply(item.formData, formData);
+             };
+
+             $scope.uploader.onCompleteItem = function(fileItem, response, status, headers) {
+                 $scope.loading = false;
+                 angular.extend($scope.node, response);
+                 document.forms[0].reset();
+             };
+         }
     };
 })
 
@@ -273,7 +316,7 @@ angular.module('ngEditor.directives', [])
                     </md-button>
                     <md-icon class="md-secondary" aria-label="刪除選項" md-svg-icon="delete" ng-click="removeAnswer(answer)"></md-icon>
                 </md-list-item>
-                <md-list-item ng-if="node.answers.length < types[node.type].editor.answers" ng-click="createAnswer(answers[answers.length-1])">
+                <md-list-item ng-if="node.answers.length < types[node.type].editor.answers && types[node.type].editor.createAnswer" ng-click="createAnswer(answers[answers.length-1])">
                     <md-icon md-svg-icon="{{types[node.type].icon}}"></md-icon>
                     <p>新增選項</p>
                 </md-list-item>
@@ -357,7 +400,7 @@ angular.module('ngEditor.directives', [])
                     </md-button>
                     <md-icon class="md-secondary" aria-label="刪除子題" md-svg-icon="delete" ng-click="removeQuestion(question)"></md-icon>
                 </md-list-item>
-                <md-list-item ng-if="node.questions.length < types[node.type].editor.questions.amount" ng-click="createQuestion(node.questions[node.questions.length-1])">
+                <md-list-item ng-if="node.questions.length < types[node.type].editor.questions.amount && types[node.type].editor.questions.createQuestion" ng-click="createQuestion(node.questions[node.questions.length-1])">
                     <md-icon md-svg-icon="help"></md-icon>
                     <p>新增問題</p>
                 </md-list-item>

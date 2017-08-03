@@ -21,7 +21,7 @@ class Fill
     public function node($node)
     {
 
-        $types = ['Text', 'Checkbox', 'Radio'];
+        $types = ['Text', 'Checkbox', 'Radio', 'Gear'];
 
         $node->type = strtolower($node->type);
 

@@ -51,7 +51,7 @@ class EditorRepository
     {
         $node = $root->childrenNodes()->save(new SurveyORM\Node($node))->after($previous_id);
 
-        if ($node->type != 'explain' && $node->type != 'page') {
+        if ($node->type != 'explain' && $node->type != 'page' && $node->type != 'gear' ) {
 
             $this->createQuestion($node->id, null);
         }
@@ -167,5 +167,73 @@ class EditorRepository
         }
 
         return true;
+    }
+
+    public function saveGearQuestion($file, $node_id)
+    {
+        $answers_tree = [];
+        $deep;
+
+        \Excel::load($file, function($reader) use (&$answers_tree, &$deep){
+            /*noHeading is read the row from first, not second*/
+            $reader->noHeading();
+            $reader = $reader->toArray();
+
+            $deep = sizeof(reset($reader));
+
+            foreach ($reader as $row) {
+                $keys = implode('.', array_slice($row, 0, $deep));
+                $value = $row[$deep-1];
+                array_set($answers_tree, $keys, $value);
+            }
+        });
+
+        if (!empty($answers_tree)) {
+
+            $node = SurveyORM\Node::find($node_id)->load(['questions', 'answers']);
+
+            foreach ($node->questions as $question) {
+                $this->removeQuestion($question->id);
+            }
+
+            foreach ($node->answers as $answer) {
+                $this->removeAnswer($answer->id);
+            }
+
+            $this->createGearQuestion($deep, $node_id, $answers_tree);
+            $this->createGearAnswer($answers_tree, 0);
+        }
+
+        return SurveyORM\Node::find($node_id)->load(['questions', 'answers']);
+    }
+
+    private function createGearQuestion($deep, $node_id, $answers_tree)
+    {
+        $last_node_id = $node_id;
+        $node_array = [];
+        array_push($node_array, $last_node_id);
+
+        for ($i=0; $i < $deep; $i++) {
+            $question = $this->createQuestion($last_node_id, null);
+            if($i < $deep-1) {
+                $last_node_id = $this->createNode($question, ['type' => 'gear'], null)->id;
+                array_push($node_array,  $last_node_id);
+            };
+        }
+
+        $this->node_array = $node_array;
+
+    }
+
+    private function createGearAnswer($answer_array, $node_level, $belong = null)
+    {
+        $last_answer_id = null ;
+        foreach ($answer_array as $key => $value) {
+            $answer = SurveyORM\Answer::create(['title' => $key, 'value' => $key, 'node_id' => $this->node_array[$node_level], 'previous_id' => $last_answer_id, 'belong' => $belong]);
+            if (gettype($value) == "array") {
+                $this->createGearAnswer($value, $node_level+1, $answer->id);
+            }
+            $last_answer_id = $answer->id;
+        }
     }
 }
