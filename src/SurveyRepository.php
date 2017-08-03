@@ -10,9 +10,10 @@ class SurveyRepository implements SurveyRepositoryInterface
 {
     function __construct($book_id)
     {
-        $book = \Plat\Eloquent\Survey\Book::find($book_id);
-
-        $this->fieldRepository = FieldRepository::target(\Files::find($book->file_id)->sheets()->first()->tables()->first());
+        $book = \Cere\Survey\Eloquent\Book::find($book_id);
+        $this->fieldRepository = FieldRepository::target($book->file->sheets()->first()->tables()->first());
+        $this->book_id = $book_id;
+        $this->login_id = SurveySession::getHashId();
     }
 
     public static function create($book_id)
@@ -27,9 +28,9 @@ class SurveyRepository implements SurveyRepositoryInterface
      * @param  array   $default
      * @return int|bool
      */
-    public function increment($id, $default = [])
+    public function increment($default = [])
     {
-        $this->fieldRepository->insert(array_merge(['encrypt_id' => $id], $default));
+        $this->fieldRepository->insert(array_merge(['encrypt_id' => $this->login_id], $default));
     }
 
     /**
@@ -38,9 +39,9 @@ class SurveyRepository implements SurveyRepositoryInterface
      * @param  string  $id
      * @return int|bool
      */
-    public function decrement($id)
+    public function decrement()
     {
-        $this->fieldRepository->deleteRow(['encrypt_id' => $id]);
+        $this->fieldRepository->deleteRow(['encrypt_id' => $this->login_id]);
     }
 
     /**
@@ -50,9 +51,9 @@ class SurveyRepository implements SurveyRepositoryInterface
      * @param  string  $key
      * @return mixed
      */
-    public function get($id, $key)
+    public function get($key)
     {
-        $answer = $this->fieldRepository->getFieldData(['encrypt_id' => $id], $key);
+        $answer = $this->fieldRepository->getFieldData(['encrypt_id' => $this->login_id], $key);
 
         return $answer->value;
     }
@@ -65,11 +66,11 @@ class SurveyRepository implements SurveyRepositoryInterface
      * @param  string     $value
      * @return void
      */
-    public function put($id, $key, $value)
+    public function put($key, $value)
     {
         $values = $this->fieldRepository->setAttributesFieldName([$key => $value]);
 
-        $this->fieldRepository->put(['encrypt_id' => $id], $values);
+        $this->fieldRepository->put(['encrypt_id' => $this->login_id], $values);
     }
 
     public function setPage($id, $value)
@@ -82,9 +83,9 @@ class SurveyRepository implements SurveyRepositoryInterface
      *
      * @return array
      */
-    public function all($id)
+    public function all()
     {
-        $answers = $this->fieldRepository->getRow(['encrypt_id' => $id]);
+        $answers = $this->fieldRepository->getRow(['encrypt_id' => $this->login_id]);
 
         return $answers;
     }
@@ -94,9 +95,9 @@ class SurveyRepository implements SurveyRepositoryInterface
      *
      * @return array
      */
-    public function exist($id)
+    public function exist()
     {
-        $existed = $this->fieldRepository->rowExists(['encrypt_id' => $id]);
+        $existed = $this->fieldRepository->rowExists(['encrypt_id' => $this->login_id]);
 
         return $existed;
     }

@@ -116,7 +116,7 @@ class SurveyController extends \BaseController {
     public function getNextNode($book_id)
     {
         $missings = [];
-        $answers = $this->repository->all($this->user_id);
+        $answers = $this->repository->all();
         $firstPage = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
         $page = $answers->page_id ? SurveyORM\Node::find($answers->page_id)->next : $firstPage;
 
@@ -211,8 +211,8 @@ class SurveyController extends \BaseController {
      */
     public function getChildren($book_id)
     {
-        $question = SurveyORM\Question::find(Input::get('question.id'));
-        $answers = $this->repository->all(SurveySession::getHashId());
+        $question = SurveyORM\Field\Field::find(Input::get('question.id'));
+        $answers = $this->repository->all();
         $filler = Fill::answers($answers)->node($question->node);
 
         if (Input::has('value')) {
@@ -222,11 +222,11 @@ class SurveyController extends \BaseController {
             }
 
             foreach ($filler->getDirty() as $id => $value) {
-                $this->repository->put(SurveySession::getHashId(), $id, $value);
+                $this->repository->put($id, $value);
             }
         }
 
-        return ['nodes' => $filler->childrens($question), 'answers' => $this->repository->all(SurveySession::getHashId()), 'message' => $filler->messages, 'logs' => DB::getQueryLog()];
+        return ['nodes' => $filler->childrens($question), 'answers' => $this->repository->all(), 'message' => $filler->messages, 'logs' => DB::getQueryLog()];
     }
 
     /**
@@ -237,7 +237,7 @@ class SurveyController extends \BaseController {
      */
     public function cleanAnswers($book_id)
     {
-        $this->repository->decrement($this->user_id);
+        $this->repository->decrement();
 
         return Redirect::to('surveyDemo/'.$book_id.'/demo/page');
     }
