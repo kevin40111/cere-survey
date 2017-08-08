@@ -27,6 +27,10 @@ class SurveyServiceProvider extends ServiceProvider {
 	public function boot()
 	{
 		$this->package('cere/survey');
+
+		include(__DIR__ . '/routes.php');
+
+		include(__DIR__ . '/filters.php');
 	}
 
 	/**
