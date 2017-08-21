@@ -6,7 +6,7 @@ use Eloquent;
 
 class SurveyBookLogin extends Eloquent
 {
-    protected $table = 'plat_survey.dbo.file_book_login';
+    protected $table = 'file_book_login';
 
     public $timestamps = false;
 
