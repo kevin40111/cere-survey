@@ -152,7 +152,7 @@ angular.module('ngEditor.directives', [])
                 <md-card-content>
                     <md-input-container class="md-block" ng-if="type.editor.title">
                         <label>{{type.editor.title}}</label>
-                        <textarea ng-model="node.title" md-maxlength="150" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
+                        <textarea ng-model="node.title" md-maxlength="2000" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
                     </md-input-container>
                     <div ng-if="type.editor.questions.amount" questions="node.questions" node="node"></div>
                     <div ng-if="type.editor.answers" answers="node.answers" node="node"></div>

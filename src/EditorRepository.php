@@ -60,7 +60,7 @@ class EditorRepository
     {
         $item = $class::find($id);
 
-        $item->update(['title' => $title]);
+        strlen($title) <= 2000 && $item->update(['title' => $title]);
 
         return $item;
     }
