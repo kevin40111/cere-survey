@@ -217,6 +217,7 @@ angular.module('ngSurvey.directives', [])
         `,
         controller: function($scope) {
 
+            $scope.answers = surveyFactory.answers;
             //$scope.node.saving = true;
             //$scope.node = {saving: true};
 
@@ -242,16 +243,11 @@ angular.module('ngSurvey.directives', [])
                 $scope.question.childrens = {};
                 surveyFactory.get('getChildren', {question: $scope.question, parent: parent, value: value, trigger: 'saveAnswer'}, $scope.node).then(function(response) {
                     $scope.question.childrens = response.nodes;
-                    surveyFactory.answers = response.answers;
+                    angular.extend(surveyFactory.answers, response.answers);
                 });
             };
 
-            var oldAnswer = surveyFactory.answers[$scope.question.name] ? surveyFactory.answers[$scope.question.name] : null;
-
-            $scope.answer = $scope.node.answers.length > 0 ? $scope.node.answers.find(function(answer) {
-                return answer.value == oldAnswer;
-            }) : oldAnswer;
-
+            $scope.answers = surveyFactory.answers;
             var parent = $scope.$eval($attrs.parent);
 
             if (parent) {
