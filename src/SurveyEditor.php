@@ -54,6 +54,11 @@ trait SurveyEditor
         return 'survey::browser-ng';
     }
 
+    public function surveyTime()
+    {
+        return 'survey::surveyTime-ng';
+    }
+
     public function questionBrowser()
     {
         return  View::make('survey::template_question_browser');
@@ -382,5 +387,15 @@ trait SurveyEditor
     public function setNoPopulationColumn()
     {
         return Survey\ApplicationRepository::book($this->book)->setNoPopulationColumn(Input::get('column'));
+    }
+
+    public function getTime()
+    {
+        return ['start_at' => $this->file->book->start_at, 'close_at' => $this->file->book->close_at];
+    }
+
+    public function setTime()
+    {
+        return (int)$this->file->book->update(['start_at' => Input::get('start_at'), 'close_at' => Input::get('close_at')]);
     }
 }
