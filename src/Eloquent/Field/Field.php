@@ -1,12 +1,12 @@
 <?php
 
-namespace Plat\Eloquent\Field;
+namespace Cere\Survey\Eloquent\Field;
 
 use Eloquent;
 
 class Field extends Eloquent {
 
-    use \Plat\Survey\Tree;
+    use \Cere\Survey\Tree;
 
     protected $table = 'row_fields';
 

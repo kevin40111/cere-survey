@@ -1,6 +1,6 @@
 <?php
 
-namespace Plat\Field;
+namespace Cere\Survey\Field;
 
 use Exception;
 

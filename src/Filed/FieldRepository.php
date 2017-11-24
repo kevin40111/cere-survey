@@ -1,13 +1,13 @@
 <?php
 
-namespace Plat\Field;
+namespace Cere\Survey\Field;
 
 use Carbon\Carbon;
 use Schema;
 use DB;
 use Auth;
-use Plat\Eloquent\Field\Table;
-use Plat\Eloquent\Field\Field;
+use Cere\Survey\Eloquent\Field\Table;
+use Cere\Survey\Eloquent\Field\Field;
 
 class FieldRepository
 {

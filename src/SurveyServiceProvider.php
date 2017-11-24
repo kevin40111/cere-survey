@@ -9,6 +9,7 @@ use Cere\Survey\SurveyRepository;
 use Cere\Survey\DemoRepository;
 use Cere\Survey\SurveySession;
 use Auth;
+use View;
 
 class SurveyServiceProvider extends ServiceProvider {
 
@@ -27,6 +28,8 @@ class SurveyServiceProvider extends ServiceProvider {
 	public function boot()
 	{
 		$this->package('cere/survey');
+
+		View::addNamespace('survey', __DIR__.'/../resources/views');
 
 		include(__DIR__ . '/routes.php');
 

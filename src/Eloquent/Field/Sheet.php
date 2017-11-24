@@ -1,6 +1,6 @@
 <?php
 
-namespace Plat\Eloquent\Field;
+namespace Cere\Survey\Eloquent\Field;
 
 use Eloquent;
 

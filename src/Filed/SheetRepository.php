@@ -1,12 +1,12 @@
 <?php
 
-namespace Plat\Field;
+namespace Cere\Survey\Field;
 
 use Carbon\Carbon;
 use Schema;
 use DB;
 use Auth;
-use Plat\Eloquent\Field\Sheet;
+use Cere\Survey\Eloquent\Field\Sheet;
 
 class SheetRepository
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Plat\Files;
+namespace Cere\Survey;
 
 use User;
 use Files;
@@ -11,8 +11,8 @@ use Input;
 use RequestFile;
 use Row\Column;
 use Illuminate\Support\MessageBag;
-use Plat\Field\SheetRepository;
-use Plat\Field\FieldRepository;
+use Cere\Survey\Field\SheetRepository;
+use Cere\Survey\Field\FieldRepository;
 
 /**
  * Rows data Repository.
