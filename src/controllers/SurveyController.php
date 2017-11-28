@@ -39,7 +39,11 @@ class SurveyController extends \BaseController {
     public function surveyLogin()
     {
         SurveySession::logout();
-
+        $file_book = SurveyORM\Book::find($this->repository->book_id);
+        $now = Carbon\Carbon::now();
+        if ((!is_null($file_book->start_at) && $now < $file_book->start_at) || (!is_null($file_book->close_at) && $now > $file_book->close_at)) {
+            return View::make('survey::layout-survey')->nest('context', 'survey::surveydisabled-ng', ['file_book' => $file_book]);
+        }
         return View::make('survey::layout-survey')->nest('context', 'survey::surveylogin-ng');
     }
 
