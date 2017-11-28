@@ -13,6 +13,7 @@ class SurveyFile extends CommFile
 {
     use SurveyEditor {
         SurveyEditor::__construct as private __SurveyEditorConstruct;
+        create as public traitcreate;
     }
 
     function __construct(Files $file, User $user)
@@ -50,7 +51,7 @@ class SurveyFile extends CommFile
     {
         $commFile = parent::create();
 
-        $book = $this->file->book()->create($this->createBook($this->file->title));
+        $this->traitcreate();
     }
 
     public function queryOrganizations()
