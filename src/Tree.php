@@ -7,7 +7,7 @@ use Cere\Survey\Eloquent\Field\Field as Question;
 trait Tree {
     public function getPaths()
     {
-        $parent = is_a($this, 'Plat\Eloquent\Survey\Answer') || is_a($this, Question::class) ? $this->node->parent : $this->parent;
+        $parent = is_a($this, 'Cere\Survey\Eloquent\Answer') || is_a($this, Question::class) ? $this->node->parent : $this->parent;
 
         $paths = $parent ? $parent->getPaths()->add($this) : \Illuminate\Database\Eloquent\Collection::make([$this]);
 

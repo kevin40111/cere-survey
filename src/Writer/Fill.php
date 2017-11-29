@@ -20,7 +20,12 @@ class Fill
 
     public function node($node)
     {
-        $type = 'Cere\Survey\Writer\Fillers\\' . ($node->type == 'checkbox' ? ucfirst($node->type) : 'Radio');
+
+        $types = ['Text', 'Checkbox', 'Radio'];
+
+        $node->type = strtolower($node->type);
+
+        $type = 'Cere\Survey\Writer\Fillers\\' . (in_array(ucfirst($node->type), $types) ? ucfirst($node->type) : 'Radio');
 
         $filler = new $type($node, $this->answers);
 
