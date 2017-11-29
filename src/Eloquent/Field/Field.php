@@ -3,6 +3,7 @@
 namespace Cere\Survey\Eloquent\Field;
 
 use Eloquent;
+use Cere\Survey\Eloquent as SurveyORM;
 
 class Field extends Eloquent {
 
@@ -101,7 +102,7 @@ class Field extends Eloquent {
      */
     public function node()
     {
-        return $this->hasOne('Plat\Eloquent\Survey\Node', 'id', 'node_id');
+        return $this->hasOne(SurveyORM\Node::class, 'id', 'node_id');
     }
 
     public function next()
@@ -116,7 +117,7 @@ class Field extends Eloquent {
 
     public function childrenNodes()
     {
-        return $this->morphMany('Plat\Eloquent\Survey\Node', 'parent');
+        return $this->morphMany(SurveyORM\Node::class, 'parent');
     }
 
     public function getRelationAttribute()
@@ -131,6 +132,6 @@ class Field extends Eloquent {
 
     public function rule()
     {
-        return $this->morphOne('Plat\Eloquent\Survey\Rule', 'effect');
+        return $this->morphOne(SurveyORM\Rule::class, 'effect');
     }
 }
