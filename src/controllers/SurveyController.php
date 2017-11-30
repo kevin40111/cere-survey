@@ -74,8 +74,7 @@ class SurveyController extends \BaseController {
 
         $table = Files::find($file_book->rowsFile_id)->sheets->first()->tables->first();
 
-        $attributes = FieldRepository::target($table)->setAttributesFieldName([$file_book->loginRow_id => $login_id]);
-        $in_rows  = FieldRepository::target($table)->rowExists($attributes);
+        $in_rows  = DB::table('rows.dbo.'.$table->name)->where('C'.$file_book->loginRow_id, $login_id)->exists();
 
         if (!$in_rows) {
             if ($file_book->no_population) {
@@ -86,11 +85,6 @@ class SurveyController extends \BaseController {
             } else {
                 return Redirect::to('survey/'.$book_id.'/survey/surveyLogin')->withErrors(['fail' => '! 登入資料不在名單內']);
             }
-        }
-
-        $encrypt_id = SurveySession::login($book_id, $login_id);
-        if (!$this->repository->exist($encrypt_id)) {
-            $this->repository->increment($encrypt_id, ['page_id' => null]);
         }
 
         return Redirect::to('survey/'.$book_id.'/survey/page');
