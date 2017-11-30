@@ -10,6 +10,7 @@ class DemoRepository implements SurveyRepositoryInterface
     function __construct($book_id)
     {
         $this->book_id = $book_id;
+        $this->login_id = $this->getId();
     }
 
     public static function create($book_id)
@@ -24,14 +25,14 @@ class DemoRepository implements SurveyRepositoryInterface
      * @param  array   $default
      * @return int|bool
      */
-    public function increment($id, $attributes = [])
+    public function increment($attributes = [])
     {
-        $attributes = array_add($attributes, 'created_by', $id);
+        $attributes = array_add($attributes, 'created_by', $this->login_id);
         $attributes = array_add($attributes, 'page_id', NULL);
 
         Session::put('answer.'.$this->book_id, (object)$attributes);
 
-        return $this->all($id);
+        return $this->all($this->login_id);
     }
 
     /**
@@ -40,11 +41,11 @@ class DemoRepository implements SurveyRepositoryInterface
      * @param  string  $id
      * @return int|bool
      */
-    public function decrement($id)
+    public function decrement()
     {
         Session::forget('answer');
 
-        return $this->all($id);
+        return $this->all($this->login_id);
     }
 
     /**
@@ -54,9 +55,9 @@ class DemoRepository implements SurveyRepositoryInterface
      * @param  string  $key
      * @return mixed
      */
-    public function get($id, $key)
+    public function get($key)
     {
-        $answers = $this->all($id);
+        $answers = $this->all($this->login_id);
 
         return isset($answers->{$key}) ? $answers->{$key} : NULL;
     }
@@ -69,9 +70,9 @@ class DemoRepository implements SurveyRepositoryInterface
      * @param  string     $value
      * @return void
      */
-    public function put($id, $key, $value)
+    public function put($key, $value)
     {
-        $answers = $this->all($id);
+        $answers = $this->all($this->login_id);
 
         $answers->{$key} = $value;
 
@@ -83,7 +84,7 @@ class DemoRepository implements SurveyRepositoryInterface
      *
      * @return array
      */
-    public function all($id)
+    public function all()
     {
         $answers = Session::get('answer.'.$this->book_id);
 
@@ -95,7 +96,7 @@ class DemoRepository implements SurveyRepositoryInterface
      *
      * @return array
      */
-    public function exist($id)
+    public function exist()
     {
         return Session::has('answer.'.$this->book_id);
     }
