@@ -114,27 +114,6 @@ trait SurveyEditor
         return ['nodes' => $nodes, 'paths' => $root->getPaths()];
     }
 
-    public function createTable()
-    {
-        DB::table('INFORMATION_SCHEMA.COLUMNS')->where('TABLE_NAME', $this->book->id)->exists() && Schema::drop($this->book->id);
-
-        Schema::create($this->book->id, function ($table) {
-            $table->increments('id');
-            $questions = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function($carry, $page) {
-                return array_merge($carry, $page->getQuestions());
-            }, []);
-
-            foreach ($questions as $question) {
-                $table->text($question['id'])->nullable();
-            }
-
-            $table->integer('page_id')->nullable();
-            $table->string('created_by',255);
-        });
-
-        return ['createTable' => true];
-    }
-
     public function createNode()
     {
         $class = Input::get('parent.class');
@@ -362,7 +341,6 @@ trait SurveyEditor
 
     public function lockBook()
     {
-        $this->createTable();
         $this->book->update(['lock' => true]);
 
         return ['lock' => true];
