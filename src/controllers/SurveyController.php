@@ -2,7 +2,7 @@
 
 use Cere\Survey\Eloquent as SurveyORM;
 use Cere\Survey\SurveySession;
-use Cere\Survey\SurveyRepositoryInterface;
+use Cere\Survey\Writer\WriterInterface;
 use Cere\Survey;
 use Cere\Survey\Writer\Fill;
 use Cere\Survey\Field\FieldRepository;
@@ -15,7 +15,7 @@ class SurveyController extends \BaseController {
      * @param  string  $type
      * @return Response
      */
-    function __construct(SurveyRepositoryInterface $repository)
+    function __construct(WriterInterface $repository)
     {
         $this->user_id = $repository->getId();
         $this->type = $repository->getType();
@@ -74,17 +74,27 @@ class SurveyController extends \BaseController {
 
         $table = Files::find($file_book->rowsFile_id)->sheets->first()->tables->first();
 
-        $in_rows  = DB::table('rows.dbo.'.$table->name)->where('C'.$file_book->loginRow_id, $login_id)->exists();
+        $in_rows  = FieldRepository::target($table)->rowExists(['C'.$file_book->loginRow_id => $login_id]);
 
         if (!$in_rows) {
             if ($file_book->no_population) {
                 $user_id = Files::find($file_book->rowsFile_id)->created_by;
                 $current_time = Carbon\Carbon::now()->toDateTimeString();
-                $query = DB::table($table->database . '.dbo.' . $table->name);
-                $query->insert(['C'.$file_book->loginRow_id => $login_id, 'file_id' => $file_book->rowsFile_id, 'updated_at' => $current_time, 'created_at' => $current_time, 'updated_by' => $user_id, 'created_by' => $user_id]);
+                FieldRepository::insert([
+                    'C'.$file_book->loginRow_id => $login_id,
+                    'file_id' => $file_book->rowsFile_id,
+                    'updated_by' => $user_id,
+                    'created_by' => $user_id
+                ]);
             } else {
                 return Redirect::to('survey/'.$book_id.'/survey/surveyLogin')->withErrors(['fail' => '! 登入資料不在名單內']);
             }
+        }
+
+        SurveySession::login($book_id, $login_id);
+
+        if (!$this->repository->exist()) {
+            $this->repository->increment();
         }
 
         return Redirect::to('survey/'.$book_id.'/survey/page');

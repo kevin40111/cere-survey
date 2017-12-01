@@ -12,7 +12,7 @@ class FieldWriter implements WriterInterface
     {
         $book = \Cere\Survey\Eloquent\Book::find($book_id);
         $this->fieldRepository = FieldRepository::target($book->file->sheets()->first()->tables()->first());
-        $this->book_id = $book_id;
+        $this->book_id = $book->id;
         $this->login_id = SurveySession::getHashId();
     }
 
@@ -30,7 +30,7 @@ class FieldWriter implements WriterInterface
      */
     public function increment($default = [])
     {
-        $this->fieldRepository->insert(array_merge(['encrypt_id' => $this->login_id], $default));
+        $this->fieldRepository->insert(array_merge(['encrypt_id' => $this->getId()], $default));
     }
 
     /**
@@ -75,7 +75,8 @@ class FieldWriter implements WriterInterface
 
     public function setPage($id, $value)
     {
-        $this->put($id, 'page_id', $value);
+        if (is_numeric($id))
+            $this->put($id, 'page_id', $value);
     }
 
     /**
@@ -97,7 +98,7 @@ class FieldWriter implements WriterInterface
      */
     public function exist()
     {
-        $existed = $this->fieldRepository->rowExists(['encrypt_id' => $this->login_id]);
+        $existed = $this->fieldRepository->rowExists(['encrypt_id' => $this->getId()]);
 
         return $existed;
     }

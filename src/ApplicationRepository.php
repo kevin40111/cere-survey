@@ -67,7 +67,7 @@ class ApplicationRepository
             $questions = $this->book->optionQuestions;
             $conditionColumn = $this->getConditionColumn();
             $rowsFile_id = $this->book->rowsFile_id;
-            $loginConditionColumn = DB::table('row_fields')->where('id', $this->book->loginRow_id)->first();
+            $loginConditionColumn = DB::table('row_columns')->where('id', $this->book->loginRow_id)->first();
             $parentSelected = \Files::find($rowsFile_id);
             if ($this->book->no_population) {
                 $parentSelected->title = "無母體名單".$this->book->no_pop_id;
@@ -79,7 +79,7 @@ class ApplicationRepository
             $questions = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
                 return array_merge($carry, $page->getQuestions());
             }, []);
-            $loginConditionColumn = DB::table('row_fields')->where('id', $this->book->loginRow_id)->first();
+            $loginConditionColumn = DB::table('row_columns')->where('id', $this->book->loginRow_id)->first();
             $parentSelected = [];
             $parentList = $this->getParentList();
         }

@@ -1,8 +1,8 @@
 <?php
 
-namespace Cere\Survey;
+namespace Cere\Survey\Writer;
 
-interface SurveyRepositoryInterface
+interface WriterInterface
 {
     /**
      * Increment a row in the repository.

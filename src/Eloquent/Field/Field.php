@@ -44,7 +44,7 @@ class Field extends Eloquent {
 
     public function answers()
     {
-        return $this->hasMany('Row\Answer', 'column_id', 'id');
+        return $this->hasMany('SurveyORM\Answer', 'column_id', 'id');
     }
 
     public function skip()
@@ -74,7 +74,7 @@ class Field extends Eloquent {
 
     public function setNameAttribute($value)
     {
-        $this->attributes['name'] = strtolower($value);
+        $this->attributes['name'] = strtoupper($value);
     }
 
     public function setUniqueAttribute($value)

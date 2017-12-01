@@ -175,6 +175,8 @@ class FieldRepository
             $query->text('updated_by', 50);
             $query->text('created_by', 50);
             $query->integer('deleted_by')->nullable();
+            $query->text('encrypt_id')->nullable();
+            $query->string('page_id')->nullable();
         });
 
         $this->field->update(['builded_at' => Carbon::now()->toDateTimeString()]);
@@ -654,6 +656,8 @@ class FieldRepository
     public function insert($values = [])
     {
         DB::table($this->getFullDataTable())->insert(array_merge([
+            'updated_by' => Auth::user()->id,
+            'created_by' => Auth::user()->id,
             'updated_at' => Carbon::now()->toDateTimeString(),
             'created_at' => Carbon::now()->toDateTimeString(),
         ], $values));
