@@ -1,12 +1,12 @@
 <?php
 
-namespace Cere\Survey;
+namespace Cere\Survey\Writer;
 
 use DB;
 use Cere\Survey\SurveySession;
 use Cere\Survey\Field\FieldRepository;
 
-class SurveyRepository implements SurveyRepositoryInterface
+class FieldWriter implements WriterInterface
 {
     function __construct($book_id)
     {

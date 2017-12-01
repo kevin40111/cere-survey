@@ -4,9 +4,9 @@ namespace Cere\Survey;
 
 use Illuminate\Support\ServiceProvider;
 use Cere\Survey\Eloquent as SurveyORM;
-use Cere\Survey\SurveyRepositoryInterface;
-use Cere\Survey\SurveyRepository;
-use Cere\Survey\DemoRepository;
+use Cere\Survey\Writer\WriterInterface;
+use Cere\Survey\Writer\FieldWriter;
+use Cere\Survey\Writer\SessionWriter;
 use Auth;
 use View;
 
@@ -42,14 +42,14 @@ class SurveyServiceProvider extends ServiceProvider {
 	 */
     public function register()
     {
-        $this->app->bind(SurveyRepositoryInterface::class, function()
+        $this->app->bind(WriterInterface::class, function()
         {
             $type = $this->app->make('router')->input('type');
             $book_id = $this->app->make('router')->input('book_id');
 
             if ($type == 'demo') {
 
-                $repository = new DemoRepository($book_id);
+                $repository = new SessionWriter($book_id);
                 if (!$repository->exist('answers')) {
 
                     $questions = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
@@ -61,7 +61,7 @@ class SurveyServiceProvider extends ServiceProvider {
             }
 
             if ($type == 'survey') {
-                $repository = new SurveyRepository($book_id);
+                $repository = new FieldWriter($book_id);
             }
 
             return $repository;

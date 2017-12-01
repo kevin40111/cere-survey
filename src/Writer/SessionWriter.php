@@ -1,11 +1,11 @@
 <?php
 
-namespace Cere\Survey;
+namespace Cere\Survey\Writer;
 
 use Session;
 use Auth;
 
-class DemoRepository implements SurveyRepositoryInterface
+class SessionWriter implements WriterInterface
 {
     function __construct($book_id)
     {
