@@ -146,6 +146,9 @@ angular.module('ngEditor.directives', [])
         },
         template:  `
             <md-card>
+                <div ng-repeat="image in node.images">
+                    <banner-image node="node" image="image" index=$index></banner-image>
+                </div>
                 <md-card-header md-colors="{background: 'indigo'}">
                     <question-bar></question-bar>
                 </md-card-header>
@@ -241,7 +244,38 @@ angular.module('ngEditor.directives', [])
     };
 })
 
-.directive('questionBar', function(editorFactory) {
+.directive('bannerImage', function(editorFactory){
+    return  {
+        restrict: 'E',
+        replace: true,
+        transclude: false,
+        scope: {
+            node: '=',
+            image: '=',
+            index:'=',
+        },
+        template:`
+            <md-card>
+                <md-card-header md-colors="{background: 'teal'}">
+                <span flex="" class="flex"></span>
+                <md-button class="md-icon-button" aria-label="刪除" ng-click="removeBanner(ndoe)">
+                        <md-icon md-svg-icon="clear" style="color:#ffffff"></md-icon>
+                    </md-button>
+                </md-card-header>
+                <img ng-src=/upload/get/{{image.serial}} class="md-card-image" alt="image caption"/>
+            </md-card>
+        `,
+        controller: function($scope) {
+            $scope.removeBanner = function (node) {
+                editorFactory.ajax('removeBanner', {image:$scope.image.pivot}).then(function(response) {
+                    $scope.node.images.splice($scope.index, 1);
+                });
+            }
+        }
+    };
+})
+
+.directive('questionBar', function(editorFactory, FileUploader) {
     return {
         restrict: 'E',
         replace: true,
@@ -251,11 +285,15 @@ angular.module('ngEditor.directives', [])
                 <div>
                     <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="{{type.icon}}"></md-icon>
                 </div>
-                <div style="margin: 0 0 0 16px">{{type.title}}</div>
+                <div style="margin: 0 0 0 16px">{{index+1}} {{type.title}}</div>
 
                 <span flex></span>
 
                 <div>
+                    <label ng-show="node.type" for="{{::$id}}">
+                    <md-icon md-svg-icon="grally"></md-icon>
+                        <input id="{{::$id}}"  style="display:none"  type="file" multiple nv-file-select uploader="uploader" />
+                    </label>
                     <div class="ui input" ng-if="node.open.moving">
                         <input type="text" ng-model="settedPage" placeholder="輸入移動到的頁數..." />
                         <md-button class="md-icon-button no-animate" ng-disabled="node.saving" aria-label="移動到某頁" ng-click="setPage(node, settedPage)">
@@ -278,7 +316,25 @@ angular.module('ngEditor.directives', [])
                     </md-button>
                 </div>
             </div>
-        `
+        `,
+        controller: function($scope){
+            $scope.uploader = new FileUploader({
+                alias: 'file_upload',
+                url: 'ajax/uploaderBanner',
+                autoUpload: true,
+                removeAfterUpload: true,
+            });
+
+            $scope.uploader.onBeforeUploadItem = function (item) {
+                item.formData.push($scope.node);
+            }
+
+            $scope.uploader.onCompleteItem = function(fileItem, response, status, headers) {
+                $scope.node.images = response.images;
+                $scope.uploader.destroy();
+                alert(response.message)
+            };
+        }
     };
 })
 

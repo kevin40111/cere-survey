@@ -296,4 +296,14 @@ trait SurveyEditor
             'auth' => Input::get('auth')
         ]);
     }
+
+    public function removeBanner()
+    {
+        return $this->editorRepository->removeBanner(Input::get('image')['node_id'], Input::get('image')['upload_id']);
+    }
+
+    public function uploaderBanner()
+    {
+        return $this->editorRepository->uploaderBanner(Input::file('file_upload'), $this->file->id, Input::get('id'));
+    }
 }

@@ -103,7 +103,9 @@ angular.module('ngSurvey.directives', [])
         },
         template:  `
             <div>
-                <survey-node ng-repeat="node in nodes" node="node" ng-if="skips.nodes.indexOf(node.id) == -1"></survey-node>
+                <survey-node ng-repeat="node in nodes" node="node" ng-if="skips.nodes.indexOf(node.id) == -1">
+                    <img ng-repeat="image in node.images" ng-src="/upload/get/{{image.serial}}" alt="Description" style="width:940px" />
+                </survey-node>
             </div>
         `,
         controller: function($scope, $http) {
