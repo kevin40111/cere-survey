@@ -15,11 +15,11 @@ class SurveyController extends \BaseController {
      * @param  string  $type
      * @return Response
      */
-    function __construct(WriterInterface $repository)
+    function __construct(WriterInterface $writer)
     {
-        $this->user_id = $repository->getId();
-        $this->type = $repository->getType();
-        $this->repository = $repository;
+        $this->user_id = $writer->getId();
+        $this->type = $writer->getType();
+        $this->writer = $writer;
     }
 
     /**
@@ -40,7 +40,7 @@ class SurveyController extends \BaseController {
     public function surveyLogin()
     {
         SurveySession::logout();
-        $file_book = SurveyORM\Book::find($this->repository->book_id);
+        $file_book = SurveyORM\Book::find($this->writer->book_id);
         $now = Carbon\Carbon::now();
         if ((!is_null($file_book->start_at) && $now < $file_book->start_at) || (!is_null($file_book->close_at) && $now > $file_book->close_at)) {
             return View::make('survey::layout-survey')->nest('context', 'survey::surveydisabled-ng', ['file_book' => $file_book]);
@@ -93,8 +93,8 @@ class SurveyController extends \BaseController {
 
         SurveySession::login($book_id, $login_id);
 
-        if (!$this->repository->exist()) {
-            $this->repository->increment();
+        if (!$this->writer->exist()) {
+            $this->writer->increment();
         }
 
         return Redirect::to('survey/'.$book_id.'/page');
@@ -120,14 +120,14 @@ class SurveyController extends \BaseController {
     public function getNextNode($book_id)
     {
         $missings = [];
-        $answers = $this->repository->all();
+        $answers = $this->writer->all();
         $firstPage = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
         $page = $answers->page_id ? SurveyORM\Node::find($answers->page_id)->next : $firstPage;
 
         if (Input::get('next') && count($missings = $this->checkPage($page, $answers)) == 0) {
             $nextPage = $page->next ? $this->checkAndJump($page->next, $answers) : NULL;
             $complete = $nextPage ? $nextPage->previous : $page;
-            $this->repository->setPage($this->user_id, $complete->id);
+            $this->writer->setPage($this->user_id, $complete->id);
         } else {
             $nextPage = $page;
         }
@@ -216,7 +216,7 @@ class SurveyController extends \BaseController {
     public function getChildren($book_id)
     {
         $question = SurveyORM\Field\Field::find(Input::get('question.id'));
-        $answers = $this->repository->all();
+        $answers = $this->writer->all();
         $filler = Fill::answers($answers)->node($question->node);
 
         if (Input::has('value')) {
@@ -226,11 +226,11 @@ class SurveyController extends \BaseController {
             }
 
             foreach ($filler->getDirty() as $id => $value) {
-                $this->repository->put($id, $value);
+                $this->writer->put($id, $value);
             }
         }
 
-        return ['nodes' => $filler->childrens($question), 'answers' => $this->repository->all(), 'message' => $filler->messages, 'logs' => DB::getQueryLog()];
+        return ['nodes' => $filler->childrens($question), 'answers' => $this->writer->all(), 'message' => $filler->messages, 'logs' => DB::getQueryLog()];
     }
 
     /**
@@ -241,7 +241,7 @@ class SurveyController extends \BaseController {
      */
     public function cleanAnswers($book_id)
     {
-        $this->repository->decrement();
+        $this->writer->decrement();
 
         return Redirect::to('surveyDemo/'.$book_id.'/demo/page');
     }
