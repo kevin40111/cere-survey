@@ -64,7 +64,7 @@ class SurveyController extends \BaseController {
      * @param  int  $book_id
      * @return Response
      */
-    public function checkInRows($book_id)
+    public function login($book_id)
     {
         SurveySession::logout();
 
@@ -87,7 +87,7 @@ class SurveyController extends \BaseController {
                     'created_by' => $user_id
                 ]);
             } else {
-                return Redirect::to('survey/'.$book_id.'/survey/surveyLogin')->withErrors(['fail' => '! 登入資料不在名單內']);
+                return Redirect::to('survey/'.$book_id.'/surveyLogin')->withErrors(['fail' => '! 登入資料不在名單內']);
             }
         }
 
@@ -97,7 +97,7 @@ class SurveyController extends \BaseController {
             $this->repository->increment();
         }
 
-        return Redirect::to('survey/'.$book_id.'/survey/page');
+        return Redirect::to('survey/'.$book_id.'/page');
     }
 
     /**

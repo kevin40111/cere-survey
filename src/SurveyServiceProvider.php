@@ -44,10 +44,10 @@ class SurveyServiceProvider extends ServiceProvider {
     {
         $this->app->bind(WriterInterface::class, function()
         {
-            $type = $this->app->make('router')->input('type');
+            $prefix = $this->app->make('router')->getCurrentRoute()->getPrefix();
             $book_id = $this->app->make('router')->input('book_id');
 
-            if ($type == 'demo') {
+            if ($prefix == 'surveyDemo') {
 
                 $repository = new SessionWriter($book_id);
                 if (!$repository->exist('answers')) {
@@ -60,7 +60,7 @@ class SurveyServiceProvider extends ServiceProvider {
                 }
             }
 
-            if ($type == 'survey') {
+            if ($prefix == 'survey') {
                 $repository = new FieldWriter($book_id);
             }
 
