@@ -7,15 +7,15 @@ use Cere\Survey\Eloquent\Field\Field as Question;
 
 class EditorRepository
 {
-    function __construct($sheetRepository)
+    function __construct($filed)
     {
-        $this->sheetRepository = $sheetRepository;
+        $this->filed = $filed;
     }
 
     public function create()
     {
-        $this->sheetRepository->field()->update_column(null, ['name' => 'page_id', 'rules' => 'gender']);
-        $this->sheetRepository->field()->update_column(null, ['name' => 'encrypt_id', 'rules' => 'gender']);
+        $this->filed->update_column(null, ['name' => 'page_id', 'rules' => 'gender']);
+        $this->filed->update_column(null, ['name' => 'encrypt_id', 'rules' => 'gender']);
     }
 
     public function getNodes($root)
@@ -61,7 +61,7 @@ class EditorRepository
 
     public function createQuestion($node_id, $previous_id)
     {
-        $column = $this->sheetRepository->field()->update_column(null, ['rules' => 'gender']);
+        $column = $this->filed->update_column(null, ['rules' => 'gender']);
 
         $question = SurveyORM\Node::find($node_id)->questions()->save($column)->after($previous_id);
 
@@ -111,7 +111,7 @@ class EditorRepository
             $subNode->deleteNode();
         });
 
-        $this->sheetRepository->field()->remove_column($question_id);
+        $this->filed->remove_column($question_id);
 
         return [$question->delete(), $node->questions];
     }

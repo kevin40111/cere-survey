@@ -8,19 +8,21 @@ use Files;
 use Mail;
 use Plat\Files\CommFile;
 use Cere\Survey\SurveyEditor;
+use Cere\Survey\Field\SheetRepository;
 
 class SurveyFile extends CommFile
 {
     use SurveyEditor {
         SurveyEditor::__construct as private __SurveyEditorConstruct;
-        create as public traitcreate;
     }
 
     function __construct(Files $file, User $user)
     {
         parent::__construct($file, $user);
 
-        $this->__SurveyEditorConstruct();
+        if ($this->file->exists) {
+            $this->__SurveyEditorConstruct(SheetRepository::target($this->file->sheets()->first())->field());
+        }
 
         $this->book = $this->file->book;
 
@@ -51,7 +53,11 @@ class SurveyFile extends CommFile
     {
         $commFile = parent::create();
 
-        $this->traitcreate();
+        $sheet = $this->file->sheets()->save(SheetRepository::create()->sheet);
+
+        SheetRepository::target($sheet)->init();
+
+        $this->file->book()->create(['title' => $this->file->title, 'lock' => false, 'no_population' => false]);
     }
 
     public function queryOrganizations()

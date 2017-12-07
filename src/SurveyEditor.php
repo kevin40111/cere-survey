@@ -9,34 +9,13 @@ use View;
 use Cere\Survey;
 use Cere\Survey\Eloquent as SurveyORM;
 use Cere\Survey\Eloquent\Field\Field;
-use Cere\Survey\Field\SheetRepository;
+
 
 trait SurveyEditor
 {
-    function __construct()
+    function __construct($field)
     {
-        $this->sheetRepository = SheetRepository::target($this->file->sheets()->first());
-
-        $this->editorRepository = new Survey\EditorRepository($this->sheetRepository);
-    }
-
-    /*
-     * create
-     */
-    public function createBook($title)
-    {
-        return ['title' => $title, 'lock' => false, 'no_population' => false];
-    }
-
-    public function create()
-    {
-        $book = $this->file->book()->create(['title' => $this->file->title, 'lock' => false]);
-
-        $sheet = $this->file->sheets()->save(SheetRepository::create()->sheet);
-
-        $this->sheetRepository = SheetRepository::target($sheet)->init();
-
-        $this->editorRepository = new Survey\EditorRepository($this->sheetRepository);
+        $this->editorRepository = new Survey\EditorRepository($field);
     }
 
     public function open()
