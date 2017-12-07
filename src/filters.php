@@ -6,7 +6,7 @@ Route::filter('has_survey_login', function($route)
 
     if (! Cere\Survey\SurveySession::check($book_id)) {
 
-        return Redirect::to('survey/'.$book_id.'/survey/surveyLogin');
+        return Redirect::to('survey/'.$book_id.'/surveyLogin');
 
     }
 

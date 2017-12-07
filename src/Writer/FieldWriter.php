@@ -2,18 +2,16 @@
 
 namespace Cere\Survey\Writer;
 
-use DB;
-use Cere\Survey\SurveySession;
 use Cere\Survey\Field\FieldRepository;
+use Cere\Survey\Eloquent\Book;
 
 class FieldWriter implements WriterInterface
 {
-    function __construct($book_id)
+    function __construct($book_id, $user)
     {
-        $book = \Cere\Survey\Eloquent\Book::find($book_id);
+        $book = Book::find($book_id);
         $this->fieldRepository = FieldRepository::target($book->file->sheets()->first()->tables()->first(), $book->file->created_by);
-        $this->book_id = $book->id;
-        $this->login_id = SurveySession::getHashId();
+        $this->user = $user;
     }
 
     public static function create($book_id)
@@ -41,7 +39,7 @@ class FieldWriter implements WriterInterface
      */
     public function decrement()
     {
-        $this->fieldRepository->deleteRow(['encrypt_id' => $this->login_id]);
+        $this->fieldRepository->deleteRow(['encrypt_id' => $this->user->id]);
     }
 
     /**
@@ -53,7 +51,7 @@ class FieldWriter implements WriterInterface
      */
     public function get($key)
     {
-        $answer = $this->fieldRepository->getFieldData(['encrypt_id' => $this->login_id], $key);
+        $answer = $this->fieldRepository->getFieldData(['encrypt_id' => $this->user->id], $key);
 
         return $answer->value;
     }
@@ -70,13 +68,12 @@ class FieldWriter implements WriterInterface
     {
         $values = $this->fieldRepository->setAttributesFieldName([$key => $value]);
 
-        $this->fieldRepository->put(['encrypt_id' => $this->login_id], $values);
+        $this->fieldRepository->put(['encrypt_id' => $this->user->id], $values);
     }
 
-    public function setPage($id, $value)
+    public function setPage($value)
     {
-        if (is_numeric($id))
-            $this->put($id, 'page_id', $value);
+        $this->put('page_id', $value);
     }
 
     /**
@@ -86,7 +83,7 @@ class FieldWriter implements WriterInterface
      */
     public function all()
     {
-        $answers = $this->fieldRepository->getRow(['encrypt_id' => $this->login_id]);
+        $answers = $this->fieldRepository->getRow(['encrypt_id' => $this->user->id]);
 
         return $answers;
     }
@@ -110,9 +107,7 @@ class FieldWriter implements WriterInterface
      */
     public function getId()
     {
-        $user_id = SurveySession::getHashId();
-
-        return $user_id;
+        return $this->user->id;
     }
 
     /**
@@ -123,5 +118,10 @@ class FieldWriter implements WriterInterface
     public function getType()
     {
         return 'survey';
+    }
+
+    public function user()
+    {
+        return $this->user;
     }
 }

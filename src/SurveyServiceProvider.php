@@ -7,6 +7,7 @@ use Cere\Survey\Eloquent as SurveyORM;
 use Cere\Survey\Writer\WriterInterface;
 use Cere\Survey\Writer\FieldWriter;
 use Cere\Survey\Writer\SessionWriter;
+use Cere\Survey\Auth\FieldUser;
 use Auth;
 use View;
 
@@ -61,7 +62,9 @@ class SurveyServiceProvider extends ServiceProvider {
             }
 
             if ($prefix == 'survey') {
-                $repository = new FieldWriter($book_id);
+                $book = SurveyORM\Book::find($book_id);
+                $user = new FieldUser($book);
+                $repository = new FieldWriter($book_id, $user);
             }
 
             return $repository;

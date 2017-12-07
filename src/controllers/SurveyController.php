@@ -1,11 +1,8 @@
 <?php
 
 use Cere\Survey\Eloquent as SurveyORM;
-use Cere\Survey\SurveySession;
 use Cere\Survey\Writer\WriterInterface;
-use Cere\Survey;
 use Cere\Survey\Writer\Fill;
-use Cere\Survey\Field\FieldRepository;
 
 class SurveyController extends \BaseController {
     /**
@@ -17,8 +14,6 @@ class SurveyController extends \BaseController {
      */
     function __construct(WriterInterface $writer)
     {
-        $this->user_id = $writer->getId();
-        $this->type = $writer->getType();
         $this->writer = $writer;
     }
 
@@ -29,6 +24,10 @@ class SurveyController extends \BaseController {
      */
     public function page()
     {
+        if (! $this->writer->exist()) {
+            $this->writer->increment();
+        }
+
         return View::make('survey::layout-survey')->nest('context', 'survey::demo-ng');
     }
 
@@ -37,13 +36,13 @@ class SurveyController extends \BaseController {
      *
      * @return Response
      */
-    public function surveyLogin()
+    public function surveyLogin($book_id)
     {
-        SurveySession::logout();
-        $file_book = SurveyORM\Book::find($this->writer->book_id);
+        $this->writer->user()->logout();
+        $book = SurveyORM\Book::find($book_id);
         $now = Carbon\Carbon::now();
-        if ((!is_null($file_book->start_at) && $now < $file_book->start_at) || (!is_null($file_book->close_at) && $now > $file_book->close_at)) {
-            return View::make('survey::layout-survey')->nest('context', 'survey::surveydisabled-ng', ['file_book' => $file_book]);
+        if ((!is_null($book->start_at) && $now < $book->start_at) || (!is_null($book->close_at) && $now > $book->close_at)) {
+            return View::make('survey::layout-survey')->nest('context', 'survey::surveydisabled-ng', ['file_book' => $book]);
         }
         return View::make('survey::layout-survey')->nest('context', 'survey::surveylogin-ng');
     }
@@ -66,27 +65,13 @@ class SurveyController extends \BaseController {
      */
     public function login($book_id)
     {
-        SurveySession::logout();
+        $this->writer->user()->login(Input::get('id'));
 
-        $login_id = Input::get('id');
-
-        $file_book = SurveyORM\Book::find($book_id);
-
-        $table = Files::find($file_book->rowsFile_id)->sheets->first()->tables->first();
-
-        $in_rows  = FieldRepository::target($table, $file_book->file->created_by)->rowExists(['C'.$file_book->loginRow_id => $login_id]);
-
-        if (!$in_rows && !$file_book->no_population) {
+        if ($this->writer->user()->logined()) {
+            return Redirect::to('survey/'.$book_id.'/page');
+        } else {
             return Redirect::to('survey/'.$book_id.'/surveyLogin')->withErrors(['fail' => '! 登入資料不在名單內']);
         }
-
-        SurveySession::login($book_id, $login_id);
-
-        if (!$this->writer->exist()) {
-            $this->writer->increment();
-        }
-
-        return Redirect::to('survey/'.$book_id.'/page');
     }
 
     /**
@@ -116,7 +101,7 @@ class SurveyController extends \BaseController {
         if (Input::get('next') && count($missings = $this->checkPage($page, $answers)) == 0) {
             $nextPage = $page->next ? $this->checkAndJump($page->next, $answers) : NULL;
             $complete = $nextPage ? $nextPage->previous : $page;
-            $this->writer->setPage($this->user_id, $complete->id);
+            $this->writer->setPage($complete->id);
         } else {
             $nextPage = $page;
         }
@@ -133,6 +118,9 @@ class SurveyController extends \BaseController {
         $extBooks = $this->getExtBook($book_id);
         $extended = (count($extBooks) == 0) ? false : true;
         if ($extended) {
+            /**
+             * todo
+             */
             if ($this->type == 'survey') {
                 $book = SurveyORM\Book::find($book_id);
                 $rowsFile = Files::find($book->rowsFile_id)->sheets()->first()->tables()->first();
@@ -150,10 +138,10 @@ class SurveyController extends \BaseController {
                     DB::table($extBook_id)->insert(['page_id' => null, 'created_by' => $encrypt_id]);
                 }
 
-                return '/survey'.'/'.$extBook_id.'/survey/page';
+                return '/survey'.'/'.$extBook_id.'/page';
             }
             if ($this->type == 'demo') {
-                return '/surveyDemo'.'/'.$book_id.'/demo/demoLogin';
+                return '/surveyDemo'.'/'.$book_id.'/demoLogin';
             }
         }
     }
