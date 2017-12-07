@@ -67,17 +67,18 @@ class FieldRepository
 
     protected $fullCheckTable;
 
-    function __construct($field)
+    function __construct($field, $user_id)
     {
         $this->field = $field;
         $this->checkTable = $this->field->name . str_random(50);
         $this->fullDataTable = $this->field->database . '.dbo.' . $this->field->name;
         $this->fullCheckTable = self::$checkDatabase . '.dbo.' . $this->checkTable;
+        $this->user_id = $user_id;
     }
 
-    public static function target($target)
+    public static function target($target, $user_id)
     {
-        return new self($target);
+        return new self($target, $user_id);
     }
 
     public static function create()
@@ -317,7 +318,7 @@ class FieldRepository
             });
         })->whereNotNull('checked.id');
 
-        $amount = DB::delete('DELETE rows ' . $query_update->toSql() . ' and rows.created_by = ' . Auth::user()->id);
+        $amount = DB::delete('DELETE rows ' . $query_update->toSql() . ' and rows.created_by = ' . $this->user_id);
 
         return $amount;
     }
@@ -328,8 +329,8 @@ class FieldRepository
         $columns = $this->field->columns->map(function ($column) { return 'C' . $column->id; });
 
         $query_insert = DB::table($this->fullCheckTable . ' AS checked')->select(array_merge($checkeds->toArray(), [
-            DB::raw('\'' . Auth::user()->id . '\''),
-            DB::raw('\'' . Auth::user()->id . '\''),
+            DB::raw('\'' . $this->user_id . '\''),
+            DB::raw('\'' . $this->user_id . '\''),
             DB::raw('\'' . Carbon::now()->toDateTimeString() . '\''),
             DB::raw('\'' . Carbon::now()->toDateTimeString() . '\''),
         ]));
@@ -441,7 +442,7 @@ class FieldRepository
 
     public function delete_rows($query, $rows)
     {
-        $updates = ['deleted_by' => Auth::user()->id, 'deleted_at' => Carbon::now()->toDateTimeString()];
+        $updates = ['deleted_by' => $this->user_id, 'deleted_at' => Carbon::now()->toDateTimeString()];
 
         return $query->whereIn('id', $rows)->update($updates);
     }
@@ -656,8 +657,8 @@ class FieldRepository
     public function insert($values = [])
     {
         DB::table($this->getFullDataTable())->insert(array_merge([
-            'updated_by' => Auth::user()->id,
-            'created_by' => Auth::user()->id,
+            'updated_by' => $this->user_id,
+            'created_by' => $this->user_id,
             'updated_at' => Carbon::now()->toDateTimeString(),
             'created_at' => Carbon::now()->toDateTimeString(),
         ], $values));

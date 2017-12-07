@@ -74,21 +74,10 @@ class SurveyController extends \BaseController {
 
         $table = Files::find($file_book->rowsFile_id)->sheets->first()->tables->first();
 
-        $in_rows  = FieldRepository::target($table)->rowExists(['C'.$file_book->loginRow_id => $login_id]);
+        $in_rows  = FieldRepository::target($table, $file_book->file->created_by)->rowExists(['C'.$file_book->loginRow_id => $login_id]);
 
-        if (!$in_rows) {
-            if ($file_book->no_population) {
-                $user_id = Files::find($file_book->rowsFile_id)->created_by;
-                $current_time = Carbon\Carbon::now()->toDateTimeString();
-                FieldRepository::insert([
-                    'C'.$file_book->loginRow_id => $login_id,
-                    'file_id' => $file_book->rowsFile_id,
-                    'updated_by' => $user_id,
-                    'created_by' => $user_id
-                ]);
-            } else {
-                return Redirect::to('survey/'.$book_id.'/surveyLogin')->withErrors(['fail' => '! 登入資料不在名單內']);
-            }
+        if (!$in_rows && !$file_book->no_population) {
+            return Redirect::to('survey/'.$book_id.'/surveyLogin')->withErrors(['fail' => '! 登入資料不在名單內']);
         }
 
         SurveySession::login($book_id, $login_id);

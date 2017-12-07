@@ -11,7 +11,7 @@ class FieldWriter implements WriterInterface
     function __construct($book_id)
     {
         $book = \Cere\Survey\Eloquent\Book::find($book_id);
-        $this->fieldRepository = FieldRepository::target($book->file->sheets()->first()->tables()->first());
+        $this->fieldRepository = FieldRepository::target($book->file->sheets()->first()->tables()->first(), $book->file->created_by);
         $this->book_id = $book->id;
         $this->login_id = SurveySession::getHashId();
     }
