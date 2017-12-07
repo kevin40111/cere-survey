@@ -38,7 +38,7 @@ class SheetRepository
 
     public function addField()
     {
-        $fieldRepository = FieldRepository::create();
+        $fieldRepository = FieldRepository::create(Auth::user()->id);
 
         $this->sheet->tables()->save($fieldRepository->field);
 
@@ -51,7 +51,7 @@ class SheetRepository
 
     public function field()
     {
-        return FieldRepository::target($this->sheet->tables()->first());
+        return FieldRepository::target($this->sheet->tables()->first(), Auth::user()->id);
     }
 
     public function replicate($sheet)
@@ -62,7 +62,7 @@ class SheetRepository
 
             $cloneTable = $this->sheet->tables()->save($cloneTable);
 
-            $cloneTable = FieldRepository::target($cloneTable)->replicate($table);
+            $cloneTable = FieldRepository::target($cloneTable, Auth::user()->id)->replicate($table);
 
         });
     }
@@ -71,21 +71,21 @@ class SheetRepository
     {
         list($query, $power) = $this->get_rows_query($isCreater);
 
-        return FieldRepository::target($this->sheet->tables->first())->get_rows($query, $search);
+        return FieldRepository::target($this->sheet->tables->first(), Auth::user()->id)->get_rows($query, $search);
     }
 
     public function updateRow($row, $isCreater)
     {
         list($query, $power) = $this->get_rows_query($isCreater);
 
-        return FieldRepository::target($this->sheet->tables->first())->updateRow($query, $row);
+        return FieldRepository::target($this->sheet->tables->first(), Auth::user()->id)->updateRow($query, $row);
     }
 
     public function delete_rows($rows, $isCreater)
     {
         list($query, $power) = $this->get_rows_query($isCreater);
 
-        FieldRepository::target($this->sheet->tables->first())->delete_rows($query, $rows);
+        FieldRepository::target($this->sheet->tables->first(), Auth::user()->id)->delete_rows($query, $rows);
     }
 
     public function export_sample()
@@ -113,7 +113,7 @@ class SheetRepository
 
                 list($query, $power) = $this->get_rows_query();
 
-                $rows = FieldRepository::target($this->sheet->tables->first())->export_my_rows($query);
+                $rows = FieldRepository::target($this->sheet->tables->first(), Auth::user()->id)->export_my_rows($query);
 
                 $sheet->freezeFirstRow();
 
@@ -131,7 +131,7 @@ class SheetRepository
 
                 list($query, $power) = $this->get_rows_query(true);
 
-                $rows = FieldRepository::target($this->sheet->tables->first())->exportAllRows($query);
+                $rows = FieldRepository::target($this->sheet->tables->first(), Auth::user()->id)->exportAllRows($query);
 
                 $sheet->freezeFirstRow();
 
@@ -147,10 +147,10 @@ class SheetRepository
     {
         foreach($this->sheet->tables as $index => $table) {
             if ($index==0) {
-                $query = DB::table(FieldRepository::target($table)->getFullDataTable());
+                $query = DB::table(FieldRepository::target($table, Auth::user()->id)->getFullDataTable());
             } else {
                 //join not complete
-                //$rows_query->leftJoin(FieldRepository::target($table)->getFullDataTable() . ' AS t' . $index, 't' . $index . '.' . $table->primaryKey, '=', 't0.'.$table->primaryKey);
+                //$rows_query->leftJoin(FieldRepository::target($table, Auth::user()->id)->getFullDataTable() . ' AS t' . $index, 't' . $index . '.' . $table->primaryKey, '=', 't0.'.$table->primaryKey);
             }
         }
         $power = [];
@@ -168,17 +168,17 @@ class SheetRepository
     {
         $child['table']     = $this->sheet->tables->first();
         $child['columns']   = $child['table']->columns->lists('id','name');
-        $child['has_table'] = FieldRepository::target($child['table'])->has_table();
+        $child['has_table'] = FieldRepository::target($child['table'], Auth::user()->id)->has_table();
         $child['rows']      = [];
 
         $parent['table']    = Table::find($parent_table_id);
         $parent['sheet']    = $parent['table']->sheet;
         $parent['columns']  = $parent['table']->columns->lists('name','id');
-        $parent['rows']     = DB::table(FieldRepository::target($parent['table'])->getFullDataTable())->where('created_by',$this->user->id)->whereNull('deleted_at')->get();
+        $parent['rows']     = DB::table(FieldRepository::target($parent['table'], Auth::user()->id)->getFullDataTable())->where('created_by',$this->user->id)->whereNull('deleted_at')->get();
 
         if (!$child['has_table']) {
-            FieldRepository::target($child['table'])->table_build();
-            $child['has_table'] = FieldRepository::target($child['table'])->has_table();
+            FieldRepository::target($child['table'], Auth::user()->id)->table_build();
+            $child['has_table'] = FieldRepository::target($child['table'], Auth::user()->id)->has_table();
         }
 
         if ($parent['rows']) {
@@ -197,7 +197,7 @@ class SheetRepository
                 $count++;
             }
             foreach (array_chunk($child['rows'], 50) as $child_row) {
-                $rowInsert = DB::table(FieldRepository::target($child['table'])->getFullDataTable())->insert($child_row);
+                $rowInsert = DB::table(FieldRepository::target($child['table'], Auth::user()->id)->getFullDataTable())->insert($child_row);
             }
         }
         // return ['child'=>$child,'parent'=>$parent];
@@ -207,7 +207,7 @@ class SheetRepository
     {
         $table = $this->sheet->tables->first();
 
-        return $table->depends->isEmpty() ? [] : FieldRepository::target($table->depends->first())->getParentTable();
+        return $table->depends->isEmpty() ? [] : FieldRepository::target($table->depends->first(), Auth::user()->id)->getParentTable();
     }
 
     public function count($isCreater)
@@ -216,7 +216,7 @@ class SheetRepository
 
         $this->sheet->load('tables.columns')->tables->each(function ($table) use ($query) {
 
-            $table->count = FieldRepository::target($table)->count($query);
+            $table->count = FieldRepository::target($table, Auth::user()->id)->count($query);
 
         });
     }

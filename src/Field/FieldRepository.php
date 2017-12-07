@@ -81,11 +81,11 @@ class FieldRepository
         return new self($target, $user_id);
     }
 
-    public static function create()
+    public static function create($user_id)
     {
         $field = new Table(['database' => self::$database, 'name' => self::generate_table(), 'lock' => false, 'construct_at' => Carbon::now()->toDateTimeString()]);
 
-        return new self($field);
+        return new self($field, $user_id);
     }
 
     public function init()
