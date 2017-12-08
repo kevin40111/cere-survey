@@ -150,7 +150,7 @@ trait SurveyEditor
 
     public function removeQuestion()
     {
-        list ($deleted, $questions) = $this->editorRepository->removeQuestion(Input::get('question.id'));
+        list ($deleted, $questions) = $this->editorRepository->removeQuestion(Input::get('question')['id']);
 
         return ['deleted' => $deleted, 'questions' => $questions];
     }

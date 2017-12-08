@@ -630,7 +630,7 @@ class FieldRepository
     {
         $column = $this->field->columns->find($column_id);
 
-        if (Schema::hasColumn($this->getFullDataTable(), $column->name)) {
+        if (Schema::connection('rows')->hasColumn($this->field->name, $column->name)) {
             Schema::table($this->getFullDataTable(), function ($table) use ($column) {
                 $table->dropColumn($column->name);
             });

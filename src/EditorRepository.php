@@ -86,14 +86,38 @@ class EditorRepository
 
     public function removeNode($node_id)
     {
+
         $node = SurveyORM\Node::find($node_id);
+
+        $questions = $this->getQuestions($node_id);
 
         if ($node->next) {
             $previous_id = $node->previous ? $node->previous->id : NULL;
             $node->next->update(['previous_id' => $previous_id]);
         }
 
+        foreach ($questions as $question) {
+            $this->filed->remove_column($question['id']);
+        }
+
         return $node->deleteNode();
+    }
+
+    private function getQuestions($node_id)
+    {
+        $node = SurveyORM\Node::find($node_id);
+
+        switch ($node->type) {
+            case 'page':
+                return $node->getQuestions();
+            break;
+
+            default:
+                return $node->questions->reduce(function ($carry, $question) {
+                    return array_merge($carry, $question->getQuestions(), [$question->toArray()]);
+                }, []);
+            break;
+        }
     }
 
     public function removeQuestion($question_id)
