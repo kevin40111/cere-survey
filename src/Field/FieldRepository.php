@@ -177,7 +177,7 @@ class FieldRepository
             $query->text('created_by', 50);
             $query->integer('deleted_by')->nullable();
             $query->text('encrypt_id')->nullable();
-            $query->string('page_id')->nullable();
+            $query->integer('page_id')->nullable();
         });
 
         $this->field->update(['builded_at' => Carbon::now()->toDateTimeString()]);
