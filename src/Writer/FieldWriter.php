@@ -73,7 +73,7 @@ class FieldWriter implements WriterInterface
 
     public function setPage($value)
     {
-        $this->put('page_id', $value);
+        $this->fieldRepository->put(['encrypt_id' => $this->user->id], ['page_id' => $value]);
     }
 
     /**
