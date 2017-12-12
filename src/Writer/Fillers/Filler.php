@@ -122,7 +122,7 @@ abstract class Filler
     protected function fillOriginal()
 	{
         $this->node->questions->each(function ($question) {
-            $this->original[$question->id] = isset($this->answers->{$question->id}) ? $this->answers->{$question->id} : null;
+            $this->original[$question->id] = isset($this->answers->{$question->name}) ? $this->answers->{$question->name} : null;
         });
     }
 
