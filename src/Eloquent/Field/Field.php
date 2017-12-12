@@ -49,7 +49,7 @@ class Field extends Eloquent {
 
     public function skip()
     {
-        return $this->hasOne('Plat\Files\Row\Skip', 'column_id', 'id');
+        return $this->hasOne('Row\Skip', 'column_id', 'id');
     }
 
     public function getUniqueAttribute($value)
@@ -74,7 +74,7 @@ class Field extends Eloquent {
 
     public function setNameAttribute($value)
     {
-        $this->attributes['name'] = strtoupper($value);
+        $this->attributes['name'] = strtolower($value);
     }
 
     public function setUniqueAttribute($value)
