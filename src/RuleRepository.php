@@ -3,6 +3,7 @@
 namespace Cere\Survey;
 
 use Cere\Survey\Eloquent as SurveyORM;
+use Cere\Survey\Eloquent\Field\Field;
 
 class RuleRepository
 {
@@ -79,7 +80,7 @@ class RuleRepository
                     if (isset($condition['compareOperator'])) {
                         $result = $result.$condition['compareOperator'];
                     }
-                    $question = is_null($answers->{$condition['question']}) ? 'null' : $answers->{$condition['question']};
+                    $question = is_null($answers[Field::find($condition['question'])->name]) ? 'null' : $answers[Field::find($condition['question'])->name];
                     $result = $result.$question.$condition['logic'].$condition['value'];
                 }
                 $result = $result.')';

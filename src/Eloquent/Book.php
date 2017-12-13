@@ -3,6 +3,7 @@
 namespace Cere\Survey\Eloquent;
 
 use Eloquent;
+use Cere\Survey\Eloquent\Field\Field as Field;
 
 class Book extends Eloquent {
 
@@ -65,12 +66,12 @@ class Book extends Eloquent {
 
     public function optionColumns()
     {
-        return $this->morphedByMany('Row\Column', 'survey_applicable_option')->withPivot('id');
+        return $this->morphedByMany(Field::class, 'survey_applicable_option')->withPivot('id');
     }
 
     public function optionQuestions()
     {
-        return $this->morphedByMany('Cere\Survey\Eloquent\Question', 'survey_applicable_option')->withPivot('id');
+        return $this->morphedByMany(Field::class, 'survey_applicable_option')->withPivot('id');
     }
 
     public function file()

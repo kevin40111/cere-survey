@@ -6,6 +6,7 @@ use Cere\Survey\Eloquent as SurveyORM;
 use Auth;
 use Input;
 use DB;
+use Plat\Eloquent\Field\Field;
 
 class ApplicationRepository
 {
@@ -171,7 +172,7 @@ class ApplicationRepository
         $application = isset($member_id) ? $this->book->applications()->where('member_id', Input::get('member_id'))->first() : $this->book->applications()->OfMe()->first();
         if ($application) {
             $appliedOptions =  $application->appliedOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
-                return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
+                return $applicableOption->survey_applicable_option_type == Field::class ? 'applicableColumns' : 'applicableQuestions';
             });
             $edited = true;
             $options = $appliedOptions;
@@ -184,7 +185,7 @@ class ApplicationRepository
             }, $rule->expressions[0]['conditions']);
         } else {
             $applicableOption = $this->book->applicableOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
-                return $applicableOption->survey_applicable_option_type == 'Row\Column' ? 'applicableColumns' : 'applicableQuestions';
+                return $applicableOption->survey_applicable_option_type == Field::class ? 'applicableColumns' : 'applicableQuestions';
             });
             $edited = false;
             $options = $applicableOption;

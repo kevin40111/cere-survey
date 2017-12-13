@@ -1,8 +1,8 @@
 <?php
 
-namespace Cere\Survey;
+namespace Cere\Survey\Writer;
 
-interface SurveyRepositoryInterface
+interface WriterInterface
 {
     /**
      * Increment a row in the repository.
@@ -11,7 +11,7 @@ interface SurveyRepositoryInterface
      * @param  array   $default
      * @return int|bool
      */
-    public function increment($id, $default = []);
+    public function increment($default = []);
 
     /**
      * Decrement a row in the repository.
@@ -19,7 +19,7 @@ interface SurveyRepositoryInterface
      * @param  string  $id
      * @return int|bool
      */
-    public function decrement($id);
+    public function decrement();
 
     /**
      * Retrieve a value from the repository by id in the repository.
@@ -28,7 +28,7 @@ interface SurveyRepositoryInterface
      * @param  string  $key
      * @return mixed
      */
-    public function get($id, $key);
+    public function get($key);
 
     /**
      * Store an value in the repository.
@@ -38,21 +38,21 @@ interface SurveyRepositoryInterface
      * @param  string     $value
      * @return void
      */
-    public function put($id, $key, $value);
+    public function put($key, $value);
 
     /**
      * Get all values of row by id in the repository.
      *
      * @return array
      */
-    public function all($id);
+    public function all();
 
     /**
      * Determine if row exists in the repository.
      *
      * @return array
      */
-    public function exist($id);
+    public function exist();
 
     /**
      * Get user ID.

@@ -4,11 +4,12 @@ namespace Cere\Survey;
 
 use Illuminate\Support\ServiceProvider;
 use Cere\Survey\Eloquent as SurveyORM;
-use Cere\Survey\SurveyRepositoryInterface;
-use Cere\Survey\SurveyRepository;
-use Cere\Survey\DemoRepository;
-use Cere\Survey\SurveySession;
+use Cere\Survey\Writer\WriterInterface;
+use Cere\Survey\Writer\FieldWriter;
+use Cere\Survey\Writer\SessionWriter;
+use Cere\Survey\Auth\FieldUser;
 use Auth;
+use View;
 
 class SurveyServiceProvider extends ServiceProvider {
 
@@ -28,6 +29,8 @@ class SurveyServiceProvider extends ServiceProvider {
 	{
 		$this->package('cere/survey');
 
+		View::addNamespace('survey', __DIR__.'/../resources/views');
+
 		include(__DIR__ . '/routes.php');
 
 		include(__DIR__ . '/filters.php');
@@ -40,28 +43,28 @@ class SurveyServiceProvider extends ServiceProvider {
 	 */
     public function register()
     {
-        $this->app->bind(SurveyRepositoryInterface::class, function()
+        $this->app->bind(WriterInterface::class, function()
         {
-            $type = $this->app->make('router')->input('type');
+            $prefix = $this->app->make('router')->getCurrentRoute()->getPrefix();
             $book_id = $this->app->make('router')->input('book_id');
 
-            if ($type == 'demo') {
-                $user_id = Auth::user()->id;
+            if ($prefix == 'surveyDemo') {
 
-                $repository = new DemoRepository($book_id);
+                $repository = new SessionWriter($book_id);
                 if (!$repository->exist('answers')) {
 
                     $questions = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
                         return array_merge($carry, array_fetch($page->getQuestions(), 'id'));
                     }, []);
 
-                    $repository->increment($user_id, array_fill_keys($questions, NULL));
+                    $repository->increment(array_fill_keys($questions, NULL));
                 }
             }
 
-            if ($type == 'survey') {
-                $user_id = SurveySession::getHashId();
-                $repository = new SurveyRepository($book_id);
+            if ($prefix == 'survey') {
+                $book = SurveyORM\Book::find($book_id);
+                $user = new FieldUser($book);
+                $repository = new FieldWriter($book_id, $user);
             }
 
             return $repository;

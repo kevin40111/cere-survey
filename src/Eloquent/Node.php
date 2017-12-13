@@ -3,6 +3,7 @@
 namespace Cere\Survey\Eloquent;
 
 use Eloquent;
+use Cere\Survey\Eloquent\Field\Field;
 
 class Node extends Eloquent {
 
@@ -35,7 +36,7 @@ class Node extends Eloquent {
 
     public function questions()
     {
-        return $this->hasMany('Cere\Survey\Eloquent\Question', 'node_id', 'id');
+        return $this->hasMany(Field::class, 'node_id', 'id');
     }
 
     public function answers()
@@ -112,9 +113,7 @@ class Node extends Eloquent {
 
         static::created(function($node) {
 
-            if ($node->type != 'explain' && $node->type != 'page') {
-                $node->questions()->save(new Question([]));
-            }
+
 
         });
 

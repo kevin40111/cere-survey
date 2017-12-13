@@ -1,9 +1,7 @@
 <?php
 
 use Cere\Survey\Eloquent as SurveyORM;
-use Cere\Survey\SurveySession;
-use Cere\Survey\SurveyRepositoryInterface;
-use Cere\Survey;
+use Cere\Survey\Writer\WriterInterface;
 use Cere\Survey\Writer\Fill;
 
 class SurveyController extends \BaseController {
@@ -14,11 +12,9 @@ class SurveyController extends \BaseController {
      * @param  string  $type
      * @return Response
      */
-    function __construct(SurveyRepositoryInterface $repository)
+    function __construct(WriterInterface $writer)
     {
-        $this->user_id = $repository->getId();
-        $this->type = $repository->getType();
-        $this->repository = $repository;
+        $this->writer = $writer;
     }
 
     /**
@@ -28,6 +24,10 @@ class SurveyController extends \BaseController {
      */
     public function page()
     {
+        if (! $this->writer->exist()) {
+            $this->writer->increment();
+        }
+
         return View::make('survey::layout-survey')->nest('context', 'survey::demo-ng');
     }
 
@@ -36,13 +36,13 @@ class SurveyController extends \BaseController {
      *
      * @return Response
      */
-    public function surveyLogin()
+    public function surveyLogin($book_id)
     {
-        SurveySession::logout();
-        $file_book = SurveyORM\Book::find($this->repository->book_id);
+        $this->writer->user()->logout();
+        $book = SurveyORM\Book::find($book_id);
         $now = Carbon\Carbon::now();
-        if ((!is_null($file_book->start_at) && $now < $file_book->start_at) || (!is_null($file_book->close_at) && $now > $file_book->close_at)) {
-            return View::make('survey::layout-survey')->nest('context', 'survey::surveydisabled-ng', ['file_book' => $file_book]);
+        if ((!is_null($book->start_at) && $now < $book->start_at) || (!is_null($book->close_at) && $now > $book->close_at)) {
+            return View::make('survey::layout-survey')->nest('context', 'survey::surveydisabled-ng', ['file_book' => $book]);
         }
         return View::make('survey::layout-survey')->nest('context', 'survey::surveylogin-ng');
     }
@@ -63,35 +63,15 @@ class SurveyController extends \BaseController {
      * @param  int  $book_id
      * @return Response
      */
-    public function checkInRows($book_id)
+    public function login($book_id)
     {
-        SurveySession::logout();
+        $this->writer->user()->login(Input::get('id'));
 
-        $login_id = Input::get('id');
-
-        $file_book = SurveyORM\Book::find($book_id);
-
-        $table = Files::find($file_book->rowsFile_id)->sheets->first()->tables->first();
-
-        $in_rows  = DB::table('rows.dbo.'.$table->name)->where('C'.$file_book->loginRow_id, $login_id)->exists();
-
-        if (!$in_rows) {
-            if ($file_book->no_population) {
-                $user_id = Files::find($file_book->rowsFile_id)->created_by;
-                $current_time = Carbon\Carbon::now()->toDateTimeString();
-                $query = DB::table($table->database . '.dbo.' . $table->name);
-                $query->insert(['C'.$file_book->loginRow_id => $login_id, 'file_id' => $file_book->rowsFile_id, 'updated_at' => $current_time, 'created_at' => $current_time, 'updated_by' => $user_id, 'created_by' => $user_id]);
-            } else {
-                return Redirect::to('survey/'.$book_id.'/survey/surveyLogin')->withErrors(['fail' => '! 登入資料不在名單內']);
-            }
+        if ($this->writer->user()->logined()) {
+            return Redirect::to('survey/'.$book_id.'/page');
+        } else {
+            return Redirect::to('survey/'.$book_id.'/surveyLogin')->withErrors(['fail' => '! 登入資料不在名單內']);
         }
-
-        $encrypt_id = SurveySession::login($book_id, $login_id);
-        if (!$this->repository->exist($encrypt_id)) {
-            $this->repository->increment($encrypt_id, ['page_id' => null]);
-        }
-
-        return Redirect::to('survey/'.$book_id.'/survey/page');
     }
 
     /**
@@ -114,14 +94,14 @@ class SurveyController extends \BaseController {
     public function getNextNode($book_id)
     {
         $missings = [];
-        $answers = $this->repository->all($this->user_id);
+        $answers = $this->writer->all();
         $firstPage = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
         $page = $answers->page_id ? SurveyORM\Node::find($answers->page_id)->next : $firstPage;
 
         if (Input::get('next') && count($missings = $this->checkPage($page, $answers)) == 0) {
             $nextPage = $page->next ? $this->checkAndJump($page->next, $answers) : NULL;
             $complete = $nextPage ? $nextPage->previous : $page;
-            $this->repository->put($this->user_id, 'page_id', $complete->id);
+            $this->writer->setPage($complete->id);
         } else {
             $nextPage = $page;
         }
@@ -138,6 +118,9 @@ class SurveyController extends \BaseController {
         $extBooks = $this->getExtBook($book_id);
         $extended = (count($extBooks) == 0) ? false : true;
         if ($extended) {
+            /**
+             * todo
+             */
             if ($this->type == 'survey') {
                 $book = SurveyORM\Book::find($book_id);
                 $rowsFile = Files::find($book->rowsFile_id)->sheets()->first()->tables()->first();
@@ -155,10 +138,10 @@ class SurveyController extends \BaseController {
                     DB::table($extBook_id)->insert(['page_id' => null, 'created_by' => $encrypt_id]);
                 }
 
-                return '/survey'.'/'.$extBook_id.'/survey/page';
+                return '/survey'.'/'.$extBook_id.'/page';
             }
             if ($this->type == 'demo') {
-                return '/surveyDemo'.'/'.$book_id.'/demo/demoLogin';
+                return '/surveyDemo'.'/'.$book_id.'/demoLogin';
             }
         }
     }
@@ -168,7 +151,7 @@ class SurveyController extends \BaseController {
         $questions = $page->getQuestions();
 
         $missings = array_filter($questions, function ($question) use ($answers) {
-            return ! isset($answers->{$question['id']});
+            return ! isset($answers->{$question['name']});
         });
 
         return array_values($missings);
@@ -180,7 +163,7 @@ class SurveyController extends \BaseController {
 
         $skips = 0;
         foreach ($questions as $question) {
-            if (isset($answers->{$question['id']}) && $answers->{$question['id']} == -8) {
+            if (isset($answers->{$question['name']}) && $answers->{$question['name']} == -8) {
                 $skips++;
             }
         }
@@ -209,8 +192,8 @@ class SurveyController extends \BaseController {
      */
     public function getChildren($book_id)
     {
-        $question = SurveyORM\Question::find(Input::get('question.id'));
-        $answers = $this->repository->all(SurveySession::getHashId());
+        $question = SurveyORM\Field\Field::find(Input::get('question.id'));
+        $answers = $this->writer->all();
         $filler = Fill::answers($answers)->node($question->node);
 
         if (Input::has('value')) {
@@ -220,11 +203,11 @@ class SurveyController extends \BaseController {
             }
 
             foreach ($filler->getDirty() as $id => $value) {
-                $this->repository->put(SurveySession::getHashId(), $id, $value);
+                $this->writer->put($id, $value);
             }
         }
 
-        return ['nodes' => $filler->childrens($question), 'answers' => $this->repository->all(SurveySession::getHashId()), 'message' => $filler->messages, 'logs' => DB::getQueryLog()];
+        return ['nodes' => $filler->childrens($question), 'answers' => $this->writer->all(), 'message' => $filler->messages, 'logs' => DB::getQueryLog()];
     }
 
     /**
@@ -235,7 +218,7 @@ class SurveyController extends \BaseController {
      */
     public function cleanAnswers($book_id)
     {
-        $this->repository->decrement($this->user_id);
+        $this->writer->decrement();
 
         return Redirect::to('surveyDemo/'.$book_id.'/demo/page');
     }

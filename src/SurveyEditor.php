@@ -8,20 +8,14 @@ use Input;
 use View;
 use Cere\Survey;
 use Cere\Survey\Eloquent as SurveyORM;
+use Cere\Survey\Eloquent\Field\Field;
+
 
 trait SurveyEditor
 {
-    function __construct()
+    function __construct($field)
     {
-        $this->editorRepository = new Survey\EditorRepository();
-    }
-
-    /*
-     * create
-     */
-    public function createBook($title)
-    {
-        return ['title' => $title, 'lock' => false, 'no_population' => false];
+        $this->editorRepository = new Survey\EditorRepository($field);
     }
 
     public function open()
@@ -83,7 +77,7 @@ trait SurveyEditor
 
     public function getAnswers()
     {
-        $answers = SurveyORM\Question::find(Input::get('question_id'))->node->answers;
+        $answers = Field::find(Input::get('question_id'))->node->answers;
 
         return ['answers' => $answers];
     }
@@ -97,27 +91,6 @@ trait SurveyEditor
         $nodes = $this->editorRepository->getNodes($root);
 
         return ['nodes' => $nodes, 'paths' => $root->getPaths()];
-    }
-
-    public function createTable()
-    {
-        DB::table('INFORMATION_SCHEMA.COLUMNS')->where('TABLE_NAME', $this->book->id)->exists() && Schema::drop($this->book->id);
-
-        Schema::create($this->book->id, function ($table) {
-            $table->increments('id');
-            $questions = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function($carry, $page) {
-                return array_merge($carry, $page->getQuestions());
-            }, []);
-
-            foreach ($questions as $question) {
-                $table->text($question['id'])->nullable();
-            }
-
-            $table->integer('page_id')->nullable();
-            $table->string('created_by',255);
-        });
-
-        return ['createTable' => true];
     }
 
     public function createNode()
@@ -177,7 +150,7 @@ trait SurveyEditor
 
     public function removeQuestion()
     {
-        list ($deleted, $questions) = $this->editorRepository->removeQuestion(Input::get('question.id'));
+        list ($deleted, $questions) = $this->editorRepository->removeQuestion(Input::get('question')['id']);
 
         return ['deleted' => $deleted, 'questions' => $questions];
     }
@@ -347,7 +320,6 @@ trait SurveyEditor
 
     public function lockBook()
     {
-        $this->createTable();
         $this->book->update(['lock' => true]);
 
         return ['lock' => true];

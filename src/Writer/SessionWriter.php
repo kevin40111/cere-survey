@@ -1,15 +1,16 @@
 <?php
 
-namespace Cere\Survey;
+namespace Cere\Survey\Writer;
 
-use DB;
-use Cere\Survey\SurveySession;
+use Session;
+use Auth;
 
-class SurveyRepository implements SurveyRepositoryInterface
+class SessionWriter implements WriterInterface
 {
     function __construct($book_id)
     {
         $this->book_id = $book_id;
+        $this->login_id = $this->getId();
     }
 
     public static function create($book_id)
@@ -24,13 +25,14 @@ class SurveyRepository implements SurveyRepositoryInterface
      * @param  array   $default
      * @return int|bool
      */
-    public function increment($id, $default = [])
+    public function increment($attributes = [])
     {
-        $attributes = array_add($default, 'created_by', $id);
+        $attributes = array_add($attributes, 'created_by', $this->login_id);
+        $attributes = array_add($attributes, 'page_id', NULL);
 
-        DB::table($this->book_id)->insert($attributes);
+        Session::put('answer.'.$this->book_id, (object)$attributes);
 
-        return $attributes;
+        return $this->all($this->login_id);
     }
 
     /**
@@ -39,9 +41,11 @@ class SurveyRepository implements SurveyRepositoryInterface
      * @param  string  $id
      * @return int|bool
      */
-    public function decrement($id)
+    public function decrement()
     {
-        DB::table($this->book_id)->where('created_by', $id)->delete();
+        Session::forget('answer');
+
+        return $this->all($this->login_id);
     }
 
     /**
@@ -51,11 +55,11 @@ class SurveyRepository implements SurveyRepositoryInterface
      * @param  string  $key
      * @return mixed
      */
-    public function get($id, $key)
+    public function get($key)
     {
-        $answer = DB::table($this->book_id)->where('created_by', $id)->select($key.' as value')->first();
+        $answers = $this->all($this->login_id);
 
-        return $answer->value;
+        return isset($answers->{$key}) ? $answers->{$key} : NULL;
     }
 
     /**
@@ -66,9 +70,13 @@ class SurveyRepository implements SurveyRepositoryInterface
      * @param  string     $value
      * @return void
      */
-    public function put($id, $key, $value)
+    public function put($key, $value)
     {
-        $answers = DB::table($this->book_id)->where('created_by', $id)->update(array($key => $value));
+        $answers = $this->all($this->login_id);
+
+        $answers->{$key} = $value;
+
+        Session::put('answer.'.$this->book_id, $answers);
     }
 
     /**
@@ -76,9 +84,9 @@ class SurveyRepository implements SurveyRepositoryInterface
      *
      * @return array
      */
-    public function all($id)
+    public function all()
     {
-        $answers = DB::table($this->book_id)->where('created_by', $id)->first();
+        $answers = Session::get('answer.'.$this->book_id);
 
         return $answers;
     }
@@ -88,10 +96,9 @@ class SurveyRepository implements SurveyRepositoryInterface
      *
      * @return array
      */
-    public function exist($id)
+    public function exist()
     {
-        $existed = DB::table($this->book_id)->where('created_by', $id)->exists();
-        return $existed;
+        return Session::has('answer.'.$this->book_id);
     }
 
     /**
@@ -101,7 +108,7 @@ class SurveyRepository implements SurveyRepositoryInterface
      */
     public function getId()
     {
-        $user_id = SurveySession::getHashId();
+        $user_id = Auth::user()->id;
 
         return $user_id;
     }
@@ -114,6 +121,6 @@ class SurveyRepository implements SurveyRepositoryInterface
     public function getType()
     {
 
-        return 'survey';
+        return 'demo';
     }
 }

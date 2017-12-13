@@ -3,9 +3,21 @@
 namespace Cere\Survey;
 
 use Cere\Survey\Eloquent as SurveyORM;
+use Cere\Survey\Eloquent\Field\Field as Question;
 
 class EditorRepository
 {
+    function __construct($filed)
+    {
+        $this->filed = $filed;
+    }
+
+    public function create()
+    {
+        $this->filed->update_column(null, ['name' => 'page_id', 'rules' => 'gender']);
+        $this->filed->update_column(null, ['name' => 'encrypt_id', 'rules' => 'gender']);
+    }
+
     public function getNodes($root)
     {
         if ($root->childrenNodes->isEmpty()) {
@@ -37,14 +49,21 @@ class EditorRepository
 
     public function createNode($root, array $node, $previous_id)
     {
-        $node = $root->childrenNodes()->save(new SurveyORM\Node($node))->after($previous_id)->load(['questions', 'answers']);
+        $node = $root->childrenNodes()->save(new SurveyORM\Node($node))->after($previous_id);
 
-        return $node;
+        if ($node->type != 'explain' && $node->type != 'page') {
+
+            $this->createQuestion($node->id, null);
+        }
+
+        return $node->load(['questions', 'answers']);
     }
 
     public function createQuestion($node_id, $previous_id)
     {
-        $question = SurveyORM\Node::find($node_id)->questions()->save(new SurveyORM\Question([]))->after($previous_id);
+        $column = $this->filed->update_column(null, ['rules' => 'gender']);
+
+        $question = SurveyORM\Node::find($node_id)->questions()->save($column)->after($previous_id);
 
         return $question;
     }
@@ -67,19 +86,43 @@ class EditorRepository
 
     public function removeNode($node_id)
     {
+
         $node = SurveyORM\Node::find($node_id);
+
+        $questions = $this->getQuestions($node_id);
 
         if ($node->next) {
             $previous_id = $node->previous ? $node->previous->id : NULL;
             $node->next->update(['previous_id' => $previous_id]);
         }
 
+        foreach ($questions as $question) {
+            $this->filed->remove_column($question['id']);
+        }
+
         return $node->deleteNode();
+    }
+
+    private function getQuestions($node_id)
+    {
+        $node = SurveyORM\Node::find($node_id);
+
+        switch ($node->type) {
+            case 'page':
+                return $node->getQuestions();
+            break;
+
+            default:
+                return $node->questions->reduce(function ($carry, $question) {
+                    return array_merge($carry, $question->getQuestions(), [$question->toArray()]);
+                }, []);
+            break;
+        }
     }
 
     public function removeQuestion($question_id)
     {
-        $question = SurveyORM\Question::find($question_id);
+        $question = Question::find($question_id);
 
         $node = $question->node;
 
@@ -91,6 +134,8 @@ class EditorRepository
         $question->childrenNodes->each(function ($subNode) {
             $subNode->deleteNode();
         });
+
+        $this->filed->remove_column($question_id);
 
         return [$question->delete(), $node->questions];
     }
