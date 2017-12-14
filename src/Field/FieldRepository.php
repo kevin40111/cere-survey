@@ -170,6 +170,7 @@ class FieldRepository
 
         $this->bulid($this->fullDataTable, function ($query) {
             $this->appendColumns($query);
+            $query->integer('file_id')->nullable();
             $query->dateTime('updated_at');
             $query->dateTime('created_at');
             $query->dateTime('deleted_at')->nullable();
@@ -329,6 +330,7 @@ class FieldRepository
         $columns = $this->field->columns->map(function ($column) { return 'C' . $column->id; });
 
         $query_insert = DB::table($this->fullCheckTable . ' AS checked')->select(array_merge($checkeds->toArray(), [
+            DB::raw('0'),
             DB::raw('\'' . $this->user_id . '\''),
             DB::raw('\'' . $this->user_id . '\''),
             DB::raw('\'' . Carbon::now()->toDateTimeString() . '\''),
@@ -338,7 +340,7 @@ class FieldRepository
         $amount = $query_insert->count();
 
         $success = DB::insert('INSERT INTO ' .
-            $this->fullDataTable . ' (' . implode(',', $columns->toArray()) . ', updated_by, created_by, updated_at, created_at) ' .
+            $this->fullDataTable . ' (' . implode(',', $columns->toArray()) . ', file_id, updated_by, created_by, updated_at, created_at) ' .
             $query_insert->toSql()
         );
 
