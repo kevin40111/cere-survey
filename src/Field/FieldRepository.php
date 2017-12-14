@@ -647,9 +647,11 @@ class FieldRepository
 
         $column->update(['name' => $name]);
 
-        Schema::table($this->getFullDataTable(), function ($table) use ($column) {
-            $table->string($column->name)->nullable();
-        });
+        if (!Schema::connection('rows')->hasColumn($this->field->name, $column->name)) {
+            Schema::table($this->getFullDataTable(), function ($table) use ($column) {
+                $table->string($column->name)->nullable();
+            });
+        }
 
         return $column;
     }

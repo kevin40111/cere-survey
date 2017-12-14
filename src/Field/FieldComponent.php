@@ -10,6 +10,7 @@ use Response;
 use Input;
 use RequestFile;
 use Row\Column;
+use Plat\Files\CommFile;
 use Illuminate\Support\MessageBag;
 use Cere\Survey\Field\SheetRepository;
 use Cere\Survey\Field\FieldRepository;
@@ -188,7 +189,7 @@ class FieldComponent extends CommFile
 
     public function remove_column()
     {
-        $deleted = FieldRepository::target($this->file->sheets->find(Input::get('sheet_id'))->tables->find(Input::get('table_id')))->remove_column(Input::get('column.id'));
+        $deleted = FieldRepository::target($this->file->sheets->find(Input::get('sheet_id'))->tables->find(Input::get('table_id')), $this->user->id)->remove_column(Input::get('column.id'));
 
         return ['deleted' => $deleted];
     }
@@ -197,7 +198,7 @@ class FieldComponent extends CommFile
     {
         $values = Input::only(['column.name', 'column.title', 'column.rules', 'column.unique', 'column.encrypt', 'column.isnull', 'column.readonly'])['column'];
 
-        $column = FieldRepository::target($this->file->sheets->find(Input::get('sheet_id'))->tables->find(Input::get('table_id')))->update_column(Input::get('column.id'), $values);
+        $column = FieldRepository::target($this->file->sheets->find(Input::get('sheet_id'))->tables->find(Input::get('table_id')), $this->user->id)->update_column(Input::get('column.id'), $values);
 
         return ['column' => $column];
     }
@@ -240,9 +241,9 @@ class FieldComponent extends CommFile
 
         $rows = \Excel::selectSheetsByIndex(0)->load(storage_path() . '/file_upload/' . $file_upload->file->file, function ($reader) {
 
-        })->get(FieldRepository::target($table)->columns())->toArray();
+        })->get(FieldRepository::target($table, $this->user->id)->columns())->toArray();
 
-        list($messages, $amounts) = FieldRepository::target($table)->import($rows, $this->user->id);
+        list($messages, $amounts) = FieldRepository::target($table, $this->user->id)->import($rows, $this->user->id);
 
         $messages_error = array_values(array_filter($messages, function ($message) {
             return !$message->pass;
