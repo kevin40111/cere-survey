@@ -357,8 +357,6 @@ class FieldRepository
 
             if (!$column->encrypt && (!$column->isnull || !empty($value)))
             {
-                $column->menu = $column->answers->lists('value');
-
                 $column_errors = $this->check_column($column, $value);
 
                 !empty($column_errors) && $errors[$column->id] = $column_errors;
