@@ -217,7 +217,6 @@ angular.module('ngSurvey.directives', [])
         `,
         controller: function($scope) {
 
-            $scope.answers = surveyFactory.answers;
             //$scope.node.saving = true;
             //$scope.node = {saving: true};
 

@@ -685,7 +685,20 @@ class FieldRepository
 
     public function getRow($attributes)
     {
-        return DB::table($this->getFullDataTable())->where($attributes)->first();
+        $map = $this->field->columns->lists('id');
+
+        $values = DB::table($this->getFullDataTable())->where($attributes)->first();
+
+        foreach ($values as $key => $value) {
+            $id = filter_var($key, FILTER_SANITIZE_NUMBER_INT);
+            if (in_array($id, $map)) {
+                $data[$id] = $value;
+            } else {
+                $data[$key] = $value;
+            }
+        }
+
+        return $data;
     }
 
     public function put($attributes, array $values)

@@ -96,7 +96,7 @@ class SurveyController extends \BaseController {
         $missings = [];
         $answers = $this->writer->all();
         $firstPage = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
-        $page = $answers->page_id ? SurveyORM\Node::find($answers->page_id)->next : $firstPage;
+        $page = $answers['page_id'] ? SurveyORM\Node::find($answers['page_id'])->next : $firstPage;
 
         if (Input::get('next') && count($missings = $this->checkPage($page, $answers)) == 0) {
             $nextPage = $page->next ? $this->checkAndJump($page->next, $answers) : NULL;
@@ -151,7 +151,7 @@ class SurveyController extends \BaseController {
         $questions = $page->getQuestions();
 
         $missings = array_filter($questions, function ($question) use ($answers) {
-            return ! isset($answers->{$question['name']});
+            return ! isset($answers->{$question['id']});
         });
 
         return array_values($missings);
@@ -163,7 +163,7 @@ class SurveyController extends \BaseController {
 
         $skips = 0;
         foreach ($questions as $question) {
-            if (isset($answers->{$question['name']}) && $answers->{$question['name']} == -8) {
+            if (isset($answers->{$question['id']}) && $answers->{$question['id']} == -8) {
                 $skips++;
             }
         }
