@@ -632,9 +632,9 @@ class FieldRepository
     {
         $column = $this->field->columns->find($column_id);
 
-        if (Schema::connection('rows')->hasColumn($this->field->name, $column->name)) {
+        if (Schema::connection('rows')->hasColumn($this->field->name, 'C' . $column->id)) {
             Schema::table($this->getFullDataTable(), function ($table) use ($column) {
-                $table->dropColumn($column->name);
+                $table->dropColumn('C' . $column->id);
             });
         }
 
@@ -649,9 +649,9 @@ class FieldRepository
 
         $column->update(['name' => $name]);
 
-        if (!Schema::connection('rows')->hasColumn($this->field->name, $column->name)) {
+        if (!Schema::connection('rows')->hasColumn($this->field->name, 'C' . $column->id)) {
             Schema::table($this->getFullDataTable(), function ($table) use ($column) {
-                $table->string($column->name)->nullable();
+                $table->string('C'.$column->id)->nullable();
             });
         }
 
