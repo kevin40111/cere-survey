@@ -10,6 +10,7 @@ use Cere\Survey\Writer\SessionWriter;
 use Cere\Survey\Auth\FieldUser;
 use Auth;
 use View;
+use Config;
 
 class SurveyServiceProvider extends ServiceProvider {
 
@@ -27,13 +28,18 @@ class SurveyServiceProvider extends ServiceProvider {
 	 */
 	public function boot()
 	{
-		$this->package('cere/survey');
+        $this->package('cere/survey');
 
-		View::addNamespace('survey', __DIR__.'/../resources/views');
+        View::addNamespace('survey', __DIR__.'/../resources/views');
+        Config::package('cere/survey', __DIR__ . '/../config');
 
 		include(__DIR__ . '/routes.php');
 
-		include(__DIR__ . '/filters.php');
+        include(__DIR__ . '/filters.php');
+
+        $this->app['config']['database.connections'] = array_merge(
+			$this->app['config']['database.connections'], Config::get('survey::database.connections')
+		);
 	}
 
 	/**

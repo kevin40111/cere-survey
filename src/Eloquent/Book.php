@@ -9,6 +9,8 @@ class Book extends Eloquent {
 
     use \Cere\Survey\Tree;
 
+    protected $connection = 'survey';
+
     protected $table = 'survey_book';
 
     public $timestamps = false;
