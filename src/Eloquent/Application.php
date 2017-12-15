@@ -9,6 +9,8 @@ class Application extends Eloquent {
 
     use \SoftDeletingTrait;
 
+    protected $connection = 'survey';
+
     protected $table = 'survey_application';
 
     public $timestamps = true;

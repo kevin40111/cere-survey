@@ -44,7 +44,7 @@ class Field extends Eloquent {
 
     public function answers()
     {
-        return $this->hasMany('SurveyORM\Answer', 'column_id', 'id');
+        return $this->hasMany(SurveyORM\Answer::class, 'column_id', 'id');
     }
 
     public function skip()

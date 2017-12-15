@@ -6,6 +6,8 @@ use Eloquent;
 
 class Rule extends Eloquent {
 
+    protected $connection = 'survey';
+
     protected $table = 'survey_rules';
 
     public $timestamps = true;

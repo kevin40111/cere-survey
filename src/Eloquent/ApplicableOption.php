@@ -6,6 +6,8 @@ use Eloquent;
 
 class ApplicableOption extends Eloquent {
 
+    protected $connection = 'survey';
+
     protected $table = 'survey_applicable_options';
 
     protected $fillable = array('survey_applicable_option_id', 'survey_applicable_option_type');

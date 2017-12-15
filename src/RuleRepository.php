@@ -80,7 +80,7 @@ class RuleRepository
                     if (isset($condition['compareOperator'])) {
                         $result = $result.$condition['compareOperator'];
                     }
-                    $question = is_null($answers[Field::find($condition['question'])->name]) ? 'null' : $answers[Field::find($condition['question'])->name];
+                    $question = is_null($answers[$condition['question']]) ? 'null' : $answers[$condition['question']];
                     $result = $result.$question.$condition['logic'].$condition['value'];
                 }
                 $result = $result.')';

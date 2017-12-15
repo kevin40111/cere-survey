@@ -9,6 +9,8 @@ class Node extends Eloquent {
 
     use \Cere\Survey\Tree;
 
+    protected $connection = 'survey';
+
     protected $table = 'survey_nodes';
 
     public $timestamps = false;

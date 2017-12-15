@@ -3,7 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateTableFileBookLogin extends Migration {
+class CreateSurveyFields extends Migration {
 
     /**
      * Run the migrations.
@@ -12,11 +12,11 @@ class CreateTableFileBookLogin extends Migration {
      */
     public function up()
     {
-        Schema::create('file_book_login', function (Blueprint $table) {
+        Schema::create('survey_fields', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('book_id');
-            $table->string('login_id', 50);
-            $table->string('encrypt_id');
+            $table->integer('node_id');
+            $table->string('title', 500);
+            $table->integer('previous_id')->nullable();
         });
     }
 
@@ -27,7 +27,7 @@ class CreateTableFileBookLogin extends Migration {
      */
     public function down()
     {
-        Schema::drop('file_book_login');
+        Schema::drop('survey_fields');
     }
 
 }

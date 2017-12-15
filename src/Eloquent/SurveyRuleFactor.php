@@ -7,6 +7,8 @@ use Cere\Survey\Eloquent\Field\Field;
 
 class SurveyRuleFactor extends Eloquent
 {
+    protected $connection = 'survey';
+
     protected $table = 'survey_rule_factor';
 
     public $timestamps = false;

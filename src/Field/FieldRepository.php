@@ -170,6 +170,7 @@ class FieldRepository
 
         $this->bulid($this->fullDataTable, function ($query) {
             $this->appendColumns($query);
+            $query->integer('file_id')->nullable();
             $query->dateTime('updated_at');
             $query->dateTime('created_at');
             $query->dateTime('deleted_at')->nullable();
@@ -329,6 +330,7 @@ class FieldRepository
         $columns = $this->field->columns->map(function ($column) { return 'C' . $column->id; });
 
         $query_insert = DB::table($this->fullCheckTable . ' AS checked')->select(array_merge($checkeds->toArray(), [
+            DB::raw('0'),
             DB::raw('\'' . $this->user_id . '\''),
             DB::raw('\'' . $this->user_id . '\''),
             DB::raw('\'' . Carbon::now()->toDateTimeString() . '\''),
@@ -338,7 +340,7 @@ class FieldRepository
         $amount = $query_insert->count();
 
         $success = DB::insert('INSERT INTO ' .
-            $this->fullDataTable . ' (' . implode(',', $columns->toArray()) . ', updated_by, created_by, updated_at, created_at) ' .
+            $this->fullDataTable . ' (' . implode(',', $columns->toArray()) . ', file_id, updated_by, created_by, updated_at, created_at) ' .
             $query_insert->toSql()
         );
 
@@ -355,8 +357,6 @@ class FieldRepository
 
             if (!$column->encrypt && (!$column->isnull || !empty($value)))
             {
-                $column->menu = $column->answers->lists('value');
-
                 $column_errors = $this->check_column($column, $value);
 
                 !empty($column_errors) && $errors[$column->id] = $column_errors;
@@ -630,9 +630,9 @@ class FieldRepository
     {
         $column = $this->field->columns->find($column_id);
 
-        if (Schema::connection('rows')->hasColumn($this->field->name, $column->name)) {
+        if (Schema::connection('rows')->hasColumn($this->field->name, 'C' . $column->id)) {
             Schema::table($this->getFullDataTable(), function ($table) use ($column) {
-                $table->dropColumn($column->name);
+                $table->dropColumn('C' . $column->id);
             });
         }
 
@@ -647,9 +647,11 @@ class FieldRepository
 
         $column->update(['name' => $name]);
 
-        Schema::table($this->getFullDataTable(), function ($table) use ($column) {
-            $table->string($column->name)->nullable();
-        });
+        if (!Schema::connection('rows')->hasColumn($this->field->name, 'C' . $column->id)) {
+            Schema::table($this->getFullDataTable(), function ($table) use ($column) {
+                $table->string('C'.$column->id)->nullable();
+            });
+        }
 
         return $column;
     }
@@ -681,7 +683,20 @@ class FieldRepository
 
     public function getRow($attributes)
     {
-        return DB::table($this->getFullDataTable())->where($attributes)->first();
+        $map = $this->field->columns->lists('id');
+
+        $values = DB::table($this->getFullDataTable())->where($attributes)->first();
+
+        foreach ($values as $key => $value) {
+            $id = filter_var($key, FILTER_SANITIZE_NUMBER_INT);
+            if (in_array($id, $map)) {
+                $data[$id] = $value;
+            } else {
+                $data[$key] = $value;
+            }
+        }
+
+        return $data;
     }
 
     public function put($attributes, array $values)

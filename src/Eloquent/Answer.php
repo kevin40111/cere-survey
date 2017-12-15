@@ -8,6 +8,8 @@ class Answer extends Eloquent {
 
     use \Cere\Survey\Tree;
 
+    protected $connection = 'survey';
+
     protected $table = 'survey_answers';
 
     public $timestamps = false;
