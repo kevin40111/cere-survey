@@ -183,7 +183,7 @@ class SurveyController extends \BaseController {
     {
         $nodes = SurveyORM\Node::find(Input::get('page.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.rule', 'answers.rule', 'rule']);
 
-        $skips = Rule::answers($this->repository->all(SurveySession::getHashId()))->skips($nodes);
+        $skips = Rule::answers($this->writer->all())->skips($nodes);
 
         return ['nodes' => $nodes, 'skips' => $skips];
     }
