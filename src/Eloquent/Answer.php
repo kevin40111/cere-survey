@@ -47,7 +47,7 @@ class Answer extends Eloquent {
 
     public function rule()
     {
-        return $this->morphOne('Cere\Survey\Eloquent\Rule', 'effect');
+        return $this->morphOne(Rule::class, 'effect');
     }
 
     public function choose()
