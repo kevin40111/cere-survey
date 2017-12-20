@@ -110,7 +110,7 @@ class ApplicationRepository
         })->map(function($file) {
             return $file->book->no_pop_id;
         })->toArray();
-        return $this->book->file->select('id', 'title')->where('created_by', '=', Auth::user()->id)->where('type','=','5')->whereNotIn('id', $no_population)->get();
+        return $this->book->file->select('id', 'title')->where('created_by', '=', Auth::user()->id)->where('type','=','30')->whereNotIn('id', $no_population)->get();
     }
 
     public function resetApplicableOptions()

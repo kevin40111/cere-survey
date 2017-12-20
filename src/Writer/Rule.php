@@ -54,7 +54,7 @@ class Rule
         $rules = SurveyORM\SurveyRuleFactor::where('rule_relation_factor', $question_id)->get()->groupBy('rule_id')->keys();
 
         return SurveyORM\Rule::find($rules)->map(function ($rule) {
-            $pass = Survey\RuleRepository::find($rule->id)->compareRule($rule->id, $this->answers);
+            $pass = Survey\RuleRepository::target($rule)->compareRule($this->answers);
             $questions = [];
             if ($rule->effect_type === SurveyORM\Node::class) {
                 $questions = array_merge($questions, $rule->effect->questions->all());
@@ -72,9 +72,8 @@ class Rule
     {
         return $nodes->map(function ($node) {
             $ruleRepository = Survey\RuleRepository::target($node);
-            $pass = $node->rule->reduce(function ($carry, $rule) {
-                return $carry || Survey\RuleRepository::target($rule)->compareRule($rule->id, $this->answers);
-            }, false);
+
+            $pass = isset($node->rule) ? Survey\RuleRepository::target($node->rule)->compareRule($this->answers) : false;
 
             return ['id' => $node->id, 'pass' => $pass];
         })->lists('pass', 'id');

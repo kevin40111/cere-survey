@@ -65,9 +65,9 @@ class RuleRepository
         }
     }
 
-    public function compareRule($rule_id, $answers)
+    public function compareRule($answers)
     {
-        $rule = SurveyORM\Rule::where('id', $rule_id)->first();
+        $rule = SurveyORM\Rule::where('id', $this->target->id)->first();
         if ($rule) {
             $expressions = $rule->expressions;
             $result = 'return ';
