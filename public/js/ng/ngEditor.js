@@ -628,7 +628,7 @@ angular.module('ngEditor.directives', [])
                         <h4>跳題設定</h4>
                         <div flex></div>
                         <md-button aria-label="關閉" ng-click="toggleSidenavRight()">關閉</md-button>
-                        <md-button aria-label="儲存設定" md-colors="{background: 'blue'}" style="float:right" ng-click="saveRule()">
+                        <md-button aria-label="儲存設定" md-colors="{background: 'blue'}" style="float:right" ng-click="saveRule('jump')">
                             儲存設定
                         </md-button>
                         <md-button aria-label="刪除設定" md-colors="{background: 'blue'}" style="float:right" ng-click="deleteRule()">
@@ -719,8 +719,8 @@ angular.module('ngEditor.directives', [])
                 $scope.rule.expressions.splice(index+1, 0, {'compareLogic':logic, 'conditions':[{'compareType':'question'}]});
             };
 
-            $scope.saveRule = function() {
-               $http({method: 'POST', url: 'saveRule', data:{expressions: $scope.rule.expressions, skipTarget: $scope.skipTarget}})
+            $scope.saveRule = function(type) {
+               $http({method: 'POST', url: 'saveRule', data:{expressions: $scope.rule.expressions, skipTarget: $scope.skipTarget, type:type}})
                 .success(function(data) {
 
                 }).error(function(e) {

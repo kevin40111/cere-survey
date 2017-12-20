@@ -31,13 +31,13 @@ class RuleRepository
         return $this->target->rule ? $this->target->rule : new SurveyORM\Rule(['expressions' => [['conditions' => [['compareType' => 'question']]]]]);
     }
 
-    public function saveExpressions($expressions)
+    public function saveExpressions($expressions, $type)
     {
         if ($this->target->rule == null) {
-            $rule = $this->target->rule()->save(new SurveyORM\Rule(['expressions' => $expressions]));
+            $rule = $this->target->rule()->save(new SurveyORM\Rule(['expressions' => $expressions, 'type' => $type]));
         } else {
             $rule = $this->target->rule;
-            $rule->update(['expressions' => $expressions]);
+            $rule->update(['expressions' => $expressions, 'type' => $type]);
         }
 
         $this->saveRulesFactor($expressions, $rule);

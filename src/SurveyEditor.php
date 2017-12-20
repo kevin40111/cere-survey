@@ -292,8 +292,7 @@ trait SurveyEditor
     {
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
-
-        $rule = Survey\RuleRepository::target($root)->saveExpressions(Input::get('expressions'));
+        $rule = Survey\RuleRepository::target($root)->saveExpressions(Input::get('expressions'), Input::get('type'));
 
         return 'save rules successed';
     }

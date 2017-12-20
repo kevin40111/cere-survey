@@ -146,7 +146,7 @@ abstract class Filler
         $skips = [];
 
         foreach ($this->contents as $id => $value) {
-            $skips[$this->question->node->id] = $this->isSkip($value);
+            $skips[$this->node->id] = $this->isSkip($value);
         }
 
         $skips = $skips + $this->fill->getSkips();
