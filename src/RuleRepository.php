@@ -65,36 +65,6 @@ class RuleRepository
         }
     }
 
-    public function compareRule($answers)
-    {
-        $rule = SurveyORM\Rule::where('id', $this->target->id)->first();
-        if ($rule) {
-            $expressions = $rule->expressions;
-            $result = 'return ';
-            foreach ($expressions as $expression) {
-                if (isset($expression['compareLogic'])) {
-                    $result = $result.$expression['compareLogic'];
-                }
-                $result = $result.'(';
-                foreach ($expression['conditions'] as $condition) {
-                    if (isset($condition['compareOperator'])) {
-                        $result = $result.$condition['compareOperator'];
-                    }
-                    $question = is_null($answers[$condition['question']]) ? 'null' : $answers[$condition['question']];
-                    $result = $result.$question.$condition['logic'].$condition['value'];
-                }
-                $result = $result.')';
-            }
-            $result = $result.';';
-
-            return eval($result);
-
-        } else {
-
-            return false;
-        }
-    }
-
     public function explanation()
     {
         $operators = [' && ' => '而且', ' || ' => '或者'];
