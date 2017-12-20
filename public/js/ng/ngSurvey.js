@@ -59,34 +59,6 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
                 (callback) && callback(data);
             }).error(function(){
             });
-        },
-        compareRule: function(target) {
-            var answers = this.answers;
-
-            if (target.rule) {
-                var expressions = target.rule.expressions;
-                var result ='';
-                for (var i in expressions) {
-                    var expression = expressions[i];
-                    if (expression.compareLogic) {
-                        result = result + expression.compareLogic;
-                    }
-                    result = result + '(';
-                    for (var j in expression.conditions) {
-                        var condition = expression.conditions[j];
-                        if (condition.compareOperator) {
-                            result += condition.compareOperator;
-                        }
-                        result += answers[condition.question] + condition.logic + condition.value;
-                    }
-                    result = result + ')';
-                }
-
-                return eval(result);
-            } else {
-                return false;
-            }
-
         }
     };
 });
@@ -113,7 +85,7 @@ angular.module('ngSurvey.directives', [])
                     <md-progress-circular md-mode="indeterminate"></md-progress-circular>
                 </div>
                 <div ng-if="!book.saving && !book.done">
-                    <survey-page ng-if="node" page="node" ng-hide="compareRule(node)"></survey-page>
+                    <survey-page ng-if="node" page="node"></survey-page>
                     <md-button class="md-raised md-primary" ng-click="getNextNode(true)" ng-disabled="book.saving" aria-label="繼續">
                         <p ng-if="!book.done">繼續</p>
                     </md-button>
@@ -154,10 +126,6 @@ angular.module('ngSurvey.directives', [])
             };
 
             $scope.getNextNode();
-
-            $scope.compareRule = function(target) {
-                return surveyFactory.compareRule(target);
-            };
         }
     };
 })
@@ -172,7 +140,7 @@ angular.module('ngSurvey.directives', [])
         },
         template:  `
             <div>
-                <survey-node ng-repeat="node in nodes" node="node" ng-hide="compareRule(node)" ng-if="!skips[node.id]"></survey-node>
+                <survey-node ng-repeat="node in nodes" node="node" ng-if="!skips[node.id]"></survey-node>
             </div>
         `,
         controller: function($scope, $http) {
@@ -185,9 +153,6 @@ angular.module('ngSurvey.directives', [])
                     angular.extend(surveyFactory.skips, response.skips);
                 });
             });
-            // $scope.compareRule = function(target) {
-            //     return surveyFactory.compareRule(target);
-            // };
         }
     };
 })
@@ -210,14 +175,14 @@ angular.module('ngSurvey.directives', [])
                         </md-card-title-text>
                     </md-card-title>
                     <md-card-content>
-                        <survey-question node="node"  ng-hide="compareRule(node)"></survey-question>
+                        <survey-question node="node"></survey-question>
                     </md-card-content>
                     <md-card-actions layout="row" layout-align="end center">
 
                     </md-card-actions>
                     <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
                 </md-card>
-                <survey-node ng-if="childrens" ng-repeat="children in childrens" node="children" ng-hide="compareRule(children)"></survey-node>
+                <survey-node ng-if="childrens" ng-repeat="children in childrens" node="children"></survey-node>
             </div>
         `,
         controller: function($scope) {
@@ -228,11 +193,6 @@ angular.module('ngSurvey.directives', [])
             this.addChildren = function(childrens) {
                 $scope.childrens = childrens;
             };
-
-            // $scope.compareRule = function(target) {
-            //     return surveyFactory.compareRule(target);
-            // };
-
         }
     };
 })
@@ -306,27 +266,6 @@ angular.module('ngSurvey.directives', [])
                         question.confirm = confirm;
                     });
                 }
-            };
-
-            /*$scope.compareRule = function(question) {
-                var show = true;
-                if (('close' in question)) {show = false;}
-                if (question.rules.length > 0) {
-                    angular.forEach(question.rules, function(rule){
-                        var parameter = rule.is.parameters[0];
-                        var keys = Object.keys(parameter);
-                        if ($scope.answers[keys[0]] == parameter[keys[0]]) {
-                            show = false;
-                        }
-                    });
-                }
-                $scope.setConfirm(show);
-                question.show = show;
-                return show;
-            };*/
-
-            $scope.compareRule = function(target) {
-                return surveyFactory.compareRule(target);
             };
         }
     };
