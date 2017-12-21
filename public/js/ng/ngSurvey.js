@@ -203,20 +203,20 @@ angular.module('ngSurvey.directives', [])
         restrict: 'A',
         require: 'ngModel',
         controller: function($scope, $attrs) {
-            $scope.saveAnswer = function(parent, value) {
+            $scope.saveTextNgOptions = {updateOn: 'default blur', debounce:{default: 1000, blur: 0}};
+            $scope.answers = surveyFactory.answers;
+
+            $scope.saveAnswer = function(value) {
                 $scope.question.childrens = {};
-                surveyFactory.get('getChildren', {question: $scope.question, parent: parent, value: value, trigger: 'saveAnswer'}, $scope.node).then(function(response) {
+                surveyFactory.get('getChildren', {question: $scope.question, value: value}, $scope.node).then(function(response) {
                     $scope.question.childrens = response.nodes;
                     angular.extend(surveyFactory.answers, response.answers);
                     angular.extend(surveyFactory.skips, response.skips);
                 });
             };
 
-            $scope.answers = surveyFactory.answers;
-            var parent = $scope.$eval($attrs.parent);
-
-            if (parent) {
-                surveyFactory.get('getChildren', {question: $scope.question, parent: parent, trigger: 'getNode'}, $scope.node).then(function(response) {
+            if ($scope.answers[$scope.question.id]) {
+                surveyFactory.get('getChildren', {question: $scope.question}, $scope.node).then(function(response) {
                     $scope.question.childrens = response.nodes;
                 });
             }
@@ -248,25 +248,7 @@ angular.module('ngSurvey.directives', [])
                 });
             };
         },
-        controller: function($scope, $http, $window, $filter, $rootScope) {
-            $scope.saveTextNgOptions = {updateOn: 'default blur', debounce:{default: 1000, blur: 0}};
-            $scope.answers = surveyFactory.answers;
-            //$scope.answers = $filter('filter')(node.answers, {id: });
-
-            $scope.$on('$destroy', function() {
-                // /$scope.setConfirm(false);
-            });
-
-            $scope.setConfirm = function(confirm) {
-                if ($scope.question.type == 'select' || $scope.question.type == 'radio') {
-                    $scope.question.confirm = confirm;
-                }
-                if ($scope.question.type == 'scales') {
-                    angular.forEach($filter('filter')($scope.branchs, {parent_question_id: $scope.question.id}, true), function(question) {
-                        question.confirm = confirm;
-                    });
-                }
-            };
+        controller: function($scope) {
         }
     };
 })
