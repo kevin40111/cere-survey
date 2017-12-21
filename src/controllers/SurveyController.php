@@ -23,10 +23,11 @@ class SurveyController extends \BaseController {
      *
      * @return Response
      */
-    public function page()
+    public function page($book_id)
     {
         if (! $this->writer->exist()) {
-            $this->writer->increment();
+            $firstPage = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
+            $this->writer->increment(['page_id' => $firstPage->id]);
         }
 
         return View::make('survey::layout-survey')->nest('context', 'survey::demo-ng');
@@ -86,32 +87,41 @@ class SurveyController extends \BaseController {
         return ['book' => SurveyORM\Book::find($book_id)];
     }
 
+    public function getPage($book_id)
+    {
+        $answers = $this->writer->all();
+
+        $page = SurveyORM\Node::find($answers['page_id']);
+
+        $skips = ! $page ? [] : $page->childrenNodes->reduce(function($carry, $node) use ($answers) {
+            $filler = Fill::answers($answers)->node($node);
+            return $carry + $filler->getSkips();
+        }, []);
+
+        return ['page' => $page, 'answers' => $answers, 'skips' => $skips, 'logs' => DB::connection()->getQueryLog()];
+    }
+
     /**
-     * Show a next node in book.
+     * Next page in book.
      *
      * @param  int  $book_id
      * @return Response
      */
-    public function getNextNode($book_id)
+    public function nextPage($book_id)
     {
-        $missings = [];
         $answers = $this->writer->all();
-        $firstPage = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
-        $page = $answers['page_id'] ? SurveyORM\Node::find($answers['page_id'])->next : $firstPage;
+        $page = SurveyORM\Node::find(Input::get('page.id'));
 
-        if (Input::get('next') && count($missings = $this->checkPage($page, $answers)) == 0) {
-            $nextPage = $page->next ? $this->checkAndJump($page->next, $answers) : NULL;
-            $complete = $nextPage ? $nextPage->previous : $page;
-            $this->writer->setPage($complete->id);
-        } else {
-            $nextPage = $page;
+        if (count($missings = $this->checkPage($page, $answers)) > 0) {
+            return ['missings' => $missings];
         }
 
-        $lastPage = is_null($nextPage);
-        $nextPage && $nextPage->load('rule');
-        $url = $lastPage ? $this->getNextUrl($book_id) : NULL;
+        $nextPage = $page->next ? $this->checkAndJump($page->next, $answers) : NULL;
+        $this->writer->setPage($nextPage);
 
-        return ['node' => $nextPage, 'answers' => $answers, 'url' => $url, 'missings' => $missings];
+        $url = is_null($nextPage) ? $this->getNextUrl($book_id) : NULL;
+
+        return ['page' => $nextPage, 'answers' => $answers, 'url' => $url];
     }
 
     private function getNextUrl($book_id)
@@ -152,7 +162,7 @@ class SurveyController extends \BaseController {
         $questions = $page->getQuestions();
 
         $missings = array_filter($questions, function ($question) use ($answers) {
-            return ! isset($answers->{$question['id']});
+            return ! isset($answers[$question['id']]);
         });
 
         return array_values($missings);
@@ -179,41 +189,47 @@ class SurveyController extends \BaseController {
      *
      * @return Response
      */
-    public function getNextNodes()
+    public function getNodes()
     {
-        $nodes = SurveyORM\Node::find(Input::get('page.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.rule', 'answers.rule', 'rule']);
+        $nodes = SurveyORM\Node::find(Input::get('page.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions', 'answers']);
 
-        $skips = Rule::answers($this->writer->all())->skips($nodes);
-
-        return ['nodes' => $nodes, 'skips' => $skips];
+        return ['nodes' => $nodes];
     }
 
     /**
-     * Show children nodes.
+     * Save answer.
      *
      * @return Response
      */
-    public function getChildren($book_id)
+    public function saveAnswer($book_id)
     {
         $question = SurveyORM\Field\Field::find(Input::get('question.id'));
         $answers = $this->writer->all();
         $filler = Fill::answers($answers)->node($question->node);
-        $skips = [];
 
-        if (Input::has('value')) {
-            $filler->set($question, Input::get('value'));
-            if (!empty($filler->messages)) {
-                return ;
-            }
-
-            foreach ($filler->getDirty() as $id => $value) {
-                $this->writer->put($id, $value);
-            }
-
-            $skips = $filler->getSkips();
+        $filler->set($question, Input::get('value'));
+        if (! empty($filler->messages)) {
+            return ;
         }
 
-        return ['nodes' => $filler->childrens($question), 'answers' => $this->writer->all(), 'message' => $filler->messages, 'logs' => DB::getQueryLog(), 'skips' => $skips];
+        foreach ($filler->getDirty() as $id => $value) {
+            $this->writer->put($id, $value);
+        }
+
+        $skips = $filler->getSkips();
+
+        return ['answers' => $this->writer->all(), 'message' => $filler->messages, 'logs' => DB::getQueryLog(), 'skips' => $skips];
+    }
+
+    public function getChildrens()
+    {
+        $question = SurveyORM\Field\Field::find(Input::get('question.id'));
+
+        $answers = $this->writer->all();
+
+        $filler = Fill::answers($answers)->node($question->node);
+
+        return ['nodes' => $filler->childrens($question)];
     }
 
     /**
