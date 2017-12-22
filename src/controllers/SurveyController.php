@@ -98,7 +98,7 @@ class SurveyController extends \BaseController {
             return $carry + $filler->getSkips();
         }, []);
 
-        return ['page' => $page, 'answers' => $answers, 'skips' => $skips, 'logs' => DB::connection()->getQueryLog()];
+        return ['page' => $page, 'answers' => $answers, 'skips' => $this->splitSkips($skips), 'logs' => DB::connection()->getQueryLog()];
     }
 
     /**
@@ -196,6 +196,33 @@ class SurveyController extends \BaseController {
         return ['nodes' => $nodes];
     }
 
+    private function splitSkips($allSkips)
+    {
+        $skips = (object)[];
+        $skips->answers = [];
+        $skips->nodes = [];
+        $skips->questions = [];
+
+        foreach ($allSkips as $skip) {
+            if ($skip['pass']) {
+                foreach ($skip['answers'] as $answer) {
+                    array_push($skips->answers, $answer->id);
+                }
+
+                foreach ($skip['questions'] as $question) {
+                    array_push($skips->questions, $question->id);
+                }
+
+                foreach ($skip['nodes'] as $node) {
+                    array_push($skips->nodes, $node->id);
+                }
+            }
+        }
+
+        return $skips;
+    }
+
+
     /**
      * Save answer.
      *
@@ -216,9 +243,14 @@ class SurveyController extends \BaseController {
             $this->writer->put($id, $value);
         }
 
-        $skips = $filler->getSkips();
+        $page = SurveyORM\Node::find($answers['page_id']);
 
-        return ['answers' => $this->writer->all(), 'message' => $filler->messages, 'logs' => DB::getQueryLog(), 'skips' => $skips];
+        $skips = ! $page ? [] : $page->childrenNodes->reduce(function($carry, $node) use ($answers) {
+            $filler = Fill::answers($answers)->node($node);
+            return $carry + $filler->getSkips();
+        }, []);
+
+        return ['answers' => $this->writer->all(), 'message' => $filler->messages, 'logs' => DB::getQueryLog(), 'skips' => $this->splitSkips($skips)];
     }
 
     public function getChildrens()

@@ -3,6 +3,7 @@
 namespace Cere\Survey\Writer;
 
 use Cere\Survey\Eloquent as SurveyORM;
+use Cere\Survey\Eloquent\Field\Field;
 
 class Rule
 {
@@ -55,16 +56,24 @@ class Rule
         return SurveyORM\Rule::find($rules)->map(function ($rule) {
             $pass = $this->compare($rule);
             $questions = [];
+            $answer = [];
+            $node = [];
+
             if ($rule->effect_type === SurveyORM\Node::class) {
                 $questions = array_merge($questions, $rule->effect->questions->all());
+                array_push($node, SurveyORM\Node::find($rule->effect_id));
             }
 
-            if ($rule->effect_type === SurveyORM\Question::class) {
-                array_push($questions, $rule->effect);
+            if ($rule->effect_type === Field::class) {
+                array_push($questions, Field::find($rule->effect_id));
             }
 
-            return ['pass' => $pass, 'type' => $rule->type, 'questions' => $questions];
-        });
+            if ($rule->effect_type === SurveyORM\Answer::class) {
+                array_push($answer, SurveyORM\Answer::find($rule->effect_id));
+            }
+
+            return ['pass' => $pass, 'type' => $rule->type, 'questions' => $questions, 'answers' => $answer, 'nodes' => $node];
+        })->toArray();
     }
 
     public function skips($nodes)

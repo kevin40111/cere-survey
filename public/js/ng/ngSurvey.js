@@ -5,6 +5,10 @@ angular.module('ngSurvey', ['ngSurvey.directives', 'ngSurvey.factories']);
 angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http, $q) {
     var answers = {};
     var skips = {};
+    skips.nodes = []
+    skips.questions = []
+    skips.answers = [];
+
     return {
         answers: answers,
         skips: skips,
@@ -99,7 +103,7 @@ angular.module('ngSurvey.directives', [])
         },
         template:  `
             <div>
-                <survey-node ng-repeat="node in nodes" node="node" ng-if="!skips[node.id]"></survey-node>
+                <survey-node ng-repeat="node in nodes" node="node" ng-if="skips.nodes.indexOf(node.id) == -1"></survey-node>
             </div>
         `,
         controller: function($scope, $http) {
@@ -202,6 +206,7 @@ angular.module('ngSurvey.directives', [])
             var compiledContents = {};
 
             return function(scope, iElement, iAttr, ctrl) {
+                scope.skips = surveyFactory.skips;
                 scope.addChildren = ctrl.addChildren;
                 //var contents = iElement.contents().remove();
                 var type = scope.node.type;

@@ -146,7 +146,8 @@ abstract class Filler
         $skips = [];
 
         foreach ($this->contents as $id => $value) {
-            $skips[$this->node->id] = $this->isSkip($value);
+            $skip = Rule::answers($this->answers)->effect($id);
+            $skips = $skips + $skip;
         }
 
         $skips = $skips + $this->fill->getSkips();
