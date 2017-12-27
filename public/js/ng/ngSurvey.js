@@ -4,11 +4,14 @@ angular.module('ngSurvey', ['ngSurvey.directives', 'ngSurvey.factories']);
 
 angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http, $q) {
     var answers = {};
-    var book = {};
-    var record = {};
-    var types = {};
+    var skips = {};
+    skips.nodes = []
+    skips.questions = []
+    skips.answers = [];
+
     return {
-        types: types,
+        answers: answers,
+        skips: skips,
         get: function(url, data, node = {}) {
             var deferred = $q.defer();
 
@@ -26,65 +29,6 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
             });
 
             return deferred.promise;
-        },
-        answers: answers,
-        setBook: function(v) { book = v; },
-        setRecord: function(v) { record = v; },
-        setAnswers: function(values) {
-            for (var i in answers) delete answers[i];
-            angular.forEach(values, function(answer, k) {
-                answers[k] = (answer.string || answer.string=='') ? answer.string : answer.id;
-            });
-        },
-        save: function(question, callback) {
-            var answer;
-            if (question.type=='text') {
-                answer = {id: question.answers[0].id, string: answers[question.id]};
-            } else {
-                answer = {id: answers[question.id], string: null};
-            }
-            question.saving = true;
-            $http({method: 'POST', url: 'saveAnswer', data:{book: book, record: record, question: question, answer: answer}})
-            .success(function(data) {
-                angular.forEach(data.deletedAnswers, function(deletedAnswer) {
-                    if (answers[deletedAnswer]) {
-                        delete answers[deletedAnswer];
-                    }
-                });
-                if (answers[question.id] == data.string || data.id) {
-                    question.saving = false;
-                }
-                (callback) && callback(data);
-            }).error(function(){
-            });
-        },
-        compareRule: function(target) {
-            var answers = this.answers;
-
-            if (target.rule) {
-                var expressions = target.rule.expressions;
-                var result ='';
-                for (var i in expressions) {
-                    var expression = expressions[i];
-                    if (expression.compareLogic) {
-                        result = result + expression.compareLogic;
-                    }
-                    result = result + '(';
-                    for (var j in expression.conditions) {
-                        var condition = expression.conditions[j];
-                        if (condition.compareOperator) {
-                            result += condition.compareOperator;
-                        }
-                        result += answers[condition.question] + condition.logic + condition.value;
-                    }
-                    result = result + ')';
-                }
-
-                return eval(result);
-            } else {
-                return false;
-            }
-
         }
     };
 });
@@ -107,16 +51,14 @@ angular.module('ngSurvey.directives', [])
         },
         template:  `
             <div>
-                <div layout="row" layout-align="space-around" ng-if="book.saving">
-                    <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+                <div>
+                    <survey-page ng-if="page" page="page"></survey-page>
+                    <div layout="row" layout-align="space-around" ng-if="book.saving">
+                        <md-progress-linear md-mode="indeterminate"></md-progress-linear>
+                    </div>
+                    <md-button class="md-raised md-primary" ng-click="nextPage()" ng-disabled="book.saving" aria-label="繼續">繼續</md-button>
                 </div>
-                <div ng-if="!book.saving && !book.done">
-                    <survey-page ng-if="node" page="node" ng-hide="compareRule(node)"></survey-page>
-                    <md-button class="md-raised md-primary" ng-click="getNextNode(true)" ng-disabled="book.saving" aria-label="繼續">
-                        <p ng-if="!book.done">繼續</p>
-                    </md-button>
-                </div>
-                <div class="ui segment" style="width:800px;margin:0 auto" ng-if="!book.saving && book.done">
+                <div class="ui segment" style="width:800px;margin:0 auto" ng-if="!book.saving && !page">
                     <div class="ui basic segment">
                         <h3>本問卷填答完畢</h3>
                         <h3>祝您一切順利、中大獎</strong>！</font></h3>
@@ -129,32 +71,23 @@ angular.module('ngSurvey.directives', [])
         `,
         controller: function($scope) {
 
-            surveyFactory.types = $scope.book.types;
+            surveyFactory.get('getPage', {book: $scope.book}, $scope.book).then(function(response) {
+                $scope.page = response.page;
+                angular.extend(surveyFactory.answers, response.answers);
+                angular.extend(surveyFactory.skips, response.skips);
+            });
 
-            $scope.getNextNode = function(next = false) {
-                surveyFactory.get('getNextNode', {next: next, book: $scope.book}, $scope.book).then(function(response) {console.log(response);
-                    if (response.missings.length > 0) {
+            $scope.nextPage = function() {
+                surveyFactory.get('nextPage', {page: $scope.page}, $scope.book).then(function(response) {
+                    if (response.missings && response.missings.length > 0) {
                         alert('有尚未填答題目');
-                    }
-
-                    $scope.node = response.node;
-                    surveyFactory.answers = response.answers;
-                    $scope.book.saving = false;
-                    $scope.book.done = false;
-                    $scope.ext_book_url = null;
-                    if (response.url != null) {
+                    } else {
+                        $scope.page = response.page;
+                        surveyFactory.answers = response.answers;
+                        $scope.book.saving = false;
                         $scope.ext_book_url = response.url;
                     }
-                    if ($scope.node == null) {
-                        $scope.book.done = true;
-                    }
                 });
-            };
-
-            $scope.getNextNode();
-
-            $scope.compareRule = function(target) {
-                return surveyFactory.compareRule(target);
             };
         }
     };
@@ -170,19 +103,18 @@ angular.module('ngSurvey.directives', [])
         },
         template:  `
             <div>
-                <survey-node ng-repeat="node in nodes" node="node" ng-hide="compareRule(node)"></survey-node>
+                <survey-node ng-repeat="node in nodes" node="node" ng-if="skips.nodes.indexOf(node.id) == -1"></survey-node>
             </div>
         `,
         controller: function($scope, $http) {
 
+            $scope.skips = surveyFactory.skips;
+
             $scope.$watch('page', function() {
-                surveyFactory.get('getNextNodes', {page: $scope.page}, $scope.page).then(function(response) {
+                surveyFactory.get('getNodes', {page: $scope.page}, $scope.page).then(function(response) {
                     $scope.nodes = response.nodes;
                 });
             });
-            $scope.compareRule = function(target) {
-                return surveyFactory.compareRule(target);
-            };
         }
     };
 })
@@ -205,14 +137,14 @@ angular.module('ngSurvey.directives', [])
                         </md-card-title-text>
                     </md-card-title>
                     <md-card-content>
-                        <survey-question node="node"  ng-hide="compareRule(node)"></survey-question>
+                        <survey-question node="node"></survey-question>
                     </md-card-content>
                     <md-card-actions layout="row" layout-align="end center">
 
                     </md-card-actions>
                     <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
                 </md-card>
-                <survey-node ng-if="childrens" ng-repeat="children in childrens" node="children" ng-hide="compareRule(children)"></survey-node>
+                <survey-node ng-if="childrens" ng-repeat="children in childrens" node="children"></survey-node>
             </div>
         `,
         controller: function($scope) {
@@ -223,11 +155,6 @@ angular.module('ngSurvey.directives', [])
             this.addChildren = function(childrens) {
                 $scope.childrens = childrens;
             };
-
-            $scope.compareRule = function(target) {
-                return surveyFactory.compareRule(target);
-            };
-
         }
     };
 })
@@ -238,19 +165,25 @@ angular.module('ngSurvey.directives', [])
         restrict: 'A',
         require: 'ngModel',
         controller: function($scope, $attrs) {
-            $scope.saveAnswer = function(parent, value) {
+            $scope.saveTextNgOptions = {updateOn: 'default blur', debounce:{default: 1000, blur: 0}};
+            $scope.answers = surveyFactory.answers;
+
+            $scope.saveAnswer = function(value) {
                 $scope.question.childrens = {};
-                surveyFactory.get('getChildren', {question: $scope.question, parent: parent, value: value, trigger: 'saveAnswer'}, $scope.node).then(function(response) {
+                surveyFactory.get('saveAnswer', {question: $scope.question, value: value}, $scope.node).then(function(response) {
                     $scope.question.childrens = response.nodes;
                     angular.extend(surveyFactory.answers, response.answers);
+                    angular.extend(surveyFactory.skips, response.skips);
+                    getChildrens();
                 });
             };
 
-            $scope.answers = surveyFactory.answers;
-            var parent = $scope.$eval($attrs.parent);
+            if ($scope.answers[$scope.question.id]) {
+                getChildrens();
+            }
 
-            if (parent) {
-                surveyFactory.get('getChildren', {question: $scope.question, parent: parent, trigger: 'getNode'}, $scope.node).then(function(response) {
+            function getChildrens() {
+                surveyFactory.get('getChildrens', {question: $scope.question}, $scope.node).then(function(response) {
                     $scope.question.childrens = response.nodes;
                 });
             }
@@ -273,55 +206,17 @@ angular.module('ngSurvey.directives', [])
             var compiledContents = {};
 
             return function(scope, iElement, iAttr, ctrl) {
+                scope.skips = surveyFactory.skips;
                 scope.addChildren = ctrl.addChildren;
                 //var contents = iElement.contents().remove();
-                var type = surveyFactory.types[scope.node.type].name;
+                var type = scope.node.type;
                 compiledContents[type] = $compile($templateCache.get(type));
                 compiledContents[type](scope, function(clone, scope) {
                     iElement.append(clone);
                 });
             };
         },
-        controller: function($scope, $http, $window, $filter, $rootScope) {
-            $scope.saveTextNgOptions = {updateOn: 'default blur', debounce:{default: 1000, blur: 0}};
-            $scope.answers = surveyFactory.answers;
-            //$scope.answers = $filter('filter')(node.answers, {id: });
-
-            $scope.$on('$destroy', function() {
-                // /$scope.setConfirm(false);
-            });
-
-            $scope.setConfirm = function(confirm) {
-                if ($scope.question.type == 'select' || $scope.question.type == 'radio') {
-                    $scope.question.confirm = confirm;
-                }
-                if ($scope.question.type == 'scales') {
-                    angular.forEach($filter('filter')($scope.branchs, {parent_question_id: $scope.question.id}, true), function(question) {
-                        question.confirm = confirm;
-                    });
-                }
-            };
-
-            /*$scope.compareRule = function(question) {
-                var show = true;
-                if (('close' in question)) {show = false;}
-                if (question.rules.length > 0) {
-                    angular.forEach(question.rules, function(rule){
-                        var parameter = rule.is.parameters[0];
-                        var keys = Object.keys(parameter);
-                        if ($scope.answers[keys[0]] == parameter[keys[0]]) {
-                            show = false;
-                        }
-                    });
-                }
-                $scope.setConfirm(show);
-                question.show = show;
-                return show;
-            };*/
-
-            $scope.compareRule = function(target) {
-                return surveyFactory.compareRule(target);
-            };
+        controller: function($scope) {
         }
     };
 })

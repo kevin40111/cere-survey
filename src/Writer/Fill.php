@@ -21,7 +21,7 @@ class Fill
     public function node($node)
     {
 
-        $types = ['Text', 'Checkbox', 'Radio'];
+        $types = ['Text', 'Checkbox', 'Radio', 'Gear'];
 
         $node->type = strtolower($node->type);
 
@@ -50,5 +50,16 @@ class Fill
         }
 
         return $dirty;
+    }
+
+    public function getSkips()
+    {
+        $skips = [];
+
+        foreach ($this->fillers as $filler) {
+            $skips = $skips + $filler->getSkips();
+        }
+
+        return $skips;
     }
 }

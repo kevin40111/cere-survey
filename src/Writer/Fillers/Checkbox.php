@@ -79,4 +79,10 @@ class Checkbox extends Filler
             }
         }
     }
+
+    private function isSkip($value)
+    {
+        return $value === '-8';
+    }
+
 }

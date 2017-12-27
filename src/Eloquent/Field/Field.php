@@ -9,7 +9,9 @@ class Field extends Eloquent {
 
     use \Cere\Survey\Tree;
 
-    protected $table = 'row_fields';
+    protected $table = 'survey_fields';
+
+    protected $connection = 'survey';
 
     public $timestamps = true;
 

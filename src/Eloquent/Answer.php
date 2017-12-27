@@ -14,7 +14,7 @@ class Answer extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = array('title', 'value', 'previous_id');
+    protected $fillable = array('title', 'node_id', 'value', 'previous_id', 'belong');
 
     protected $attributes = ['value' => '', 'title' => ''];
 
@@ -47,7 +47,7 @@ class Answer extends Eloquent {
 
     public function rule()
     {
-        return $this->morphOne('Cere\Survey\Eloquent\Rule', 'effect');
+        return $this->morphOne(Rule::class, 'effect');
     }
 
     public function choose()

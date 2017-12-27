@@ -31,13 +31,13 @@ class RuleRepository
         return $this->target->rule ? $this->target->rule : new SurveyORM\Rule(['expressions' => [['conditions' => [['compareType' => 'question']]]]]);
     }
 
-    public function saveExpressions($expressions)
+    public function saveExpressions($expressions, $type)
     {
         if ($this->target->rule == null) {
-            $rule = $this->target->rule()->save(new SurveyORM\Rule(['expressions' => $expressions]));
+            $rule = $this->target->rule()->save(new SurveyORM\Rule(['expressions' => $expressions, 'type' => $type]));
         } else {
             $rule = $this->target->rule;
-            $rule->update(['expressions' => $expressions]);
+            $rule->update(['expressions' => $expressions, 'type' => $type]);
         }
 
         $this->saveRulesFactor($expressions, $rule);
@@ -62,36 +62,6 @@ class RuleRepository
                     SurveyORM\SurveyRuleFactor::create(['rule_relation_factor' => $condition['question'], 'rule_id' => $rule->id]);
                 }
             }
-        }
-    }
-
-    public function compareRule($rule_id, $answers)
-    {
-        $rule = SurveyORM\Rule::where('id', $rule_id)->first();
-        if ($rule) {
-            $expressions = $rule->expressions;
-            $result = 'return ';
-            foreach ($expressions as $expression) {
-                if (isset($expression['compareLogic'])) {
-                    $result = $result.$expression['compareLogic'];
-                }
-                $result = $result.'(';
-                foreach ($expression['conditions'] as $condition) {
-                    if (isset($condition['compareOperator'])) {
-                        $result = $result.$condition['compareOperator'];
-                    }
-                    $question = is_null($answers[$condition['question']]) ? 'null' : $answers[$condition['question']];
-                    $result = $result.$question.$condition['logic'].$condition['value'];
-                }
-                $result = $result.')';
-            }
-            $result = $result.';';
-
-            return eval($result);
-
-        } else {
-
-            return false;
         }
     }
 

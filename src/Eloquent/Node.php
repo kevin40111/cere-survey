@@ -66,11 +66,6 @@ class Node extends Eloquent {
         return 'childrenNodes';
     }
 
-    public function byRules()
-    {
-        return $this->morphToMany('Cere\Survey\Eloquent\Rule', 'survey_rule_effect');
-    }
-
     public function childrenRule()
     {
         return $this->hasOne('Cere\Survey\Eloquent\Rule', 'expression', 'children_expression');
@@ -130,7 +125,7 @@ class Node extends Eloquent {
 
     public function rule()
     {
-        return $this->morphOne('Cere\Survey\Eloquent\Rule', 'effect');
+        return $this->morphOne(Rule::class, 'effect');
     }
 
 }

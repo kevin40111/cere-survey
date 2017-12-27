@@ -292,8 +292,7 @@ trait SurveyEditor
     {
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
-
-        $rule = Survey\RuleRepository::target($root)->saveExpressions(Input::get('expressions'));
+        $rule = Survey\RuleRepository::target($root)->saveExpressions(Input::get('expressions'), Input::get('type'));
 
         return 'save rules successed';
     }
@@ -369,5 +368,12 @@ trait SurveyEditor
     public function setTime()
     {
         return (int)$this->file->book->update(['start_at' => Input::get('start_at'), 'close_at' => Input::get('close_at')]);
+    }
+
+    public function saveGearQuestion()
+    {
+        $gear_file = Input::file('file_upload');
+        $node_id = Input::get('node_id');
+        return $this->editorRepository->saveGearQuestion($gear_file, $node_id);
     }
 }

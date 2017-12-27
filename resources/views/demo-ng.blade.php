@@ -31,6 +31,9 @@
 <script type="text/ng-template" id="number">
     @include('survey::template_question_number')
 </script>
+<script type="text/ng-template" id="gear">
+    @include('survey::template_question_gear')
+</script>
 
 <script src="/packages/cere/survey/js/ng/ngSurvey.js"></script>
 
