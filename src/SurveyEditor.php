@@ -28,21 +28,6 @@ trait SurveyEditor
         return 'survey::demo-ng';
     }
 
-    public function application()
-    {
-        return 'survey::application-ng';
-    }
-
-    public function confirm()
-    {
-        return 'survey::confirm-ng';
-    }
-
-    public function applicableList()
-    {
-        return 'survey::applicableList-ng';
-    }
-
     public function browser()
     {
         return 'survey::browser-ng';
@@ -56,11 +41,6 @@ trait SurveyEditor
     public function questionBrowser()
     {
         return  View::make('survey::template_question_browser');
-    }
-
-    public function userApplication()
-    {
-        return View::make('survey::userApplication-ng');
     }
 
     public function getBook()
@@ -215,79 +195,6 @@ trait SurveyEditor
         return ['item' => $item->load(['questions', 'answers']), 'next' => $item->next->load(['questions', 'answers'])];
     }
 
-    public function setAppliedOptions()
-    {
-        $selected = Input::get('selected');
-
-        return Survey\ApplicationRepository::book($this->book)->setAppliedOptions($selected);
-    }
-
-    public function getAppliedOptions()
-    {
-        $member_id = Input::get('member_id');
-
-        return Survey\ApplicationRepository::book($this->book)->getAppliedOptions($member_id);
-    }
-
-    public function resetApplication()
-    {
-        return Survey\ApplicationRepository::book($this->book)->resetApplication();
-    }
-
-    public function setApplicableOptions()
-    {
-        Survey\ApplicationRepository::book($this->book)->setApplicableOptions(Input::get('selected'), Input::get('noPopulation'));
-        return $this->getApplicableOptions();
-    }
-
-    public function getApplicableOptions()
-    {
-        return Survey\ApplicationRepository::book($this->book)->getApplicableOptions(Input::get('rowsFileId'), Input::get('noPopulation'));
-    }
-
-    public function getApplications()
-    {
-        $applications = $this->book->applications->load('members.organizations.now', 'members.user', 'members.contact');
-
-        return ['applications' => $applications];
-    }
-
-    public function resetApplicableOptions()
-    {
-        Survey\ApplicationRepository::book($this->book)->resetApplicableOptions();
-
-        return $this->getApplicableOptions();
-    }
-
-    public function activeExtension()
-    {
-        $application_id = Input::get('application_id');
-        $application = $this->book->applications()->where('id', $application_id)->first();
-        if (!$application->reject) {
-            SurveyORM\Book::find($application->ext_book_id)->update(array('lock' => true));
-        }
-        $application->extension = !$application->extension;
-        $application->save();
-
-        return ['application' => $application];
-    }
-
-    public function reject()
-    {
-        $application = $this->book->applications()->where('id', Input::get('application_id'))->first();
-
-        $application = Survey\ApplicationRepository::application($application)->reject();
-
-        return ['application' => $application];
-    }
-
-    public function getApplicationPages()
-    {
-        $pagination = Survey\ApplicationRepository::book($this->book)->getApplicationPages();
-
-        return ['currentPage' => $pagination->getCurrentPage(), 'lastPage' => $pagination->getLastPage()];
-    }
-
     public function saveRule()
     {
         $class = Input::get('skipTarget.class');
@@ -324,35 +231,11 @@ trait SurveyEditor
         return ['lock' => true];
     }
 
-    public function checkExtBookLocked()
-    {
-        $locked = SurveyORM\Book::find(Input::get('book_id'))->lock;
-
-        return  ['ext_locked' => $locked];
-    }
-
     public function getExpressionExplanation()
     {
         $explanation = Survey\RuleRepository::find(Input::get('rule_id'))->explanation();
 
         return ['explanation' => $explanation];
-    }
-
-    public function applicationStatus()
-    {
-        $application = $this->book->applications()->OfMe()->first();
-        if (is_null($application)) {
-            return ['status' => null];
-        } else {
-            if ($application->extension ==  $application->reject) {
-                $status = '0';
-            } else if ($application->reject) {
-                $status = '1';
-            } else {
-                $status = '2';
-            }
-            return ['status' => $status];
-        }
     }
 
     public function setNoPopulationColumn()

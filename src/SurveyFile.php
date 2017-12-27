@@ -9,12 +9,15 @@ use Mail;
 use Plat\Files\CommFile;
 use Cere\Survey\SurveyEditor;
 use Cere\Survey\Field\SheetRepository;
+use Cere\Survey\Extend\Apply;
 
 class SurveyFile extends CommFile
 {
     use SurveyEditor {
         SurveyEditor::__construct as private __SurveyEditorConstruct;
     }
+
+    use Apply;
 
     function __construct(Files $file, User $user)
     {

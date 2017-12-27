@@ -1,6 +1,6 @@
 <?php
 
-namespace Cere\Survey;
+namespace Cere\Survey\Extend;
 
 use Cere\Survey\Eloquent as SurveyORM;
 use Auth;
