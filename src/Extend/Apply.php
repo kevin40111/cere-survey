@@ -10,22 +10,22 @@ trait Apply
 {
     public function application()
     {
-        return 'survey::application-ng';
+        return 'survey::extend.application-ng';
     }
 
     public function confirm()
     {
-        return 'survey::confirm-ng';
+        return 'survey::extend.confirm-ng';
     }
 
     public function applicableList()
     {
-        return 'survey::applicableList-ng';
+        return 'survey::extend.applicableList-ng';
     }
 
     public function userApplication()
     {
-        return View::make('survey::userApplication-ng');
+        return View::make('survey::extend.userApplication-ng');
     }
 
     public function setAppliedOptions()
