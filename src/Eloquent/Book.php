@@ -72,14 +72,9 @@ class Book extends Eloquent {
         return $this->hasMany('Cere\Survey\Eloquent\Application', 'book_id', 'id');
     }
 
-    public function optionColumns()
+    public function optionFields()
     {
-        return $this->morphedByMany(Field::class, 'survey_applicable_option')->withPivot('id');
-    }
-
-    public function optionQuestions()
-    {
-        return $this->morphedByMany(Field::class, 'survey_applicable_option')->withPivot('id');
+        return $this->morphedByMany(Field::class, 'survey_applicable_option');
     }
 
     public function file()

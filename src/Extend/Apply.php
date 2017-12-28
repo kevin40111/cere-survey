@@ -49,13 +49,12 @@ trait Apply
 
     public function setApplicableOptions()
     {
-        ApplicationRepository::book($this->book)->setApplicableOptions(Input::get('selected'), Input::get('noPopulation'));
-        return $this->getApplicableOptions();
+        ApplicationRepository::book($this->book)->setApplicableOptions(Input::get('selected'));
     }
 
     public function getApplicableOptions()
     {
-        return ApplicationRepository::book($this->book)->getApplicableOptions(Input::get('rowsFileId'), Input::get('noPopulation'));
+        return ApplicationRepository::book($this->book)->getApplicableOptions(Input::get('rowsFileId'));
     }
 
     public function getApplications()
@@ -63,13 +62,6 @@ trait Apply
         $applications = $this->book->applications->load('members.organizations.now', 'members.user', 'members.contact');
 
         return ['applications' => $applications];
-    }
-
-    public function resetApplicableOptions()
-    {
-        ApplicationRepository::book($this->book)->resetApplicableOptions();
-
-        return $this->getApplicableOptions();
     }
 
     public function activeExtension()

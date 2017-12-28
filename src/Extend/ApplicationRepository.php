@@ -29,71 +29,38 @@ class ApplicationRepository
         return $instance;
     }
 
-    public function setApplicableOptions($selected, $noPopulation)
+    public function setApplicableOptions($selected)
     {
-        $this->book->optionColumns()->sync($selected['columns']);
-        $this->book->optionQuestions()->sync($selected['questions']);
-        $this->setConditionColumns($selected['conditionColumn']);
-        if ($noPopulation) {
-            $this->book->no_population = 1;
-            $this->book->save();
-        }
-        $this->setRowsFile($noPopulation ? $this->book->no_pop_id : $selected['tablesSelected']);
-        $this->setLoginFile(array_get($selected, 'loginSelected.id'));
-    }
+        $this->book->applicableOptions()->delete();
 
-    private function setConditionColumns($conditionColumn)
-    {
-        $this->book->column_id = $conditionColumn['id'];
+        $this->book->optionFields()->sync($selected['fields']);
+        $this->book->column_id = $selected['conditionColumn_id'];
         $this->book->save();
     }
 
-    private function setRowsFile($rows_file_id)
+    public function getApplicableOptions()
     {
-        $this->book->update(['rowsFile_id' => $rows_file_id]);
-    }
+        $columns = $this->book->optionFields()->wherePivot('target', 'login')->get()->lists('id');
+        $questions = $this->book->optionFields()->wherePivot('target', 'main')->get()->lists('id');
+        $file = $this->book->no_population ? \Files::find($this->book->no_pop_id) : \Files::find($this->book->rowsFile_id);
 
-    private function setLoginFile($login_row_id)
-    {
-        $this->book->update(['loginRow_id' => $login_row_id]);
-    }
+        $optionColumns = !is_null($file) ? $file->sheets->first()->tables->first()->columns->each(function ($column) use ($columns) {
+            $column->selected = in_array($column->id, $columns);
+        }) : [];
 
-    public function getApplicableOptions($rowsFileId, $noPopulation)
-    {
-        $conditionColumn = [];
-        $edited = !$this->book->optionColumns->isEmpty() || !$this->book->optionQuestions->isEmpty();
-        if ($edited) {
-            $columns = $this->book->optionColumns;
-            $questions = $this->book->optionQuestions;
-            $conditionColumn = $this->getConditionColumn();
-            $rowsFile_id = $this->book->rowsFile_id;
-            $loginConditionColumn = DB::table('row_columns')->where('id', $this->book->loginRow_id)->first();
-            $parentSelected = \Files::find($rowsFile_id);
-            if ($this->book->no_population) {
-                $parentSelected->title = "無母體名單".$this->book->no_pop_id;
+        $optionQuestions = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($questions) {
+            $optionQuestions = $page->getQuestions();
+            foreach ($optionQuestions as $index => $optionQuestion) {
+                $optionQuestions[$index]['selected'] = in_array($optionQuestion['id'], $questions);
             }
-            $parentList = [];
-        } else {
-            $file = $noPopulation ? \Files::find($this->book->no_pop_id) : \Files::find($rowsFileId);
-            $columns = !is_null($file) ? $file->sheets->first()->tables->first()->columns : [];
-            $questions = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
-                return array_merge($carry, $page->getQuestions());
-            }, []);
-            $loginConditionColumn = DB::table('row_columns')->where('id', $this->book->loginRow_id)->first();
-            $parentSelected = [];
-            $parentList = $this->getParentList();
-        }
+            return array_merge($carry, $optionQuestions);
+        }, []);
 
         return [
-            'rules' => (new \Plat\Files\RowsFile(\Files::first(),Auth::user()))->rules,
-            'columns' => $columns,
-            'questions' => $questions,
-            'edited' => $edited,
-            'conditionColumn' => $conditionColumn,
-            'loginConditionColumn' => $loginConditionColumn,
-            'tables' => [
-                'list' => $parentList,
-                'selected' => $parentSelected,
+            'conditionColumn_id' => $this->book->column_id,
+            'options' => [
+                'columns' => $optionColumns,
+                'questions' => $optionQuestions,
             ],
         ];
     }
