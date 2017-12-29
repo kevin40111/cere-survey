@@ -316,7 +316,7 @@ angular.module('ngEditor.directives', [])
                     </md-button>
                     <md-icon class="md-secondary" aria-label="刪除選項" md-svg-icon="delete" ng-click="removeAnswer(answer)"></md-icon>
                 </md-list-item>
-                <md-list-item ng-if="node.answers.length < types[node.type].editor.answers && types[node.type].editor.createAnswer" ng-click="createAnswer(answers[answers.length-1])">
+                <md-list-item ng-if="node.answers.length < types[node.type].editor.answers" ng-click="createAnswer(answers[answers.length-1])">
                     <md-icon md-svg-icon="{{types[node.type].icon}}"></md-icon>
                     <p>新增選項</p>
                 </md-list-item>
@@ -400,7 +400,7 @@ angular.module('ngEditor.directives', [])
                     </md-button>
                     <md-icon class="md-secondary" aria-label="刪除子題" md-svg-icon="delete" ng-click="removeQuestion(question)"></md-icon>
                 </md-list-item>
-                <md-list-item ng-if="node.questions.length < types[node.type].editor.questions.amount && types[node.type].editor.questions.createQuestion" ng-click="createQuestion(node.questions[node.questions.length-1])">
+                <md-list-item ng-if="node.questions.length < types[node.type].editor.questions.amount" ng-click="createQuestion(node.questions[node.questions.length-1])">
                     <md-icon md-svg-icon="help"></md-icon>
                     <p>新增問題</p>
                 </md-list-item>
