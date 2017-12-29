@@ -23,6 +23,11 @@ trait Apply
         return 'survey::extend.applicableList-ng';
     }
 
+    public function loginCondition()
+    {
+        return 'survey::extend.loginCondition-ng';
+    }
+
     public function userApplication()
     {
         return View::make('survey::extend.userApplication-ng');
@@ -123,5 +128,24 @@ trait Apply
             }
             return ['status' => $status];
         }
+    }
+
+    public function getColumns()
+    {
+        $book = Input::get('book');
+        return ApplicationRepository::book($this->book)->getColumns($book['rowsFile_id'], $book['no_population']);
+    }
+
+    public function getRowsTable()
+    {
+        return ApplicationRepository::book($this->book)->getRowsTables();
+    }
+
+    public function setLoginCondition()
+    {
+        $book = Input::get('book');
+        $lock = Input::get('lock');
+
+        return ApplicationRepository::book($this->book)->setLoginCondition($book, $lock);
     }
 }

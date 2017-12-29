@@ -6,7 +6,7 @@ use Cere\Survey\Eloquent as SurveyORM;
 use Auth;
 use Input;
 use DB;
-use Plat\Eloquent\Field\Field;
+use Cere\Survey\Eloquent\Field\Field;
 
 class ApplicationRepository
 {
@@ -113,7 +113,7 @@ class ApplicationRepository
         return $this->book->file->select('id', 'title')->where('created_by', '=', Auth::user()->id)->where('type','=','30')->whereNotIn('id', $no_population)->get();
     }
 
-    public function resetApplicableOptions()
+    private function resetApplicableOptions()
     {
         $this->deleteRelatedApplications();
         $this->deleteApplicableOptions();
@@ -138,6 +138,8 @@ class ApplicationRepository
         $book->column_id = NULL;
         $book->rowsFile_id = NULL;
         $book->no_population = 0;
+        $book->lock = false;
+        $book->loginRow_id = NULL;
         $book->save();
     }
 
@@ -262,20 +264,61 @@ class ApplicationRepository
 
     public function setNoPopulationColumn($column)
     {
-        $input = ['name' => $column['name'], 'title' => $column['title'], 'rules' => $column['rules'], 'unique'  => true, 'encrypt' => false, 'isnull'  => false, 'readonly'=> false];
+        $input = ['name' => $column['name'], 'title' => $column['title'], 'rules' => $column['rule'], 'unique'  => true, 'encrypt' => false, 'isnull'  => false, 'readonly'=> false];
         if (is_null($this->book->no_pop_id)) {
-            $file = new \Files(['type' => 5, 'title' => "noPopulation"]);
+            $file = new \Files(['type' => 5, 'title' => $this->book->title.'-無母體']);
             $rows_file = new \Plat\Files\RowsFile($file,Auth::user());
             $rows_file->create();
-            $this->book->update(['no_pop_id' => $file->id]);
+            $this->book->update(['no_pop_id' => $file->id, 'no_population' => true]);
             $table = $file->sheets->first()->tables->first();
             $column = $table->columns()->create($input);
-            $rows_file->get_file();
             return $column;
         } else {
             $column = \Files::find($this->book->no_pop_id)->sheets->first()->tables->first()->columns->first();
             $column->update($input);
             return $column;
+        }
+    }
+
+    public function getRowsTables()
+    {
+        $no_population = \Files::all()->filter(function ($file) {
+            return ($file->created_by ==  Auth::user()->id) ? (is_null($file->book) ? false : $file->book->no_pop_id) : false;
+        })->map(function($file) {
+            return $file->book->no_pop_id;
+        })->toArray();
+        $rowsTables = $this->book->file->select('id', 'title')->where('created_by', '=', Auth::user()->id)->where('type','=','30')->whereNotIn('id', $no_population)->get();
+
+        $rowRules = (new \Plat\Files\RowsFile(\Files::first(),Auth::user()))->rules;
+
+        return ['rowsTables' => $rowsTables, 'rowRules' => $rowRules];
+    }
+
+    public function getColumns($rowsFileId, $noPopulation)
+    {
+        $noColumns = $this->book->optionColumns->isEmpty();
+
+        if($noColumns) {
+            $file = $noPopulation ? \Files::find($this->book->no_pop_id) : \Files::find($rowsFileId);
+            $columns = !is_null($file) ? $file->sheets->first()->tables->first()->columns : [];
+        } else {
+            $columns = $this->book->optionColumns;
+        }
+
+        return ['columns' => $columns];
+    }
+
+    public function setLoginCondition($login, $lock)
+    {
+        if($lock) {
+            $this->book->update([
+                'loginRow_id' => $login['loginRow_id'],
+                'rowsFile_id' => $login['rowsFile_id'],
+                'no_population' => $login['no_population'],
+                'lock' => $lock
+            ]);
+        } else {
+            $this->resetApplicableOptions();
         }
     }
 }

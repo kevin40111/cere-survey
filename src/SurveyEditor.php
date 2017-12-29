@@ -45,6 +45,14 @@ trait SurveyEditor
 
     public function getBook()
     {
+        $this->book->loginColumn = Field::find($this->book->loginRow_id);
+
+        if ($this->book->no_population) {
+            $this->book->rowsFile = $this->book->noRows;
+        } else {
+            $this->book->rowsFile = $this->book->file;
+        }
+
         return ['book' => $this->book];
     }
 

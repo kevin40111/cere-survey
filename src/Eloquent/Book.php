@@ -57,6 +57,11 @@ class Book extends Eloquent {
         return (boolean)$value;
     }
 
+    public function getNoPopulationAttribute($value)
+    {
+        return (boolean)$value;
+    }
+
     public function applicableOptions()
     {
         return $this->hasMany('Cere\Survey\Eloquent\ApplicableOption', 'book_id', 'id');
@@ -87,5 +92,8 @@ class Book extends Eloquent {
         return $this->morphOne('Cere\Survey\Eloquent\Rule', 'effect');
     }
 
-
+    public function noRows()
+    {
+        return $this->belongsTo('Files', 'no_pop_id', 'id');
+    }
 }
