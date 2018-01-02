@@ -8,7 +8,7 @@
                 </div>
             </h2>
             <div style="height:300px; width:800px;">
-                調查時間：<?php echo date_format(new DateTime($file_book->start_at), 'Y-m-d H:i') . '~' . date_format(new DateTime($file_book->close_at), 'Y-m-d H:i');?>
+                調查時間：<?php echo date_format(new DateTime($book->start_at), 'Y-m-d H:i') . '~' . date_format(new DateTime($book->close_at), 'Y-m-d H:i');?>
             </div>
             <div class="ui divider"></div>
             <div class="ui mini horizontal bulleted link list">

@@ -1,29 +1,28 @@
-<md-content ng-cloak layout="column" ng-controller="surveylogin" layout-align="start center" style="height:100%">
-<form action="login" class="ui large form <?=$errors->isEmpty() ? '' : 'error'?>" method="post">
-    <div class="ui middle aligned center aligned grid">
-      <div class="column">
-        <h2 class="ui teal image header">
-            <div class="content">
-                主題本登入
-            </div>
-        </h2>
-        <div class="ui stacked segment">
-            <div class="field">
-                <div class="ui left icon input">
-                    <i class="write icon"></i>
-                    <input type="text" name="id" ng-model="input_value" placeholder="請輸入所申請的登入資料">
-                </div>
-            </div>
-            <input type="submit" class="ui fluid large teal submit button" value="登入">
+<div ng-cloak ng-controller="surveylogin" layout="row" layout-align="center center" style="height:100%">
+
+    <md-content md-whiteframe="1" style="width: 500px" layout-padding>
+    <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h2><?php echo $book->title?></h2>
         </div>
-      </div>
+    </md-toolbar>
+    <form action="login" method="post">
+    <?php foreach($fields as $field) { ?>
+    <md-input-container class="md-block">
+        <label>請輸入<?php echo $field->title; ?></label>
+        <input type="text" name="<?php echo $field->name; ?>">
+    </md-input-container>
+    <?php } ?>
+    <div>
+    <?=$errors->first("fail")?>
+        <md-button type="submit">登入</md-button>
     </div>
-    <div class="ui error message secondary inverted red segment">
-        <p><?=$errors->first("fail")?></p>
-    </div>
-</form>
-</md-content>
+    </form>
+    </md-content>
+
+
+</div>
 <script src="/packages/cere/survey/js/ng/ngSurvey.js"></script>
 <script >
-    app.controller('surveylogin', function ($scope, $http){});
+    app.controller('surveylogin', function ($scope, $http) {});
 </script>

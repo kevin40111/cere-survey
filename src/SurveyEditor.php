@@ -10,6 +10,9 @@ use Auth;
 use Cere\Survey;
 use Cere\Survey\Eloquent as SurveyORM;
 use Cere\Survey\Eloquent\Field\Field;
+use Cere\Survey\Field\FieldComponent;
+use Cere\Survey\Field\FieldRepository;
+use Files;
 
 
 trait SurveyEditor
@@ -51,14 +54,6 @@ trait SurveyEditor
 
     public function getBook()
     {
-        $this->book->loginColumn = Field::find($this->book->loginRow_id);
-
-        if ($this->book->no_population) {
-            $this->book->rowsFile = $this->book->noRows;
-        } else {
-            $this->book->rowsFile = $this->book->file;
-        }
-
         return ['book' => $this->book];
     }
 
@@ -269,83 +264,44 @@ trait SurveyEditor
         return $this->editorRepository->saveGearQuestion($gear_file, $node_id);
     }
 
-    public function setNoPopulationColumn()
+    public function createAuthField()
     {
-        $column = Input::get('column');
-        $input = ['name' => $column['name'], 'title' => $column['title'], 'rules' => $column['rule'], 'unique'  => true, 'encrypt' => false, 'isnull'  => false, 'readonly'=> false];
-        if (is_null($this->book->no_pop_id)) {
-            $file = new \Files(['type' => 5, 'title' => $this->book->title.'-無母體']);
-            $rows_file = new \Plat\Files\RowsFile($file,Auth::user());
-            $rows_file->create();
-            $this->book->update(['no_pop_id' => $file->id, 'no_population' => true]);
-            $table = $file->sheets->first()->tables->first();
-            $column = $table->columns()->create($input);
-            return $column;
-        } else {
-            $column = \Files::find($this->book->no_pop_id)->sheets->first()->tables->first()->columns->first();
-            $column->update($input);
-            return $column;
-        }
+        $input = Input::only(['field.name', 'field.title', 'field.rules'])['field'];
+
+        $file = new Files(['type' => 30, 'title' => Input::get('fileTitle', $this->book->title.'-無母體')]);
+        $rows_file = new FieldComponent($file, Auth::user());
+        $rows_file->create();
+
+        FieldRepository::target($file->sheets->first()->tables->first(), $this->user->id)->update_column(NULL, $input);
+
+        return ['file' => $file];
     }
 
-    public function getColumns()
+    public function getAuthOptions()
     {
-        $book = Input::get('book');
+        $fieldFiles = Files::where('created_by', '=', Auth::user()->id)->where('type', '=', '30')->get();
 
-        $rowsFileId = $book['rowsFile_id'];
-        $noPopulation = $book['no_population'];
-
-        $noColumns = $this->book->optionColumns->isEmpty();
-
-        if($noColumns) {
-            $file = $noPopulation ? \Files::find($this->book->no_pop_id) : \Files::find($rowsFileId);
-            $columns = !is_null($file) ? $file->sheets->first()->tables->first()->columns : [];
-        } else {
-            $columns = $this->book->optionColumns;
-        }
-
-        return ['columns' => $columns];
+        return [
+            'fieldFiles' => $fieldFiles,
+            'fieldFile_id' => $this->book->auth['fieldFile_id'],
+            'rules' => FieldRepository::$rules,
+        ];
     }
 
-    public function getRowsTable()
+    public function getAuthFields()
     {
-        $no_population = \Files::all()->filter(function ($file) {
-            return ($file->created_by ==  Auth::user()->id) ? (is_null($file->book) ? false : $file->book->no_pop_id) : false;
-        })->map(function($file) {
-            return $file->book->no_pop_id;
-        })->toArray();
-        $rowsTables = $this->book->file->select('id', 'title')->where('created_by', '=', Auth::user()->id)->where('type','=','30')->whereNotIn('id', $no_population)->get();
+        $authFields = Files::find(Input::get('fieldFile_id'))->sheets->first()->tables->first()->columns->each(function($field) {
+            $field->isInput = in_array($field->id, $this->book->auth['inputFields']);
+            $field->isValid = in_array($field->id, $this->book->auth['validFields']);
+        });
 
-        $rowRules = (new \Plat\Files\RowsFile(\Files::first(),Auth::user()))->rules;
-
-        return ['rowsTables' => $rowsTables, 'rowRules' => $rowRules];
+        return ['authFields' => $authFields];
     }
 
     public function setLoginCondition()
     {
-        $book = Input::get('book');
-        $lock = Input::get('lock');
-
-        if($lock) {
-            $this->book->update([
-                'loginRow_id' => $book['loginRow_id'],
-                'rowsFile_id' => $book['rowsFile_id'],
-                'no_population' => $book['no_population'],
-                'lock' => $lock
-            ]);
-        } else {
-            $this->book->applications->each(function($application){
-                $application->delete();
-            });
-            $this->book->applicableOptions()->delete();
-
-            $book = $this->book;
-            $book->column_id = NULL;
-            $book->rowsFile_id = NULL;
-            $book->no_population = 0;
-            $book->lock = false;
-            $book->loginRow_id = NULL;
-            $book->save();
-        }
+        $this->book->update([
+            'auth' => Input::get('auth')
+        ]);
     }
 }

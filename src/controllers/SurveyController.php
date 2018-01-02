@@ -4,6 +4,7 @@ use Cere\Survey\Eloquent as SurveyORM;
 use Cere\Survey\Writer\WriterInterface;
 use Cere\Survey\Writer\Fill;
 use Cere\Survey\Writer\Rule;
+use Cere\Survey\Eloquent\Field\Field;
 
 class SurveyController extends \BaseController {
     /**
@@ -42,11 +43,12 @@ class SurveyController extends \BaseController {
     {
         $this->writer->user()->logout();
         $book = SurveyORM\Book::find($book_id);
+        $fields = Field::find($book->auth['inputFields']);
         $now = Carbon\Carbon::now();
-        if ((!is_null($book->start_at) && $now < $book->start_at) || (!is_null($book->close_at) && $now > $book->close_at)) {
-            return View::make('survey::layout-survey')->nest('context', 'survey::surveydisabled-ng', ['file_book' => $book]);
-        }
-        return View::make('survey::layout-survey')->nest('context', 'survey::surveylogin-ng');
+
+        $view = (! is_null($book->start_at) && $now < $book->start_at) || (! is_null($book->close_at) && $now > $book->close_at) ? 'surveydisabled-ng' : 'surveylogin-ng';
+
+        return View::make('survey::layout-survey')->nest('context', 'survey::' . $view, ['book' => $book, 'fields' => $fields]);
     }
 
     /**
@@ -67,7 +69,7 @@ class SurveyController extends \BaseController {
      */
     public function login($book_id)
     {
-        $this->writer->user()->login(Input::get('id'));
+        $this->writer->user()->login(Input::all());
 
         if ($this->writer->user()->logined()) {
             return Redirect::to('survey/'.$book_id.'/page');

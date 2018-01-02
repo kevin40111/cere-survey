@@ -45,9 +45,9 @@ class SurveyFile extends CommFile
     public static function tools()
     {
         return [
-            ['name' => 'confirm', 'title' => '加掛審核', 'method' => 'confirm', 'icon' => 'list'],
+            // ['name' => 'confirm', 'title' => '加掛審核', 'method' => 'confirm', 'icon' => 'list'],
             ['name' => 'confirm', 'title' => '登入條件設定', 'method' => 'loginCondition', 'icon' => 'list'],
-            ['name' => 'applicableList', 'title' => '加掛設定', 'method' => 'applicableList', 'icon' => 'list'],
+            // ['name' => 'applicableList', 'title' => '加掛設定', 'method' => 'applicableList', 'icon' => 'list'],
             ['name' => 'browser', 'title' => '題目瀏覽', 'method' => 'browser', 'icon' => 'list'],
             ['name' => 'surveyTime', 'title' => '設定時間', 'method' => 'surveyTime', 'icon' => 'alarm'],
         ];

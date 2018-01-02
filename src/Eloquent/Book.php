@@ -15,7 +15,7 @@ class Book extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = array('file_id', 'title', 'lock', 'column_id', 'rowsFile_id', 'loginRow_id', 'no_population', 'no_pop_id', 'start_at', 'close_at');
+    protected $fillable = array('file_id', 'title', 'lock', 'loginRow_id', 'auth', 'start_at', 'close_at');
 
     protected $attributes = ['lock' => false];
 
@@ -60,6 +60,30 @@ class Book extends Eloquent {
     public function getNoPopulationAttribute($value)
     {
         return (boolean)$value;
+    }
+
+    public function getAuthAttribute($value)
+    {
+        $auth = json_decode($value, true);
+        $inputFields = array_keys($auth['fields']);
+        $validFields = array_filter($auth['fields'], function($field) { return $field; });
+        return [
+            'fieldFile_id' => isset($auth['fieldFile_id']) ? $auth['fieldFile_id'] : NULL,
+            'inputFields' => array_keys($auth['fields']),
+            'validFields' => array_keys(array_filter($auth['fields'], function($field) { return $field['valid']; })),
+        ];
+    }
+
+    public function setAuthAttribute($auth)
+    {
+        $fields = [];
+        foreach ($auth['fields'] as $field) {
+            $fields[$field['id']] = ['valid' => $field['isValid']];
+        }
+        $this->attributes['auth'] = json_encode([
+            'fieldFile_id' => $auth['fieldFile_id'],
+            'fields' => $fields,
+        ]);
     }
 
     public function applicableOptions()
