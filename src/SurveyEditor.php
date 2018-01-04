@@ -39,7 +39,7 @@ trait SurveyEditor
 
     public function surveyTime()
     {
-        return 'survey::surveyTime-ng';
+        return 'survey::auth.surveyTime-ng';
     }
 
     public function questionBrowser()
@@ -49,7 +49,7 @@ trait SurveyEditor
 
     public function loginCondition()
     {
-        return 'survey::extend.loginCondition-ng';
+        return 'survey::auth.loginCondition-ng';
     }
 
     public function getBook()

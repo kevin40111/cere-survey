@@ -48,7 +48,7 @@ class SurveyController extends \BaseController {
 
         $view = (! is_null($book->start_at) && $now < $book->start_at) || (! is_null($book->close_at) && $now > $book->close_at) ? 'surveydisabled-ng' : 'surveylogin-ng';
 
-        return View::make('survey::layout-survey')->nest('context', 'survey::' . $view, ['book' => $book, 'fields' => $fields]);
+        return View::make('survey::layout-survey')->nest('context', 'survey::auth.' . $view, ['book' => $book, 'fields' => $fields]);
     }
 
     /**
@@ -58,7 +58,7 @@ class SurveyController extends \BaseController {
      */
     public function demoLogin()
     {
-        return View::make('survey::layout-survey')->nest('context', 'survey::demologin-ng');
+        return View::make('survey::layout-survey')->nest('context', 'survey::auth.demologin-ng');
     }
 
     /**
