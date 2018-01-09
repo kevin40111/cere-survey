@@ -118,7 +118,8 @@ class SurveyController extends \BaseController {
         }
 
         $nextPage = $page->next ? $this->checkAndJump($page->next, $answers) : NULL;
-        $this->writer->setPage($nextPage);
+
+        $this->writer->setPage(isset($nextPage->id) ? $nextPage->id : NULL);
 
         $url = is_null($nextPage) ? $this->getNextUrl($book_id) : NULL;
 
