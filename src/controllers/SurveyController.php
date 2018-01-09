@@ -247,8 +247,8 @@ class SurveyController extends \BaseController {
 
         $page = SurveyORM\Node::find($answers['page_id']);
 
-        $skips = ! $page ? [] : $page->childrenNodes->reduce(function($carry, $node) use ($answers) {
-            $filler = Fill::answers($answers)->node($node);
+        $skips = ! $page ? [] : $page->childrenNodes->reduce(function($carry, $node) {
+            $filler = Fill::answers($this->writer->all())->node($node);
             return $carry + $filler->getSkips();
         }, []);
 

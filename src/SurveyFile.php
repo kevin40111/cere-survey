@@ -61,7 +61,7 @@ class SurveyFile extends CommFile
 
         SheetRepository::target($sheet)->init();
 
-        $this->file->book()->create(['title' => $this->file->title, 'lock' => false, 'no_population' => false]);
+        $this->file->book()->create(['title' => $this->file->title, 'lock' => false]);
     }
 
     public function queryOrganizations()

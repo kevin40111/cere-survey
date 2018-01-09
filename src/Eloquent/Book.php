@@ -64,9 +64,7 @@ class Book extends Eloquent {
 
     public function getAuthAttribute($value)
     {
-        $auth = json_decode($value, true);
-        $inputFields = array_keys($auth['fields']);
-        $validFields = array_filter($auth['fields'], function($field) { return $field; });
+        $auth = $value ? json_decode($value, true) : ['fields' => []];
         return [
             'fieldFile_id' => isset($auth['fieldFile_id']) ? $auth['fieldFile_id'] : NULL,
             'inputFields' => array_keys($auth['fields']),
