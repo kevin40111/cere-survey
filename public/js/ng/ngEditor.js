@@ -61,6 +61,26 @@ angular.module('ngEditor.directives', [])
                 <div layout="column" layout-align="start center" style="height:100%;overflow-y:scroll">
                     <div style="width:960px">
                         <survey-node ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
+                        <md-card>
+                            <md-card-header md-colors="{background: 'blue'}">
+                                <div flex layout="row" layout-align="start center">
+                                    <div>
+                                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="info-outline"></md-icon>
+                                    </div>
+                                    <div style="margin: 0 0 0 16px">底頁說明欄</div>
+                                    <span flex></span>
+                                </div>
+                            </md-card-header>
+                            <md-card-content>
+                                <md-input-container class="md-block">
+                                    <label>說明</label>
+                                    <textarea ng-model="footer.title" md-maxlength="2000" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus></textarea>
+                                </md-input-container>
+                            </md-card-content>
+                            <md-card-actions>
+                                <md-button ng-click="saveNodeTitle()">儲存</md-button>
+                            </md-card-actions>
+                        </md-card>
                     </div>
                 </div>
                 <md-sidenav class="md-sidenav-right" md-component-id="survey-skips" md-is-open="skipSetting" style="min-width:40%">
