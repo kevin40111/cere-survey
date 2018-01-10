@@ -306,4 +306,10 @@ trait SurveyEditor
     {
         return $this->editorRepository->uploaderBanner(Input::file('file_upload'), $this->file->id, Input::get('id'));
     }
+
+    public function saveBookFooter()
+    {
+        $this->file->book->update(['footer' => Input::get('footer')]);
+        return ['footer' => $this->file->book->footer];
+    }
 }

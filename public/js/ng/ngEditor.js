@@ -74,11 +74,11 @@ angular.module('ngEditor.directives', [])
                             <md-card-content>
                                 <md-input-container class="md-block">
                                     <label>說明</label>
-                                    <textarea ng-model="footer.title" md-maxlength="2000" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus></textarea>
+                                    <textarea ng-model="book.footer" md-maxlength="2000" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus></textarea>
                                 </md-input-container>
                             </md-card-content>
                             <md-card-actions>
-                                <md-button ng-click="saveNodeTitle()">儲存</md-button>
+                                <md-button ng-click="saveBookFooter()">儲存</md-button>
                             </md-card-actions>
                         </md-card>
                     </div>
@@ -141,6 +141,12 @@ angular.module('ngEditor.directives', [])
             $scope.lockBook = function() {
                 editorFactory.ajax('lockBook', {}, $scope.book).then(function(response) {
                     $scope.book.lock = response.lock;
+                });
+            };
+
+            $scope.saveBookFooter = function() {
+                editorFactory.ajax('saveBookFooter',{'footer':$scope.book.footer}).then(function(response) {
+                    $scope.book.footer = response.footer;
                 });
             };
 
