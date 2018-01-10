@@ -4,6 +4,7 @@ namespace Cere\Survey\Eloquent;
 
 use Eloquent;
 use Cere\Survey\Eloquent\Field\Field as Field;
+use Carbon\Carbon;
 
 class Book extends Eloquent {
 
@@ -15,7 +16,7 @@ class Book extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = array('file_id', 'title', 'lock', 'loginRow_id', 'auth', 'start_at', 'close_at');
+    protected $fillable = array('file_id', 'title', 'lock', 'loginRow_id', 'auth');
 
     protected $attributes = ['lock' => false];
 
@@ -69,6 +70,8 @@ class Book extends Eloquent {
             'fieldFile_id' => isset($auth['fieldFile_id']) ? $auth['fieldFile_id'] : NULL,
             'inputFields' => array_keys($auth['fields']),
             'validFields' => array_keys(array_filter($auth['fields'], function($field) { return $field['valid']; })),
+            'start_at' => isset($auth['start_at']) ? Carbon::parse($auth['start_at']) : Carbon::minValue(),
+            'close_at' => isset($auth['close_at']) ? Carbon::parse($auth['close_at']) : Carbon::maxValue(),
         ];
     }
 
@@ -81,6 +84,8 @@ class Book extends Eloquent {
         $this->attributes['auth'] = json_encode([
             'fieldFile_id' => $auth['fieldFile_id'],
             'fields' => $fields,
+            'start_at' => isset($auth['start_at']) ? Carbon::parse($auth['start_at'])->tz('Asia/Taipei')->toDateTimeString() : NULL,
+            'close_at' => isset($auth['close_at']) ? Carbon::parse($auth['close_at'])->tz('Asia/Taipei')->toDateTimeString() : NULL,
         ]);
     }
 

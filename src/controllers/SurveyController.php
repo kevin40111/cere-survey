@@ -44,9 +44,8 @@ class SurveyController extends \BaseController {
         $this->writer->user()->logout();
         $book = SurveyORM\Book::find($book_id);
         $fields = Field::find($book->auth['inputFields']);
-        $now = Carbon\Carbon::now();
 
-        $view = (! is_null($book->start_at) && $now < $book->start_at) || (! is_null($book->close_at) && $now > $book->close_at) ? 'surveydisabled-ng' : 'surveylogin-ng';
+        $view = Carbon\Carbon::now()->between($book->auth['start_at'], $book->auth['close_at']) ? 'surveylogin-ng' : 'surveydisabled-ng';
 
         return View::make('survey::layout-survey')->nest('context', 'survey::auth.' . $view, ['book' => $book, 'fields' => $fields]);
     }

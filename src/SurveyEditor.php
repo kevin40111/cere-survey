@@ -247,16 +247,6 @@ trait SurveyEditor
         return ['explanation' => $explanation];
     }
 
-    public function getTime()
-    {
-        return ['start_at' => $this->file->book->start_at, 'close_at' => $this->file->book->close_at];
-    }
-
-    public function setTime()
-    {
-        return (int)$this->file->book->update(['start_at' => Input::get('start_at'), 'close_at' => Input::get('close_at')]);
-    }
-
     public function saveGearQuestion()
     {
         $gear_file = Input::file('file_upload');
@@ -284,6 +274,8 @@ trait SurveyEditor
         return [
             'fieldFiles' => $fieldFiles,
             'fieldFile_id' => $this->book->auth['fieldFile_id'],
+            'start_at' => $this->book->auth['start_at']->isSameDay(\Carbon\Carbon::minValue()) ? NULL : $this->book->auth['start_at']->toDateTimeString(),
+            'close_at' => $this->book->auth['close_at']->isSameDay(\Carbon\Carbon::maxValue()) ? NULL : $this->book->auth['close_at']->toDateTimeString(),
             'rules' => FieldRepository::$rules,
         ];
     }
