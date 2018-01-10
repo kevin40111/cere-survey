@@ -18,6 +18,7 @@ class CreateSurveyAnswers extends Migration {
             $table->string('title', 500);
             $table->string('value', 50);
             $table->integer('previous_id')->nullable();
+            $table->integer('belong');
         });
     }
 

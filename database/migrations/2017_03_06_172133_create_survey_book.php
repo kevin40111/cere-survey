@@ -17,13 +17,8 @@ class CreateSurveyBook extends Migration {
             $table->integer('file_id');
             $table->string('title', 50);
             $table->boolean('lock', 200);
-            $table->integer('column_id')->nullable();
-            $table->integer('rowsFile_id')->nullable();
             $table->integer('loginRow_id')->nullable();
-            $table->boolean('no_population');
-            $table->integer('no_pop_id')->nullable();
-            $table->dateTime('start_at')->nullable();
-            $table->dateTime('close_at')->nullable();
+            $table->text('auth');
         });
     }
 

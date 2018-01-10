@@ -58,11 +58,6 @@ class Book extends Eloquent {
         return (boolean)$value;
     }
 
-    public function getNoPopulationAttribute($value)
-    {
-        return (boolean)$value;
-    }
-
     public function getAuthAttribute($value)
     {
         $auth = $value ? json_decode($value, true) : ['fields' => []];
@@ -112,10 +107,5 @@ class Book extends Eloquent {
     public function rule()
     {
         return $this->morphOne('Cere\Survey\Eloquent\Rule', 'effect');
-    }
-
-    public function noRows()
-    {
-        return $this->belongsTo('Files', 'no_pop_id', 'id');
     }
 }
