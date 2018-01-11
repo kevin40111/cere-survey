@@ -9,12 +9,15 @@ use Mail;
 use Plat\Files\CommFile;
 use Cere\Survey\SurveyEditor;
 use Cere\Survey\Field\SheetRepository;
+use Cere\Survey\Extend\Apply;
 
 class SurveyFile extends CommFile
 {
     use SurveyEditor {
         SurveyEditor::__construct as private __SurveyEditorConstruct;
     }
+
+    use Apply;
 
     function __construct(Files $file, User $user)
     {
@@ -36,16 +39,17 @@ class SurveyFile extends CommFile
 
     public function get_views()
     {
-        return ['open', 'demo', 'application','confirm', 'applicableList', 'browser', 'surveyTime'];
+        return ['open', 'demo', 'application','confirm', 'applicableList', 'browser', 'surveyTime', 'loginCondition'];
     }
 
     public static function tools()
     {
         return [
-            ['name' => 'confirm', 'title' => '加掛審核', 'method' => 'confirm', 'icon' => 'list'],
-            ['name' => 'applicableList', 'title' => '加掛項目', 'method' => 'applicableList', 'icon' => 'list'],
+            // ['name' => 'confirm', 'title' => '加掛審核', 'method' => 'confirm', 'icon' => 'list'],
+            ['name' => 'confirm', 'title' => '登入設定', 'method' => 'loginCondition', 'icon' => 'list'],
+            // ['name' => 'applicableList', 'title' => '加掛設定', 'method' => 'applicableList', 'icon' => 'list'],
             ['name' => 'browser', 'title' => '題目瀏覽', 'method' => 'browser', 'icon' => 'list'],
-            ['name' => 'surveyTime', 'title' => '設定時間', 'method' => 'surveyTime', 'icon' => 'alarm'],
+            // ['name' => 'surveyTime', 'title' => '設定時間', 'method' => 'surveyTime', 'icon' => 'alarm'],
         ];
     }
 
@@ -57,7 +61,7 @@ class SurveyFile extends CommFile
 
         SheetRepository::target($sheet)->init();
 
-        $this->file->book()->create(['title' => $this->file->title, 'lock' => false, 'no_population' => false]);
+        $this->file->book()->create(['title' => $this->file->title, 'lock' => false]);
     }
 
     public function queryOrganizations()

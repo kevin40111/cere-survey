@@ -707,7 +707,7 @@ class FieldRepository
     public function setAttributesFieldName($attributes)
     {
         return Field::find(array_keys($attributes))->map(function ($field) use ($attributes) {
-            return ['name' => $field->name, 'value' => $attributes[$field->id]];
+            return ['name' => 'c'.$field->id, 'value' => $attributes[$field->id]];
         })->lists('value', 'name');
     }
 }

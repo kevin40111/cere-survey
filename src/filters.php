@@ -6,7 +6,7 @@ Route::filter('has_survey_login', function($route)
 
     if (! $session->exists()) {
 
-        return Redirect::to('survey/'.$book_id.'/surveyLogin');
+        return Redirect::to('survey/'.$route->getParameter('book_id').'/surveyLogin');
 
     }
 

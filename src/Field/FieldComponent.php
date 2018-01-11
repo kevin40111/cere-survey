@@ -1,6 +1,6 @@
 <?php
 
-namespace Cere\Survey;
+namespace Cere\Survey\Field;
 
 use User;
 use Files;

@@ -6,9 +6,13 @@ use DB;
 use Schema;
 use Input;
 use View;
+use Auth;
 use Cere\Survey;
 use Cere\Survey\Eloquent as SurveyORM;
 use Cere\Survey\Eloquent\Field\Field;
+use Cere\Survey\Field\FieldComponent;
+use Cere\Survey\Field\FieldRepository;
+use Files;
 
 
 trait SurveyEditor
@@ -28,21 +32,6 @@ trait SurveyEditor
         return 'survey::demo-ng';
     }
 
-    public function application()
-    {
-        return 'survey::application-ng';
-    }
-
-    public function confirm()
-    {
-        return 'survey::confirm-ng';
-    }
-
-    public function applicableList()
-    {
-        return 'survey::applicableList-ng';
-    }
-
     public function browser()
     {
         return 'survey::browser-ng';
@@ -50,7 +39,7 @@ trait SurveyEditor
 
     public function surveyTime()
     {
-        return 'survey::surveyTime-ng';
+        return 'survey::auth.surveyTime-ng';
     }
 
     public function questionBrowser()
@@ -58,9 +47,9 @@ trait SurveyEditor
         return  View::make('survey::template_question_browser');
     }
 
-    public function userApplication()
+    public function loginCondition()
     {
-        return View::make('survey::userApplication-ng');
+        return 'survey::auth.loginCondition-ng';
     }
 
     public function getBook()
@@ -215,79 +204,6 @@ trait SurveyEditor
         return ['item' => $item->load(['questions', 'answers']), 'next' => $item->next->load(['questions', 'answers'])];
     }
 
-    public function setAppliedOptions()
-    {
-        $selected = Input::get('selected');
-
-        return Survey\ApplicationRepository::book($this->book)->setAppliedOptions($selected);
-    }
-
-    public function getAppliedOptions()
-    {
-        $member_id = Input::get('member_id');
-
-        return Survey\ApplicationRepository::book($this->book)->getAppliedOptions($member_id);
-    }
-
-    public function resetApplication()
-    {
-        return Survey\ApplicationRepository::book($this->book)->resetApplication();
-    }
-
-    public function setApplicableOptions()
-    {
-        Survey\ApplicationRepository::book($this->book)->setApplicableOptions(Input::get('selected'), Input::get('noPopulation'));
-        return $this->getApplicableOptions();
-    }
-
-    public function getApplicableOptions()
-    {
-        return Survey\ApplicationRepository::book($this->book)->getApplicableOptions(Input::get('rowsFileId'), Input::get('noPopulation'));
-    }
-
-    public function getApplications()
-    {
-        $applications = $this->book->applications->load('members.organizations.now', 'members.user', 'members.contact');
-
-        return ['applications' => $applications];
-    }
-
-    public function resetApplicableOptions()
-    {
-        Survey\ApplicationRepository::book($this->book)->resetApplicableOptions();
-
-        return $this->getApplicableOptions();
-    }
-
-    public function activeExtension()
-    {
-        $application_id = Input::get('application_id');
-        $application = $this->book->applications()->where('id', $application_id)->first();
-        if (!$application->reject) {
-            SurveyORM\Book::find($application->ext_book_id)->update(array('lock' => true));
-        }
-        $application->extension = !$application->extension;
-        $application->save();
-
-        return ['application' => $application];
-    }
-
-    public function reject()
-    {
-        $application = $this->book->applications()->where('id', Input::get('application_id'))->first();
-
-        $application = Survey\ApplicationRepository::application($application)->reject();
-
-        return ['application' => $application];
-    }
-
-    public function getApplicationPages()
-    {
-        $pagination = Survey\ApplicationRepository::book($this->book)->getApplicationPages();
-
-        return ['currentPage' => $pagination->getCurrentPage(), 'lastPage' => $pagination->getLastPage()];
-    }
-
     public function saveRule()
     {
         $class = Input::get('skipTarget.class');
@@ -324,13 +240,6 @@ trait SurveyEditor
         return ['lock' => true];
     }
 
-    public function checkExtBookLocked()
-    {
-        $locked = SurveyORM\Book::find(Input::get('book_id'))->lock;
-
-        return  ['ext_locked' => $locked];
-    }
-
     public function getExpressionExplanation()
     {
         $explanation = Survey\RuleRepository::find(Input::get('rule_id'))->explanation();
@@ -338,42 +247,53 @@ trait SurveyEditor
         return ['explanation' => $explanation];
     }
 
-    public function applicationStatus()
-    {
-        $application = $this->book->applications()->OfMe()->first();
-        if (is_null($application)) {
-            return ['status' => null];
-        } else {
-            if ($application->extension ==  $application->reject) {
-                $status = '0';
-            } else if ($application->reject) {
-                $status = '1';
-            } else {
-                $status = '2';
-            }
-            return ['status' => $status];
-        }
-    }
-
-    public function setNoPopulationColumn()
-    {
-        return Survey\ApplicationRepository::book($this->book)->setNoPopulationColumn(Input::get('column'));
-    }
-
-    public function getTime()
-    {
-        return ['start_at' => $this->file->book->start_at, 'close_at' => $this->file->book->close_at];
-    }
-
-    public function setTime()
-    {
-        return (int)$this->file->book->update(['start_at' => Input::get('start_at'), 'close_at' => Input::get('close_at')]);
-    }
-
     public function saveGearQuestion()
     {
         $gear_file = Input::file('file_upload');
         $node_id = Input::get('node_id');
         return $this->editorRepository->saveGearQuestion($gear_file, $node_id);
+    }
+
+    public function createAuthField()
+    {
+        $input = Input::only(['field.name', 'field.title', 'field.rules'])['field'];
+
+        $file = new Files(['type' => 30, 'title' => Input::get('fileTitle', $this->book->title.'-無母體')]);
+        $rows_file = new FieldComponent($file, Auth::user());
+        $rows_file->create();
+
+        FieldRepository::target($file->sheets->first()->tables->first(), $this->user->id)->update_column(NULL, $input);
+
+        return ['file' => $file];
+    }
+
+    public function getAuthOptions()
+    {
+        $fieldFiles = Files::where('created_by', '=', Auth::user()->id)->where('type', '=', '30')->get();
+
+        return [
+            'fieldFiles' => $fieldFiles,
+            'fieldFile_id' => $this->book->auth['fieldFile_id'],
+            'start_at' => $this->book->auth['start_at']->isSameDay(\Carbon\Carbon::minValue()) ? NULL : $this->book->auth['start_at']->toDateTimeString(),
+            'close_at' => $this->book->auth['close_at']->isSameDay(\Carbon\Carbon::maxValue()) ? NULL : $this->book->auth['close_at']->toDateTimeString(),
+            'rules' => FieldRepository::$rules,
+        ];
+    }
+
+    public function getAuthFields()
+    {
+        $authFields = Files::find(Input::get('fieldFile_id'))->sheets->first()->tables->first()->columns->each(function($field) {
+            $field->isInput = in_array($field->id, $this->book->auth['inputFields']);
+            $field->isValid = in_array($field->id, $this->book->auth['validFields']);
+        });
+
+        return ['authFields' => $authFields];
+    }
+
+    public function setLoginCondition()
+    {
+        $this->book->update([
+            'auth' => Input::get('auth')
+        ]);
     }
 }
