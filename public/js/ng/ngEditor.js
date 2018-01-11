@@ -84,7 +84,7 @@ angular.module('ngEditor.directives', [])
                     </div>
                 </div>
                 <md-sidenav class="md-sidenav-right" md-component-id="survey-skips" md-is-open="skipSetting" style="min-width:40%">
-                    <survey-skips ng-if="skipSetting" skip-target="skipTarget" book="book"></survey-skips>
+                    <survey-skips ng-if="skipSetting" paths="paths" skip-target="skipTarget" book="book"></survey-skips>
                 </md-sidenav>
             </md-content>
         `,
@@ -744,7 +744,8 @@ angular.module('ngEditor.directives', [])
         transclude: false,
         scope: {
             skipTarget: '=',
-            book: '='
+            book: '=',
+            paths: '='
         },
         template: `
             <div layout="column">
@@ -845,7 +846,7 @@ angular.module('ngEditor.directives', [])
             };
 
             $scope.saveRule = function(type) {
-               $http({method: 'POST', url: 'saveRule', data:{expressions: $scope.rule.expressions, skipTarget: $scope.skipTarget, type:type}})
+               $http({method: 'POST', url: 'saveRule', data:{paths: $scope.paths, expressions: $scope.rule.expressions, skipTarget: $scope.skipTarget, type:type}})
                 .success(function(data) {
 
                 }).error(function(e) {

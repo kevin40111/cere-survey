@@ -94,12 +94,9 @@ class SurveyController extends \BaseController {
 
         $page = SurveyORM\Node::find($answers['page_id']);
 
-        $skips = ! $page ? [] : $page->childrenNodes->reduce(function($carry, $node) use ($answers) {
-            $filler = Fill::answers($answers)->node($node);
-            return $carry + $filler->getSkips();
-        }, []);
+        $skips = ! $page ? [] : $this->getSkips($page->pageRules);
 
-        return ['page' => $page, 'answers' => $answers, 'skips' => $this->splitSkips($skips), 'logs' => DB::connection()->getQueryLog()];
+        return ['page' => $page, 'answers' => $answers, 'skips' => $skips, 'logs' => DB::connection()->getQueryLog()];
     }
 
     /**
@@ -198,33 +195,6 @@ class SurveyController extends \BaseController {
         return ['nodes' => $nodes];
     }
 
-    private function splitSkips($allSkips)
-    {
-        $skips = (object)[];
-        $skips->answers = [];
-        $skips->nodes = [];
-        $skips->questions = [];
-
-        foreach ($allSkips as $skip) {
-            if ($skip['pass']) {
-                foreach ($skip['answers'] as $answer) {
-                    array_push($skips->answers, $answer->id);
-                }
-
-                foreach ($skip['questions'] as $question) {
-                    array_push($skips->questions, $question->id);
-                }
-
-                foreach ($skip['nodes'] as $node) {
-                    array_push($skips->nodes, $node->id);
-                }
-            }
-        }
-
-        return $skips;
-    }
-
-
     /**
      * Save answer.
      *
@@ -247,12 +217,39 @@ class SurveyController extends \BaseController {
 
         $page = SurveyORM\Node::find($answers['page_id']);
 
-        $skips = ! $page ? [] : $page->childrenNodes->reduce(function($carry, $node) {
-            $filler = Fill::answers($this->writer->all())->node($node);
-            return $carry + $filler->getSkips();
-        }, []);
+        $skips = ! $page ? [] : $this->getSkips($page->pageRules);
 
-        return ['answers' => $this->writer->all(), 'message' => $filler->messages, 'logs' => DB::getQueryLog(), 'skips' => $this->splitSkips($skips)];
+        return ['answers' => $this->writer->all(), 'message' => $filler->messages, 'logs' => DB::getQueryLog(), 'skips' => $skips];
+    }
+
+    private function getSkips($rules)
+    {
+        $fillerAnswers = $this->writer->all();
+
+        $skips = (object)[];
+        $skips->answers = [];
+        $skips->nodes = [];
+        $skips->questions = [];
+
+        $rules->map(function ($rule) use ($skips, $fillerAnswers){
+            $pass = Rule::answers($fillerAnswers)->compare($rule);
+
+            if(!$pass) return 0;
+
+            if ($rule->effect_type === SurveyORM\Node::class) {
+                array_push($skips->nodes, SurveyORM\Node::find($rule->effect_id)->id);
+            }
+
+            if ($rule->effect_type === Field::class) {
+                array_push($skips->questions, Field::find($rule->effect_id)->id);
+            }
+
+            if ($rule->effect_type === SurveyORM\Answer::class) {
+                array_push($skips->answers, SurveyORM\Answer::find($rule->effect_id)->id);
+            }
+        });
+
+        return $skips;
     }
 
     public function getChildrens()

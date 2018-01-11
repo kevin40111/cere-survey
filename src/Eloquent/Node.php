@@ -133,4 +133,9 @@ class Node extends Eloquent {
     {
         return $this->belongsToMany(Upload::class, 'image_node');
     }
+
+    public function pageRules()
+    {
+        return $this->hasMany('Cere\Survey\Eloquent\Rule', 'page_id');
+    }
 }
