@@ -176,12 +176,12 @@ class SurveyController extends \BaseController {
 
         $skips = 0;
         foreach ($questions as $question) {
-            if (isset($answers->{$question['id']}) && $answers->{$question['id']} == -8) {
+            if (isset($answers[$question['id']]) && $answers[$question['id']] == -8) {
                 $skips++;
             }
         }
 
-        return $skips == sizeof($questions)
+        return $skips == sizeof($questions) && sizeof($questions) != 0
             ? $page->next ? $this->checkAndJump($page->next, $answers) : NULL
             : $page;
     }
