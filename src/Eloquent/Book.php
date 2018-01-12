@@ -16,7 +16,7 @@ class Book extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = array('file_id', 'title', 'lock', 'loginRow_id', 'auth');
+    protected $fillable = array('file_id', 'title', 'lock', 'loginRow_id', 'auth', 'footer');
 
     protected $attributes = ['lock' => false];
 

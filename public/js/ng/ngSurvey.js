@@ -58,14 +58,16 @@ angular.module('ngSurvey.directives', [])
                     </div>
                     <md-button class="md-raised md-primary" ng-click="nextPage()" ng-disabled="book.saving" aria-label="繼續">繼續</md-button>
                 </div>
-                <div class="ui segment" style="width:800px;margin:0 auto" ng-if="!book.saving && !page">
+                <div class="ui segment" style="width:800px;margin:0 auto; text-align:center" ng-if="!book.saving && !page">
                     <div class="ui basic segment">
                         <h3>本問卷填答完畢</h3>
-                        <h3>祝您一切順利、中大獎</strong>！</font></h3>
                     </div>
                     <md-button ng-if="ext_book_url" class="md-raised md-primary" href="{{ext_book_url}}" target="_blank" ng-disabled="book.saving" aria-label="跳至加掛題本" >
                         填寫加掛題本
                     </md-button>
+                </div>
+                <div style="padding:20px; text-align:center; color:grey">
+                    {{book.footer}}
                 </div>
             </div>
         `,
@@ -103,7 +105,9 @@ angular.module('ngSurvey.directives', [])
         },
         template:  `
             <div>
-                <survey-node ng-repeat="node in nodes" node="node" ng-if="skips.nodes.indexOf(node.id) == -1"></survey-node>
+                <survey-node ng-repeat="node in nodes" node="node" ng-if="skips.nodes.indexOf(node.id) == -1">
+                    <img ng-repeat="image in node.images" ng-src="/upload/get/{{image.serial}}" alt="Description" style="width:940px" />
+                </survey-node>
             </div>
         `,
         controller: function($scope, $http) {

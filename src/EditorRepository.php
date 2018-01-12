@@ -2,6 +2,7 @@
 
 namespace Cere\Survey;
 
+use Plat\Files\Uploader;
 use Cere\Survey\Eloquent as SurveyORM;
 use Cere\Survey\Eloquent\Field\Field as Question;
 
@@ -27,7 +28,7 @@ class EditorRepository
             $root->load('childrenNodes');
         }
 
-        $nodes = $root->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.node', 'answers'])->each(function ($node) {
+        $nodes = $root->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.node', 'answers', 'images'])->each(function ($node) {
             $node->sortByPrevious(['questions', 'answers']);
         });
 
@@ -235,5 +236,24 @@ class EditorRepository
             }
             $last_answer_id = $answer->id;
         }
+    }
+
+    public function removeBanner($node_id, $image_id)
+    {
+        return SurveyORM\Node::find($node_id)->images()->detach($image_id);
+    }
+
+    public function uploaderBanner($image_file, $forder_id, $node_id)
+    {
+        $upload = new Uploader($image_file, ['jpg', 'png'], 10000000);
+        $result = $upload->fileUpload($forder_id);
+        if($result['message'] == '檔案上傳成功') {
+            SurveyORM\Node::find($node_id)->images()->attach($result['file']->id);
+        }
+
+        return[
+            'message' => $result['message'],
+            'images' => SurveyORM\Node::find($node_id)->images()->get(),
+        ];
     }
 }

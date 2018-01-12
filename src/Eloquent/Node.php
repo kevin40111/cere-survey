@@ -3,6 +3,7 @@
 namespace Cere\Survey\Eloquent;
 
 use Eloquent;
+use Plat\Eloquent\Upload;
 use Cere\Survey\Eloquent\Field\Field;
 
 class Node extends Eloquent {
@@ -128,4 +129,8 @@ class Node extends Eloquent {
         return $this->morphOne(Rule::class, 'effect');
     }
 
+    public function images()
+    {
+        return $this->belongsToMany(Upload::class, 'image_node');
+    }
 }
