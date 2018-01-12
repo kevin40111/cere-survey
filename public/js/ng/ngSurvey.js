@@ -58,10 +58,9 @@ angular.module('ngSurvey.directives', [])
                     </div>
                     <md-button class="md-raised md-primary" ng-click="nextPage()" ng-disabled="book.saving" aria-label="繼續">繼續</md-button>
                 </div>
-                <div class="ui segment" style="width:800px;margin:0 auto" ng-if="!book.saving && !page">
+                <div class="ui segment" style="width:800px;margin:0 auto; text-align:center" ng-if="!book.saving && !page">
                     <div class="ui basic segment">
                         <h3>本問卷填答完畢</h3>
-                        <h3>祝您一切順利、中大獎</strong>！</font></h3>
                     </div>
                     <md-button ng-if="ext_book_url" class="md-raised md-primary" href="{{ext_book_url}}" target="_blank" ng-disabled="book.saving" aria-label="跳至加掛題本" >
                         填寫加掛題本
