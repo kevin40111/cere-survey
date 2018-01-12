@@ -67,6 +67,9 @@ angular.module('ngSurvey.directives', [])
                         填寫加掛題本
                     </md-button>
                 </div>
+                <div style="padding:20px; text-align:center; color:grey">
+                    {{book.footer}}
+                </div>
             </div>
         `,
         controller: function($scope) {
