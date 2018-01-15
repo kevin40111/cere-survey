@@ -60,7 +60,7 @@ angular.module('ngEditor.directives', [])
                 <md-divider></md-divider>
                 <div layout="column" layout-align="start center" style="height:100%;overflow-y:scroll">
                     <div style="width:960px">
-                        <survey-node ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
+                        <survey-node class="fade" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
                         <md-card>
                             <md-card-header md-colors="{background: 'blue'}">
                                 <div flex layout="row" layout-align="start center">
