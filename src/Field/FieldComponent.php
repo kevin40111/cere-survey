@@ -475,6 +475,60 @@ class FieldComponent extends CommFile
         return ['message' => $message];
     }
 
+    public function createUpdateSheet()
+    {
+        \Excel::create('sample', function($excel) {
+            $column = 'C'.Input::get('column_id');
+            $table = $this->file->sheets->first()->tables->first();
+            $table_name = $table->database . '.dbo.' . $table->name;
+
+            $query_admin = "select u.id from (select * from users where actived = 1) as u "
+                         . "join (select * from user_member where actived = 1) as m on u.id = m.user_id "
+                         . "join works as w on w.member_id = m.id "
+                         . "group by u.id "
+                         . "having count(u.id) > 2";
+
+            $query  = "SELECT * FROM "
+                    . "(select distinct $column, deleted_at, created_by from $table_name where deleted_at is null) as r "
+                    . "join organization_details as o on r.$column = o.id "
+                    . "join works as w on w.organization_id = o.organization_id "
+                    . "join (select * from user_member where actived = 1) as m on m.id = w.member_id "
+                    . "join (select * from users where actived = 1) as u on u.id = m.user_id "
+                    . "where user_id not in ( $query_admin )"
+                    . "order by $column";
+
+            $rows = DB::select(DB::raw($query));
+
+            $array = [[$column, 'school_name', 'user_id', 'user_name']];
+
+            foreach ($rows as $row) {
+                 array_push($array, [$row->{$column}, $row->name, $row->id, $row->username]);
+            }
+
+            $excel->sheet('sample', function($sheet) use($array) {
+                $sheet->fromArray($array, null, 'A1', false, false);
+            });
+        })->download('xls');
+    }
+
+    public function updateRowsOwner()
+    {
+        if (!Input::hasFile('file_upload'))
+            throw new UploadFailedException(new MessageBag(['messages' => ['max' => '檔案格式或大小錯誤']]));
+
+        $rows = \Excel::load(Input::file('file_upload'))->get();
+        $schoolColumn = array_keys(json_decode(json_encode($rows[0]), 1))[0];
+
+        $table = $this->file->sheets->first()->tables->first();
+        $table_name = $table->database . '.dbo.' . $table->name;
+
+        foreach ($rows as $row) {
+            DB::table($table_name)->whereNotNull('deleted_at')->where(strtoupper($schoolColumn), $row->{$schoolColumn})->update(['created_by' => $row->user_id]);
+        }
+
+        return ['status' => true];
+    }
+
     /**
      * no UI
      */
