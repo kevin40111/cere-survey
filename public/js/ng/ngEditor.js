@@ -72,8 +72,14 @@ angular.module('ngEditor.directives', [])
                             <md-card-content>
                                 <div>
                                     <md-list>
-                                        <md-list-item ng-repeat="item in parent.items" md-colors="{'background-color': item.selected ? 'grey': 'grey-A100'}">
-                                            選項{{$index+1}}:{{item.title}}
+                                        <md-list-item ng-repeat="item in parent.items" md-colors="{'background-color': item.selected ? 'grey': 'grey-A100'}"">
+                                            <div flex layout="row" layout-align="start center">
+                                                選項{{$index+1}}:{{item.title}}
+                                                <span flex></span>
+                                                <div>
+                                                <md-button class="md-raised md-warn md-button md-ink-ripple" ng-if="item.selected" ng-click="getNodes(paths[paths.length-2])">返回上一層</md-button>
+                                                </div>
+                                            </div>
                                         </md-list-item>
                                     </md-list>
                                 </div>
