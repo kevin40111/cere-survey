@@ -19,15 +19,16 @@ class Gear extends Filler
         return $this;
     }
 
-    public function setAnswer($answer_id){
+    public function setAnswer($answer_id)
+    {
         $this->answer = SurveyORM\Answer::find($answer_id);
     }
 
     protected function getEffects($question)
     {
         return $this->node->answers->load(['childrenNodes.questions', 'childrenNodes.answers'])->map(function($answer) use ($question) {
-            $pass = $this->contents[$question->id] !== $answer->value;
-            return ['target' => $question, 'pass' => $pass];
+            $isSkip = is_null($this->contents[$question->id]) ? false : $this->contents[$question->id] !== $answer->value;
+            return ['target' => $question, 'isSkip' => $isSkip];
         });
     }
 
@@ -40,7 +41,7 @@ class Gear extends Filler
     {
         $click_answer = $this->getAnswer($question);
 
-        return $this->isChecked($question) ? $question->childrenNodes()->with(['answers'=>function ($query) use ($click_answer) {
+        return $this->isChecked($question) ? $question->childrenNodes()->with(['answers' => function ($query) use ($click_answer) {
             $query->where('belong', $click_answer->id);
         }, 'questions'])->get() : [];
     }

@@ -31,10 +31,10 @@ class RuleRepository
         return $this->target->rule ? $this->target->rule : new SurveyORM\Rule(['expressions' => [['conditions' => [['compareType' => 'question']]]]]);
     }
 
-    public function saveExpressions($expressions, $type)
+    public function saveExpressions($expressions, $type, $page_id)
     {
         if ($this->target->rule == null) {
-            $rule = $this->target->rule()->save(new SurveyORM\Rule(['expressions' => $expressions, 'type' => $type]));
+            $rule = $this->target->rule()->save(new SurveyORM\Rule(['expressions' => $expressions, 'type' => $type, 'page_id' => $page_id]));
         } else {
             $rule = $this->target->rule;
             $rule->update(['expressions' => $expressions, 'type' => $type]);

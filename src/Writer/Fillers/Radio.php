@@ -20,8 +20,8 @@ class Radio extends Filler
     protected function getEffects($question)
 	{
         return $this->node->answers->load(['childrenNodes.questions', 'childrenNodes.answers'])->map(function($answer) use ($question) {
-            $pass = $this->contents[$question->id] !== $answer->value;
-            return ['target' => $answer, 'pass' => $pass];
+            $isSkip = is_null($this->contents[$question->id]) ? false : $this->contents[$question->id] !== $answer->value;
+            return ['target' => $answer, 'isSkip' => $isSkip];
         });
     }
 

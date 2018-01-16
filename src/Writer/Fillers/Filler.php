@@ -51,22 +51,37 @@ abstract class Filler
     {
         $this->getEffects($question)->each(function ($effect) {
             $effect['target']->childrenNodes->each(function ($node) use ($effect) {
-                $this->fill->node($node)->reset($effect['pass']);
+                $this->fill->node($node)->reset($effect['isSkip']);
             });
         });
     }
 
     protected function setRules($by)
     {
-        foreach ($this->getRules($by) as $rule) {
-            foreach ($rule['questions'] as $question) {
-                if ($question->node->id === $by->node->id) {
-                    $this->affected($question, $rule['pass']);
-                } else {
-                    $this->fill->node($question->node)->affected($question, $rule['pass']);
-                }
+        $rules = SurveyORM\SurveyRuleFactor::where('rule_relation_factor', $by->id)->get()->groupBy('rule_id')->keys();
+
+        SurveyORM\Rule::find($rules)->map(function ($rule) {
+            $isSkip = Rule::answers($this->answers)->compare($rule);
+            switch ($rule->effect_type) {
+                case SurveyORM\Node::class:
+                    $this->fill->node($rule->effect)->reset($isSkip);
+                    $rule->effect->childrenNodes->each(function ($node) use ($isSkip) {
+                        $this->fill->node($node)->reset($isSkip);
+                    });
+                    break;
+
+                case SurveyORM\Field\Field::class:
+                    if ($rule->effect->node->id === $this->node->id) {
+                        $this->affected($rule->effect, $isSkip);
+                    } else {
+                        $this->fill->node($rule->effect->node)->affected($rule->effect, $isSkip);
+                    }
+
+                case SurveyORM\Answer::class:
+                    # todo...
+                    break;
             }
-        }
+        });
     }
 
     public function clean($question)
@@ -79,16 +94,16 @@ abstract class Filler
         $this->set($question, '-8');
     }
 
-    public function reset($pass)
+    public function reset($isSkip)
     {
-        $this->node->questions->each(function ($question) use ($pass) {
-            $this->affected($question, $pass);
+        $this->node->questions->each(function ($question) use ($isSkip) {
+            $this->affected($question, $isSkip);
         });
     }
 
-    public function affected($question, $pass)
+    public function affected($question, $isSkip)
     {
-        if ($pass) {
+        if ($isSkip) {
             $this->skip($question);
         } else {
             $this->clean($question);
@@ -129,11 +144,6 @@ abstract class Filler
     protected function fillContents()
 	{
         $this->contents = $this->original;
-    }
-
-    protected function getRules($question)
-	{
-        return Rule::answers($this->answers)->effect($question->id);
     }
 
     private function isSkip($value)
