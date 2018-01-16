@@ -182,7 +182,7 @@ class FieldComponent extends CommFile
     {
         $sheet = $this->file->sheets()->with(['tables', 'tables.columns'])->find(Input::get('sheet')['id']);
 
-        $sheet->update(['title' => Input::get('sheet')['title'], 'editable' => Input::get('sheet')['editable']]);
+        $sheet->update(['title' => Input::get('sheet')['title'], 'editable' => Input::get('sheet')['editable'], 'fillable' => Input::get('sheet')['fillable']]);
 
         return ['sheet' => $sheet->toArray()];
     }
