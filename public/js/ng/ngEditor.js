@@ -848,7 +848,7 @@ angular.module('ngEditor.directives', [])
             $scope.saveRule = function(type) {
                $http({method: 'POST', url: 'saveRule', data:{paths: $scope.paths, expressions: $scope.rule.expressions, skipTarget: $scope.skipTarget, type:type}})
                 .success(function(data) {
-
+                    $mdSidenav('survey-skips').close();
                 }).error(function(e) {
                    console.log(e)
                 });
