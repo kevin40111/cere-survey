@@ -59,6 +59,26 @@ angular.module('ngEditor.directives', [])
                 <md-divider></md-divider>
                 <div layout="column" layout-align="start center" style="height:100%;overflow-y:scroll">
                     <div style="width:960px">
+                        <md-card ng-if="question">
+                            <md-card-header md-colors="{background: 'grey'}">
+                                <div flex layout="row" layout-align="start center">
+                                    <div>
+                                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="description"></md-icon>
+                                    </div>
+                                    <div style="margin: 0 0 0 16px">{{question.title}}</div>
+                                    <span flex></span>
+                                </div>
+                            </md-card-header>
+                            <md-card-content>
+                                <div>
+                                    <md-list>
+                                        <md-list-item ng-repeat="answer in answers" ng-style="setBackground(answer)">
+                                            選項{{$index+1}}:{{answer.title}}
+                                        </md-list-item>
+                                    </md-list>
+                                </div>
+                            </md-card-content>
+                        </md-card>
                         <survey-node ng-class="{fade:node.deleting}" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
                         <md-card ng-if="paths.length == 1">
                             <md-card-header md-colors="{background: 'blue'}">
@@ -98,6 +118,8 @@ angular.module('ngEditor.directives', [])
                     $scope.root = root;
                     $scope.nodes = response.nodes;
                     $scope.paths = response.paths;
+                    $scope.question = response.question;
+                    $scope.answers = response.answers;
                 });
             };
 
@@ -155,6 +177,12 @@ angular.module('ngEditor.directives', [])
                 $mdSidenav('survey-skips').toggle();
             };
 
+            $scope.setBackground = function(answer) {
+                if(answer.title == $scope.paths[$scope.paths.length-1].title) {
+                    return {'background-color':'#f1f1f1'};
+                }
+                return {'background-color':'#fff'};
+            }
         }
     };
 })
