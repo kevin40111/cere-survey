@@ -52,7 +52,6 @@ angular.module('ngEditor.directives', [])
                             <div ng-repeat-end class="divider"> / </div>
                         </div>
                         <span flex></span>
-                        <md-button ng-click="lockBook()">定稿</md-button>
                         <md-button href="/surveyDemo/{{book.id}}/page" target="_blank">預覽</md-button>
                         <md-button href="/surveyDemo/{{book.id}}/cleanAnswers" target="_blank">刪除填答值</md-button>
                     </div>
@@ -61,7 +60,7 @@ angular.module('ngEditor.directives', [])
                 <div layout="column" layout-align="start center" style="height:100%;overflow-y:scroll">
                     <div style="width:960px">
                         <survey-node class="fade" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
-                        <md-card>
+                        <md-card ng-if="footerShow">
                             <md-card-header md-colors="{background: 'blue'}">
                                 <div flex layout="row" layout-align="start center">
                                     <div>
@@ -99,6 +98,11 @@ angular.module('ngEditor.directives', [])
                     $scope.root = root;
                     $scope.nodes = response.nodes;
                     $scope.paths = response.paths;
+                    if($scope.paths.length == 1){
+                        return $scope.footerShow = true;
+                    } else {
+                        return $scope.footerShow = false;
+                    }
                 });
             };
 
@@ -196,7 +200,7 @@ angular.module('ngEditor.directives', [])
                         </md-menu-item>
                         </md-menu-content>
                     </md-menu>
-                    <md-button ng-if="type.editor.enter" ng-click="getNodes(node)">編輯</md-button>
+                    <md-button ng-if="type.editor.enter" ng-click="getNodes(node)">編輯問卷</md-button>
                 </md-card-actions>
                 <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
             </md-card>
@@ -375,7 +379,7 @@ angular.module('ngEditor.directives', [])
         },
         template:  `
             <md-list>
-                <md-subheader class="md-no-sticky">選項 ({{ answers.length || 0 }})</md-subheader>
+                <div style="padding:10px; font-size:14px;" md-colors="{color: 'default-indigo-400'}">選項 ({{ answers.length || 0 }})</div>
                 <md-list-item ng-repeat="answer in answers">
                     <md-icon ng-style="{fill: !answer.title ? 'red' : ''}" md-svg-icon="{{types[node.type].icon}}"></md-icon>
                     <div flex>
@@ -461,11 +465,11 @@ angular.module('ngEditor.directives', [])
         },
         template:  `
             <md-list>
-                <md-subheader class="md-no-sticky">問題 ({{ node.questions.length || 0 }})</md-subheader>
+                <div style="padding:10px; font-size:14px;" md-colors="{color: 'default-indigo-400'}">問題 ({{ node.questions.length || 0 }})</div>
                 <md-list-item ng-repeat="question in node.questions">
                     <md-icon md-svg-icon="help"><md-tooltip md-direction="left">{{$index+1}}</md-tooltip></md-icon>
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
-                        <input type="text" placeholder="輸入問題..." ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)" />
+                        <input type="text" placeholder="輸入{{types[node.type].editor.questions.text}}" ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)" />
                     </p>
                     <md-button class="md-secondary" ng-if="types[node.type].editor.questions.childrens" aria-label="設定子題" ng-click="getNodes(question)">設定子題</md-button>
                     <md-button class="md-secondary md-icon-button" ng-click="moveUp(question)" aria-label="上移" ng-disabled="$first">
@@ -484,7 +488,7 @@ angular.module('ngEditor.directives', [])
                 </md-list-item>
                 <md-list-item ng-if="node.questions.length < types[node.type].editor.questions.amount" ng-click="createQuestion(node.questions[node.questions.length-1])">
                     <md-icon md-svg-icon="help"></md-icon>
-                    <p>新增問題</p>
+                    <p>新增{{types[node.type].editor.questions.text}}</p>
                 </md-list-item>
             </md-list>
         `,
@@ -751,7 +755,7 @@ angular.module('ngEditor.directives', [])
             <div layout="column">
                 <md-toolbar md-scroll-shrink>
                     <div class="md-toolbar-tools">
-                        <h4>跳題設定</h4>
+                        <h4>跳過此題</h4>
                         <div flex></div>
                         <md-button aria-label="關閉" ng-click="toggleSidenavRight()">關閉</md-button>
                         <md-button aria-label="儲存設定" md-colors="{background: 'blue'}" style="float:right" ng-click="saveRule('jump')">
@@ -766,6 +770,9 @@ angular.module('ngEditor.directives', [])
                     <md-card ng-repeat="expression in rule.expressions">
                         <md-card-header md-colors="{background: 'indigo'}">
                             <div flex layout="row" layout-align="start center">
+                                <div  style="margin: 0 0 0 16px" ng-if="!expression.compareLogic">
+                                    請問是從哪個題目的選項而跳過此題? 請輸入。
+                                </div>
                                 <div  style="margin: 0 0 0 16px" ng-if="expression.compareLogic">
                                     {{ (compareOperators | filter: {key: expression.compareLogic}:true)[0].title }}
                                 </div>
