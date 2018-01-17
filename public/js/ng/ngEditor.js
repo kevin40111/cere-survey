@@ -60,7 +60,7 @@ angular.module('ngEditor.directives', [])
                 <div layout="column" layout-align="start center" style="height:100%;overflow-y:scroll">
                     <div style="width:960px">
                         <survey-node class="fade" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
-                        <md-card ng-if="footerShow">
+                        <md-card ng-if="paths.length == 1">
                             <md-card-header md-colors="{background: 'blue'}">
                                 <div flex layout="row" layout-align="start center">
                                     <div>
@@ -98,11 +98,6 @@ angular.module('ngEditor.directives', [])
                     $scope.root = root;
                     $scope.nodes = response.nodes;
                     $scope.paths = response.paths;
-                    if($scope.paths.length == 1){
-                        return $scope.footerShow = true;
-                    } else {
-                        return $scope.footerShow = false;
-                    }
                 });
             };
 
