@@ -172,69 +172,58 @@ class EditorRepository
 
     public function saveGearQuestion($file, $node_id)
     {
-        $answers_tree = [];
-        $deep;
-
-        \Excel::load($file, function($reader) use (&$answers_tree, &$deep){
-            /*noHeading is read the row from first, not second*/
+        $answers = \Excel::load($file, function ($reader) {
             $reader->noHeading();
-            $reader = $reader->toArray();
+        })->get();
 
-            $deep = sizeof(reset($reader));
+        $heads = $answers->pull(0);
 
-            foreach ($reader as $row) {
-                $keys = implode('.', array_slice($row, 0, $deep));
-                $value = $row[$deep-1];
-                array_set($answers_tree, $keys, $value);
-            }
-        });
+        if (! $answers->isEmpty()) {
 
-        if (!empty($answers_tree)) {
+            $node = SurveyORM\Node::find($node_id);
 
-            $node = SurveyORM\Node::find($node_id)->load(['questions', 'answers']);
-
-            foreach ($node->questions as $question) {
+            $node->questions->each(function ($question) {
                 $this->removeQuestion($question->id);
-            }
+            });
 
-            foreach ($node->answers as $answer) {
+            $node->answers->each(function ($answer) {
                 $this->removeAnswer($answer->id);
-            }
+            });
 
-            $this->createGearQuestion($deep, $node_id, $answers_tree);
-            $this->createGearAnswer($answers_tree, 0);
+            $nodes = $this->createGearQuestion($heads, [$node]);
+            $this->createGearAnswer($nodes, $answers->reduce(function ($carry, $answer) {
+                $keys = implode('.', $answer->toArray());
+                array_set($carry, $keys, []);
+                return $carry;
+            }, []));
         }
 
-        return SurveyORM\Node::find($node_id)->load(['questions', 'answers']);
+        return $node->load(['questions', 'answers']);
     }
 
-    private function createGearQuestion($deep, $node_id, $answers_tree)
+    private function createGearQuestion($heads, $nodes)
     {
-        $last_node_id = $node_id;
-        $node_array = [];
-        array_push($node_array, $last_node_id);
-
-        for ($i=0; $i < $deep; $i++) {
-            $question = $this->createQuestion($last_node_id, null);
-            if($i < $deep-1) {
-                $last_node_id = $this->createNode($question, ['type' => 'gear'], null)->id;
-                array_push($node_array,  $last_node_id);
+        foreach ($heads as $index => $head) {
+            $question = $this->createQuestion(end($nodes)->id, null);
+            $question->update(['title' => $head]);
+            if ($index < sizeof($heads)-1) {
+                array_push($nodes, $this->createNode($question, ['type' => 'gear'], null));
             };
         }
 
-        $this->node_array = $node_array;
-
+        return $nodes;
     }
 
-    private function createGearAnswer($answer_array, $node_level, $belong = null)
+    private function createGearAnswer($nodes, $categories, $category_id = null)
     {
-        $last_answer_id = null ;
-        foreach ($answer_array as $key => $value) {
-            $answer = SurveyORM\Answer::create(['title' => $key, 'value' => $key, 'node_id' => $this->node_array[$node_level], 'previous_id' => $last_answer_id, 'belong' => $belong]);
-            if (gettype($value) == "array") {
-                $this->createGearAnswer($value, $node_level+1, $answer->id);
+        $answer_id = null ;
+        $node = array_shift($nodes);
+
+        foreach ($categories as $answer => $subCategories) {
+            $answer_id = $node->answers()->create(['title' => $answer, 'value' => $answer, 'previous_id' => $answer_id, 'category_id' => $category_id])->id;
+            if (! empty($nodes)) {
+                $this->createGearAnswer($nodes, $subCategories, $answer_id);
             }
-            $last_answer_id = $answer->id;
         }
     }
 

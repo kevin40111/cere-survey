@@ -14,7 +14,7 @@ class Answer extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = array('title', 'node_id', 'value', 'previous_id', 'belong');
+    protected $fillable = array('title', 'value', 'previous_id', 'category_id');
 
     protected $attributes = ['value' => '', 'title' => ''];
 
@@ -22,7 +22,7 @@ class Answer extends Eloquent {
 
     public function node()
     {
-        return $this->hasOne('Cere\Survey\Eloquent\Node', 'id', 'node_id');
+        return $this->morphTo('belong');
     }
 
     public function next()

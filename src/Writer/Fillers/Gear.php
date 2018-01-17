@@ -42,7 +42,7 @@ class Gear extends Filler
         $click_answer = $this->getAnswer($question);
 
         return $this->isChecked($question) ? $question->childrenNodes()->with(['answers' => function ($query) use ($click_answer) {
-            $query->where('belong', $click_answer->id);
+            $query->where('category_id', $click_answer->id);
         }, 'questions'])->get() : [];
     }
 

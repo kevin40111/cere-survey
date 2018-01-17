@@ -93,12 +93,6 @@ class FieldRepository
 
     public function init()
     {
-        $this->field->columns->each(function ($column) {
-            if (isset(self::$rules[$column->rules]['editor']) && self::$rules[$column->rules]['editor'] == 'menu') {
-                $answers = $this->setAnswers($column);
-            }
-        });
-
         $this->construct();
 
         return $this;
@@ -515,7 +509,7 @@ class FieldRepository
         });
     }
 
-    public function setAnswers($column)
+    public static function setAnswers($column)
     {
         switch ($column->rules) {
             case 'counties':

@@ -44,7 +44,7 @@ class Node extends Eloquent {
 
     public function answers()
     {
-        return $this->hasMany('Cere\Survey\Eloquent\Answer', 'node_id', 'id');
+        return $this->morphMany(Answer::class, 'belong');
     }
 
     public function next()

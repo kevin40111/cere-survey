@@ -170,6 +170,12 @@ class FieldComponent extends CommFile
 
         $sheets->first()->selected = true;
 
+        $sheets->first()->tables->first()->columns->each(function($column) {
+            if (isset(FieldRepository::$rules[$column->rules]['editor']) && FieldRepository::$rules[$column->rules]['editor'] == 'menu') {
+                FieldRepository::setAnswers($column);
+            }
+        });
+
         return [
             'title'    => $this->file->title,
             'sheets'   => $sheets->toArray(),
