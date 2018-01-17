@@ -425,7 +425,7 @@ angular.module('ngEditor.directives', [])
             };
 
             $scope.saveAnswerTitle = function(answer) {
-                editorFactory.ajax('saveAnswerTitle', {answer: answer}, answer).then(function(response) {
+                editorFactory.ajax('saveAnswerTitle', {answer: answer}, $scope.node).then(function(response) {
                     angular.extend(answer, response.answer);
                 });
             };
@@ -511,7 +511,7 @@ angular.module('ngEditor.directives', [])
             };
 
             $scope.saveQuestionTitle = function(question) {
-                editorFactory.ajax('saveQuestionTitle', {question: question}, question).then(function(response) {
+                editorFactory.ajax('saveQuestionTitle', {question: question}, $scope.node).then(function(response) {
                     angular.extend(question, response.question);
                 });
             };
