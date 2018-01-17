@@ -228,7 +228,7 @@ trait SurveyEditor
         $rule = Survey\RuleRepository::target($root)->saveExpressions(Input::get('expressions'), Input::get('type'), $page);
 
 
-        return 'save rules successed';
+        return ['rule' => $rule];
     }
 
     public function deleteRule()

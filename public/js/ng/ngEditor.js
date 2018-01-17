@@ -26,6 +26,13 @@ angular.module('ngEditor.factories', []).factory('editorFactory', function($http
             });
 
             return deferred.promise;
+        },
+        hasJumpStyle: function(rule) {
+            if(rule) {
+                return {"background-color": "#7c4dff"};
+            } else {
+                return {};
+            }
         }
     };
 
@@ -181,7 +188,6 @@ angular.module('ngEditor.directives', [])
                 $scope.skipTarget = skipTarget;
                 $mdSidenav('survey-skips').toggle();
             };
-
         }
     };
 })
@@ -202,7 +208,7 @@ angular.module('ngEditor.directives', [])
                 <div ng-repeat="image in node.images">
                     <banner-image node="node" image="image" index=$index></banner-image>
                 </div>
-                <md-card-header md-colors="{background: 'indigo'}">
+                <md-card-header ng-style="hasJumpStyle(node.rule)" md-colors="{background: 'indigo'}">
                     <question-bar></question-bar>
                 </md-card-header>
                 <md-card-content>
@@ -252,6 +258,9 @@ angular.module('ngEditor.directives', [])
                 });
             };
 
+            $scope.hasJumpStyle = function(rule) {
+                return editorFactory.hasJumpStyle(rule);
+            };
         }
     };
 })
@@ -403,7 +412,7 @@ angular.module('ngEditor.directives', [])
         },
         template:  `
             <md-list>
-                <md-list-item ng-repeat="answer in answers" style="margin-left:15px;">
+                <md-list-item ng-style="hasJumpStyle(answer.rule)" ng-repeat="answer in answers" style="margin-left:15px;">
                     <span style="font-style: oblique;margin-right: 10px">{{$index+1}}. </span>
                     <div flex>
                         <div class="ui transparent fluid input" ng-class="{loading: answer.saving}">
@@ -472,6 +481,9 @@ angular.module('ngEditor.directives', [])
                 });
             };
 
+            $scope.hasJumpStyle = function(rule) {
+                return editorFactory.hasJumpStyle(rule);
+            };
         }
     };
 })
@@ -487,7 +499,7 @@ angular.module('ngEditor.directives', [])
         },
         template:  `
             <md-list>
-                <md-list-item ng-repeat="question in node.questions">
+                <md-list-item ng-style="hasJumpStyle(question.rule)" ng-repeat="question in node.questions">
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
                         <input type="text" placeholder="輸入{{types[node.type].editor.questions.text}}" ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)" />
                     </p>
@@ -594,6 +606,9 @@ angular.module('ngEditor.directives', [])
                 }
             };
 
+            $scope.hasJumpStyle = function(rule) {
+                return editorFactory.hasJumpStyle(rule);
+            };
         }
     };
 })
@@ -777,7 +792,7 @@ angular.module('ngEditor.directives', [])
                         <h4>跳過此題</h4>
                         <div flex></div>
                         <md-button aria-label="關閉" ng-click="toggleSidenavRight()">關閉</md-button>
-                        <md-button aria-label="儲存設定" md-colors="{background: 'blue'}" style="float:right" ng-click="saveRule('jump')">
+                        <md-button aria-label="儲存設定" md-colors="{background: 'blue'}" style="float:right" ng-click="saveRule('jump');">
                             儲存設定
                         </md-button>
                         <md-button aria-label="刪除設定" md-colors="{background: 'blue'}" style="float:right" ng-click="deleteRule()">
@@ -874,6 +889,7 @@ angular.module('ngEditor.directives', [])
             $scope.saveRule = function(type) {
                $http({method: 'POST', url: 'saveRule', data:{paths: $scope.paths, expressions: $scope.rule.expressions, skipTarget: $scope.skipTarget, type:type}})
                 .success(function(data) {
+                    $scope.skipTarget.rule = data.rule;
                     $mdSidenav('survey-skips').close();
                 }).error(function(e) {
                    console.log(e)
@@ -883,7 +899,8 @@ angular.module('ngEditor.directives', [])
             $scope.deleteRule = function() {
                $http({method: 'POST', url: 'deleteRule', data:{skipTarget: $scope.skipTarget}})
                 .success(function(data) {
-                    $scope.getRule();
+                    $scope.skipTarget.rule = undefined;
+                    $mdSidenav('survey-skips').close();
                 }).error(function(e) {
                     console.log(e)
                 });
