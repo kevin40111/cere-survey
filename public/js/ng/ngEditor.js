@@ -59,7 +59,7 @@ angular.module('ngEditor.directives', [])
                 <md-divider></md-divider>
                 <div layout="column" layout-align="start center" style="height:100%;overflow-y:scroll">
                     <div style="width:960px">
-                        <survey-node class="fade" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
+                        <survey-node ng-class="{fade:node.deleting}" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
                         <md-card ng-if="paths.length == 1">
                             <md-card-header md-colors="{background: 'blue'}">
                                 <div flex layout="row" layout-align="start center">
@@ -112,6 +112,7 @@ angular.module('ngEditor.directives', [])
             };
 
             this.removeNode = function(node) {
+                node.deleting = true;
                 editorFactory.ajax('removeNode', {node: node}, node).then(function(response) {
                     if (response.deleted) {
                         $scope.nodes.splice($scope.nodes.indexOf(node), 1);
