@@ -77,26 +77,21 @@ trait SurveyEditor
 
         $root = $class::find(Input::get('root.id'));
 
-        $rootPaths = $root->getPaths();
-
         $nodes = $this->editorRepository->getNodes($root);
 
-        $question = null;
-        $answers = null;
-
-        $lasthPath = $rootPaths[(sizeof($rootPaths) - 1)];
-
-        if($lasthPath->node) {
-            if($lasthPath->node->type == 'checkbox') {
-                $question = $lasthPath->node;
-                $answers = $lasthPath->node->questions;
+        if ($root->node) {
+            $parent = [];
+            if ($root->node->type == 'checkbox') {
+                $parent['title'] = $root->node->title;
+                $parent['items'] = $root->node->questions;
             } else {
-                $question = $lasthPath->node->questions[0];
-                $answers = $lasthPath->node->answers;
+                $parent['title'] = $root->node->questions->first()->title;
+                $parent['items'] = $root->node->answers;
             }
+            $parent['items']->find($root->id)->selected = true;
         }
 
-        return ['nodes' => $nodes, 'paths' => $rootPaths, 'question' => $question, 'answers' => $answers];
+        return ['nodes' => $nodes, 'paths' => $root->getPaths(), 'parent' => $root->node ? $parent : null];
     }
 
     public function createNode()
