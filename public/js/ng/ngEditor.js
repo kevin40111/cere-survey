@@ -183,6 +183,7 @@ angular.module('ngEditor.directives', [])
                         <textarea ng-model="node.title" md-maxlength="2000" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
                     </md-input-container>
                     <div ng-if="type.editor.questions.amount" questions="node.questions" node="node"></div>
+                    <md-divider ng-if="type.editor.questions.amount && type.editor.answers"></md-divider>
                     <div ng-if="type.editor.answers" answers="node.answers" node="node"></div>
                     <div ng-if="type.editor.uploadFile" gear-bar node="node"></div>
                 </md-card-content>
@@ -374,11 +375,10 @@ angular.module('ngEditor.directives', [])
         },
         template:  `
             <md-list>
-                <md-divider ></md-divider>
                 <md-list-item ng-repeat="answer in answers" style="margin-left:15px;">
+                    <span style="font-style: oblique;margin-right: 10px">{{$index+1}}. </span>
                     <div flex>
                         <div class="ui transparent fluid input" ng-class="{loading: answer.saving}">
-                            <span class="Roboto">{{$index+1}}. </span>
                             <input type="text" placeholder="輸入選項名稱..." ng-model="answer.title" ng-model-options="saveTitleNgOptions" ng-change="saveAnswerTitle(answer)" />
                         </div>
                     </div>

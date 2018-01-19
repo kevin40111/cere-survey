@@ -30,11 +30,6 @@
     .fade.ng-leave.ng-leave-active {
         opacity:0;
     }
-    .Robot {
-        font-family:'Roboto';
-        font-style:italic;
-        margin-right:5px;
-    }
 </style>
 
 <script>
