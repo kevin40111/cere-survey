@@ -16,6 +16,7 @@
 
 <link rel="stylesheet" href="/css/Semantic-UI/2.1.8/semantic.min.css" />
 <link rel="stylesheet" href="/js/angular_material/1.1.1/angular-material.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic">
 
 <script>
 var app = angular.module('app', ['ngSanitize', 'ngMaterial']);

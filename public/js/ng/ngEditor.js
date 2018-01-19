@@ -195,7 +195,7 @@ angular.module('ngEditor.directives', [])
                         </md-menu-item>
                         </md-menu-content>
                     </md-menu>
-                    <md-button ng-if="type.editor.enter" ng-click="getNodes(node)">編輯問卷</md-button>
+                    <md-button ng-if="type.editor.enter" ng-click="getNodes(node)">編輯此頁</md-button>
                 </md-card-actions>
                 <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
             </md-card>
@@ -374,11 +374,11 @@ angular.module('ngEditor.directives', [])
         },
         template:  `
             <md-list>
-                <div style="padding:10px; font-size:14px;" md-colors="{color: 'default-indigo-400'}">選項 ({{ answers.length || 0 }})</div>
-                <md-list-item ng-repeat="answer in answers">
-                    <md-icon ng-style="{fill: !answer.title ? 'red' : ''}" md-svg-icon="{{types[node.type].icon}}"></md-icon>
+                <md-divider ></md-divider>
+                <md-list-item ng-repeat="answer in answers" style="margin-left:15px;">
                     <div flex>
                         <div class="ui transparent fluid input" ng-class="{loading: answer.saving}">
+                            <span class="Roboto">{{$index+1}}. </span>
                             <input type="text" placeholder="輸入選項名稱..." ng-model="answer.title" ng-model-options="saveTitleNgOptions" ng-change="saveAnswerTitle(answer)" />
                         </div>
                     </div>
@@ -398,8 +398,7 @@ angular.module('ngEditor.directives', [])
                     <md-icon class="md-secondary" aria-label="刪除選項" md-svg-icon="delete" ng-click="removeAnswer(answer)"></md-icon>
                 </md-list-item>
                 <md-list-item ng-if="node.answers.length < types[node.type].editor.answers" ng-click="createAnswer(answers[answers.length-1])">
-                    <md-icon md-svg-icon="{{types[node.type].icon}}"></md-icon>
-                    <p>新增選項</p>
+                    <p md-colors="{color:'grey'}">新增選項</p>
                 </md-list-item>
             </md-list>
         `,
@@ -460,9 +459,7 @@ angular.module('ngEditor.directives', [])
         },
         template:  `
             <md-list>
-                <div style="padding:10px; font-size:14px;" md-colors="{color: 'default-indigo-400'}">問題 ({{ node.questions.length || 0 }})</div>
                 <md-list-item ng-repeat="question in node.questions">
-                    <md-icon md-svg-icon="help"><md-tooltip md-direction="left">{{$index+1}}</md-tooltip></md-icon>
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
                         <input type="text" placeholder="輸入{{types[node.type].editor.questions.text}}" ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)" />
                     </p>
@@ -482,8 +479,7 @@ angular.module('ngEditor.directives', [])
                     <md-icon class="md-secondary" aria-label="刪除子題" md-svg-icon="delete" ng-click="removeQuestion(question)"></md-icon>
                 </md-list-item>
                 <md-list-item ng-if="node.questions.length < types[node.type].editor.questions.amount" ng-click="createQuestion(node.questions[node.questions.length-1])">
-                    <md-icon md-svg-icon="help"></md-icon>
-                    <p>新增{{types[node.type].editor.questions.text}}</p>
+                    <p md-colors="{color:'grey'}">新增{{types[node.type].editor.questions.text}}</p>
                 </md-list-item>
             </md-list>
         `,
