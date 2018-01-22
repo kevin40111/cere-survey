@@ -338,7 +338,7 @@ angular.module('ngEditor.directives', [])
                 <div>
                     <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="{{type.icon}}"></md-icon>
                 </div>
-                <div style="margin: 0 0 0 16px">{{index+1}} {{type.title}}</div>
+                <div style="margin: 0 0 0 16px"><span ng-if="type.editor.enter">第 {{index+1}}</span> {{type.title}}</div>
 
                 <span flex></span>
 
