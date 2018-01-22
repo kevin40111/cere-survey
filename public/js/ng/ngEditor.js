@@ -26,13 +26,6 @@ angular.module('ngEditor.factories', []).factory('editorFactory', function($http
             });
 
             return deferred.promise;
-        },
-        hasJumpStyle: function(rule) {
-            if(rule) {
-                return {"background-color": "#7c4dff"};
-            } else {
-                return {};
-            }
         }
     };
 
@@ -208,7 +201,7 @@ angular.module('ngEditor.directives', [])
                 <div ng-repeat="image in node.images">
                     <banner-image node="node" image="image" index=$index></banner-image>
                 </div>
-                <md-card-header ng-style="hasJumpStyle(node.rule)" md-colors="{background: 'indigo'}">
+                <md-card-header md-colors="{background: 'indigo'}">
                     <question-bar></question-bar>
                 </md-card-header>
                 <md-card-content>
@@ -258,9 +251,6 @@ angular.module('ngEditor.directives', [])
                 });
             };
 
-            $scope.hasJumpStyle = function(rule) {
-                return editorFactory.hasJumpStyle(rule);
-            };
         }
     };
 })
@@ -371,8 +361,9 @@ angular.module('ngEditor.directives', [])
                         <md-tooltip md-direction="bottom">下移</md-tooltip>
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
-                    <md-button class="md-icon-button" aria-label="跳題" ng-disabled="node.saving" ng-click="toggleSidenavRight(node)">
-                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="settings"></md-icon>
+                    <md-button class="md-icon-button" md-colors="{backgroundColor: node.rule ? 'blue-300' : 'primary'}" aria-label="跳過此題" ng-disabled="node.saving" ng-click="toggleSidenavRight(node)">
+                        <md-tooltip md-direction="bottom">跳過此題</md-tooltip>
+                        <md-icon md-colors="{color: 'grey-A100'}">visibility_off</md-icon>
                     </md-button>
                     <md-button class="md-icon-button" aria-label="刪除" ng-disabled="node.saving" ng-click="removeNode(node)">
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
@@ -412,7 +403,7 @@ angular.module('ngEditor.directives', [])
         },
         template:  `
             <md-list>
-                <md-list-item ng-style="hasJumpStyle(answer.rule)" ng-repeat="answer in answers" style="margin-left:15px;">
+                <md-list-item ng-repeat="answer in answers" style="margin-left:15px;">
                     <span style="font-style: oblique;margin-right: 10px">{{$index+1}}. </span>
                     <div flex>
                         <div class="ui transparent fluid input" ng-class="{loading: answer.saving}">
@@ -428,9 +419,9 @@ angular.module('ngEditor.directives', [])
                         <md-tooltip md-direction="left">下移</md-tooltip>
                         <md-icon md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
-                    <md-button class="md-secondary md-icon-button" ng-click="toggleSidenavRight(answer)" aria-label="設定限制">
+                    <md-button md-colors="{backgroundColor: answer.rule ? 'blue-300' : 'grey-A100'}" class="md-secondary md-icon-button" ng-click="toggleSidenavRight(answer)" aria-label="設定限制">
                         <md-tooltip>設定限制</md-tooltip>
-                        <md-icon md-svg-icon="settings"></md-icon>
+                        <md-icon md-colors="{color: answer.rule ? 'grey-A100' : 'grey-600'}">visibility_off</md-icon>
                     </md-button>
                     <md-icon class="md-secondary" aria-label="刪除選項" md-svg-icon="delete" ng-click="removeAnswer(answer)"></md-icon>
                 </md-list-item>
@@ -481,9 +472,6 @@ angular.module('ngEditor.directives', [])
                 });
             };
 
-            $scope.hasJumpStyle = function(rule) {
-                return editorFactory.hasJumpStyle(rule);
-            };
         }
     };
 })
@@ -499,7 +487,7 @@ angular.module('ngEditor.directives', [])
         },
         template:  `
             <md-list>
-                <md-list-item ng-style="hasJumpStyle(question.rule)" ng-repeat="question in node.questions">
+                <md-list-item ng-repeat="question in node.questions">
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
                         <input type="text" placeholder="輸入{{types[node.type].editor.questions.text}}" ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)" />
                     </p>
@@ -512,9 +500,9 @@ angular.module('ngEditor.directives', [])
                         <md-tooltip md-direction="left">下移</md-tooltip>
                         <md-icon md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
-                    <md-button class="md-secondary md-icon-button" ng-click="toggleSidenavRight(question)" aria-label="設定限制" ng-if="(question.node.type == 'scale') || (question.node.type == 'checkbox')">
+                    <md-button  md-colors="{backgroundColor: question.rule ? 'blue-300' : 'grey-A100'}" class="md-secondary md-icon-button" ng-click="toggleSidenavRight(question)" aria-label="設定限制" ng-if="(question.node.type == 'scale') || (question.node.type == 'checkbox')">
                         <md-tooltip>設定限制</md-tooltip>
-                        <md-icon md-svg-icon="settings"></md-icon>
+                        <md-icon md-colors="{color: question.rule ? 'grey-A100' : 'grey-600'}">visibility_off</md-icon>
                     </md-button>
                     <md-icon class="md-secondary" aria-label="刪除子題" md-svg-icon="delete" ng-click="removeQuestion(question)"></md-icon>
                 </md-list-item>
@@ -606,9 +594,6 @@ angular.module('ngEditor.directives', [])
                 }
             };
 
-            $scope.hasJumpStyle = function(rule) {
-                return editorFactory.hasJumpStyle(rule);
-            };
         }
     };
 })
