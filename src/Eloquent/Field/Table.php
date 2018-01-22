@@ -22,11 +22,6 @@ class Table extends Eloquent {
         return $this->hasMany(Field::class, 'table_id', 'id');
     }
 
-    public function depends()
-    {
-        return $this->belongsToMany(Table::class, 'row_table_depend', 'table_id', 'depend_table_id');
-    }
-
     public function sheet()
     {
         return $this->belongsTo(Sheet::class, 'sheet_id', 'id');

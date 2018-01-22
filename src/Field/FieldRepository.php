@@ -629,31 +629,22 @@ class FieldRepository
         return $this->field->columns->fetch('name')->toArray();
     }
 
-    public function replicate($field)
+    public function replicateTo($sheet)
     {
-        $this->field->name = self::generate_table();
+        $table = self::create($this->user_id);
 
-        $this->field->lock = true;
+        $fields = $this->field->columns->map(function ($column) {
+            return $column->replicate();
+        })->all();
 
-        $this->field->save();
+        $sheet->tables()->save($table->getModel())->columns()->saveMany($fields);
 
-        $this->field->depends()->attach($field->id);
-
-        $field->columns->each(function ($column) {
-
-            $this->field->columns()->save($column->replicate());
-
-        });
+        return $table->init();
     }
 
     public function getFullDataTable()
     {
         return $this->field->database . '.dbo.' . $this->field->name;
-    }
-
-    public function getParentTable()
-    {
-        return $this->exists() ? [$this->field] : [];
     }
 
     public function remove_column($column_id)
@@ -739,5 +730,10 @@ class FieldRepository
         return Field::find(array_keys($attributes))->map(function ($field) use ($attributes) {
             return ['name' => 'c'.$field->id, 'value' => $attributes[$field->id]];
         })->lists('value', 'name');
+    }
+
+    public function getModel()
+    {
+        return $this->field;
     }
 }

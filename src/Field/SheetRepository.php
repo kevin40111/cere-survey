@@ -54,17 +54,19 @@ class SheetRepository
         return FieldRepository::target($this->sheet->tables()->first(), Auth::user()->id);
     }
 
-    public function replicate($sheet)
+    public function replicateTo($file)
     {
-        $cloneTables = $sheet->tables->each(function ($table) {
+        $sheet = self::create();
 
-            $cloneTable = $table->replicate();
+        $file->sheets()->save($sheet->getModel());
 
-            $cloneTable = $this->sheet->tables()->save($cloneTable);
+        $this->sheet->tables->each(function ($table) use ($sheet) {
 
-            $cloneTable = FieldRepository::target($cloneTable, Auth::user()->id)->replicate($table);
+            FieldRepository::target($table, Auth::user()->id)->replicateTo($sheet->getModel());
 
         });
+
+        return $sheet;
     }
 
     public function get_rows($search, $isCreater)
@@ -164,52 +166,6 @@ class SheetRepository
         return [$query, $power];
     }
 
-    public function cloneTableData($parent_table_id, $owner_id)
-    {
-        $child['table']     = $this->sheet->tables->first();
-        $child['columns']   = $child['table']->columns->lists('id','name');
-        $child['has_table'] = FieldRepository::target($child['table'], Auth::user()->id)->has_table();
-        $child['rows']      = [];
-
-        $parent['table']    = Table::find($parent_table_id);
-        $parent['sheet']    = $parent['table']->sheet;
-        $parent['columns']  = $parent['table']->columns->lists('name','id');
-        $parent['rows']     = DB::table(FieldRepository::target($parent['table'], Auth::user()->id)->getFullDataTable())->where('created_by',$this->user->id)->whereNull('deleted_at')->get();
-
-        if (!$child['has_table']) {
-            FieldRepository::target($child['table'], Auth::user()->id)->table_build();
-            $child['has_table'] = FieldRepository::target($child['table'], Auth::user()->id)->has_table();
-        }
-
-        if ($parent['rows']) {
-            $count = 0;
-            foreach ($parent['rows'] as $row) {
-                foreach ($parent['table']['columns'] as $column) {
-                    $columnTitle    = $parent['columns'][$column->id];
-                    $childColumnId  = $child['columns'][$columnTitle];
-                    $child['rows'][$count]['C'.$childColumnId] = $row->{'C'.$column->id};
-                    $child['rows'][$count]['file_id'] = $parent['sheet']->file_id;
-                    $child['rows'][$count]['created_by'] = $owner_id;
-                    $child['rows'][$count]['updated_by'] = $owner_id;
-                    $child['rows'][$count]['created_at'] = Carbon::now()->toDateTimeString();
-                    $child['rows'][$count]['updated_at'] = Carbon::now()->toDateTimeString();
-                }
-                $count++;
-            }
-            foreach (array_chunk($child['rows'], 50) as $child_row) {
-                $rowInsert = DB::table(FieldRepository::target($child['table'], Auth::user()->id)->getFullDataTable())->insert($child_row);
-            }
-        }
-        // return ['child'=>$child,'parent'=>$parent];
-    }
-
-    public function getParentTable()
-    {
-        $table = $this->sheet->tables->first();
-
-        return $table->depends->isEmpty() ? [] : FieldRepository::target($table->depends->first(), Auth::user()->id)->getParentTable();
-    }
-
     public function count($isCreater)
     {
         list($query, $power) = $this->get_rows_query($isCreater);
@@ -219,5 +175,10 @@ class SheetRepository
             $table->count = FieldRepository::target($table, Auth::user()->id)->count($query);
 
         });
+    }
+
+    public function getModel()
+    {
+        return $this->sheet;
     }
 }

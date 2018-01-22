@@ -136,7 +136,7 @@ class FieldComponent extends CommFile
      */
     public function analysis()
     {
-        return 'files.analysis.analysis';
+        return 'analysis::analysis';
     }
 
     /**
@@ -151,13 +151,11 @@ class FieldComponent extends CommFile
 
     private function init()
     {
-        $isCreater = $this->isCreater() || Input::get('editor');
-
         if ($this->file->sheets->isEmpty()) {
             $this->file->sheets()->save(SheetRepository::create()->sheet);
         }
 
-        $sheets = $this->file->load('sheets')->sheets->each(function ($sheet) use ($isCreater) {
+        $sheets = $this->file->load('sheets')->sheets->each(function ($sheet) {
             SheetRepository::target($sheet)->init()->count($this->isCreater());
         });
 
@@ -423,23 +421,9 @@ class FieldComponent extends CommFile
 
         $this->file->sheets->each(function ($sheet) use ($doc) {
 
-            $cloneSheet = $sheet->replicate();
-
-            $cloneSheet = $doc->is_file->sheets()->save($cloneSheet);
-
-            SheetRepository::target($cloneSheet)->replicate($sheet);
+            SheetRepository::target($sheet)->replicateTo($doc->isFile);
 
         });
-    }
-
-    public function getParentTable()
-    {
-        return SheetRepository::target($this->file->sheets->first())->getParentTable();
-    }
-
-    public function cloneTableData()
-    {
-        SheetRepository::target($this->file->sheets->first())->cloneTableData(Input::get('table_id'), $this->user->id);
     }
 
     public function queryValueInColumn()
