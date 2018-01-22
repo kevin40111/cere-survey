@@ -31,8 +31,10 @@ angular.module('ngEditor.factories', []).factory('editorFactory', function($http
 
 });
 
-angular.module('ngEditor.directives', [])
-
+angular.module('ngEditor.directives', ['ngQuill'])
+.config(['ngQuillConfigProvider', function (ngQuillConfigProvider) {
+    ngQuillConfigProvider.set(null, null, 'custom placeholder')
+  }])
 .directive('surveyBook', function(editorFactory) {
     return {
         restrict: 'E',
@@ -72,10 +74,8 @@ angular.module('ngEditor.directives', [])
                                 </div>
                             </md-card-header>
                             <md-card-content>
-                                <md-input-container class="md-block">
-                                    <label>說明</label>
-                                    <textarea ng-model="book.footer" md-maxlength="2000" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus></textarea>
-                                </md-input-container>
+                                <ng-quill-editor placeholder="說明" ng-model="book.footer" on-editor-created="editorCreated(editor)" on-content-changed="contentChanged(editor, html, text)" on-selection-changed="selectionChanged(editor, range, oldRange, source)">
+                                </ng-quill-editor>
                             </md-card-content>
                             <md-card-actions>
                                 <md-button ng-click="saveBookFooter()">儲存</md-button>
@@ -89,7 +89,6 @@ angular.module('ngEditor.directives', [])
             </md-content>
         `,
         controller: function($scope, $filter, $mdSidenav) {
-
             $scope.skipSetting = false;
             editorFactory.types = $scope.book.types;
             editorFactory.typesInPage = $filter('filter')(Object.values(editorFactory.types), {disabled: '!'})
@@ -181,7 +180,9 @@ angular.module('ngEditor.directives', [])
                 <md-card-content>
                     <md-input-container class="md-block" ng-if="type.editor.title">
                         <label>{{type.editor.title}}</label>
-                        <textarea ng-model="node.title" md-maxlength="2000" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
+                        <ng-quill-editor placeholder="{{type.editor.title}}" ng-if="node.type!='page'" ng-model="node.title" on-editor-created="editorCreated(editor)" on-content-changed="contentChanged(editor, html, text)" on-selection-changed="selectionChanged(node, editor, range, oldRange, source)" >
+                        </ng-quill-editor>
+                        <textarea ng-model="node.title" ng-if="node.type=='page'" md-maxlength="2000" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
                     </md-input-container>
                     <div ng-if="type.editor.questions.amount" questions="node.questions" node="node"></div>
                     <div ng-if="type.editor.answers" answers="node.answers" node="node"></div>
@@ -212,6 +213,11 @@ angular.module('ngEditor.directives', [])
         },
         controller: function($scope) {
 
+            $scope.selectionChanged = function (node, editor, range, oldRange, source) {
+                editorFactory.ajax('saveNodeTitle', {node: node}, node).then(function(response) {
+                    angular.extend(node, response.node);
+                });
+            }
             $scope.type = editorFactory.types[$scope.node.type];
 
             $scope.getTypesArray = function() {

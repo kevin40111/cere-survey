@@ -9,7 +9,11 @@
         </div>
     </md-content>
 </md-content>
+<link rel="stylesheet" href="//cdn.quilljs.com/1.1.5/quill.snow.css">
+<link rel="stylesheet" href="//cdn.quilljs.com/1.1.5/quill.bubble.css">
+<style>
 
+</style>
 <script type="text/ng-template" id="list">
     @include('survey::template_question_list')
 </script>
