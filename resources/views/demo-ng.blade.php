@@ -9,8 +9,8 @@
         </div>
     </md-content>
 </md-content>
-<link rel="stylesheet" href="//cdn.quilljs.com/1.1.5/quill.snow.css">
-<link rel="stylesheet" href="//cdn.quilljs.com/1.1.5/quill.bubble.css">
+<link rel="stylesheet" href="/packages/cere/survey/js/quill.snow.min.css">
+<link rel="stylesheet" href="/packages/cere/survey/js/quill.bubble.min.css">
 <style>
 
 </style>

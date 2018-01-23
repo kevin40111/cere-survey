@@ -21,11 +21,11 @@
 <script src="/js/angular-file-upload.min.js"></script>
 <script src="/packages/cere/survey/js/ng/ngEditor.js"></script>
 <script src="/packages/cere/survey/js/ng/ngBrowser.js"></script>
-<script type="text/javascript" src="//cdn.quilljs.com/1.1.5/quill.js"></script>
-<script src="/packages/cere/survey/js/ng-quill.js"></script>
+<script src="/packages/cere/survey/js/quill.min.js"></script>
+<script src="/packages/cere/survey/js/ng-quill.min.js"></script>
 
-<link rel="stylesheet" href="//cdn.quilljs.com/1.1.5/quill.snow.css">
-<link rel="stylesheet" href="//cdn.quilljs.com/1.1.5/quill.bubble.css">
+<link rel="stylesheet" href="/packages/cere/survey/js/quill.snow.min.css">
+<link rel="stylesheet" href="/packages/cere/survey/js/quill.bubble.min.css">
 
 <script>
 app.requires.push('angularFileUpload');
