@@ -45,7 +45,7 @@ class FieldRepository
         'schoolsys'        => ['sort' => 27, 'type' => 'tinyInteger',             'title' => 'TTED學制別',                'validator' => 'in:1,2'],
         'program'          => ['sort' => 28, 'type' => 'tinyInteger',             'title' => 'TTED修課資格',              'validator' => 'in:0,1,2,3'],
         'govexp'           => ['sort' => 29, 'type' => 'tinyInteger',             'title' => 'TTED公費生',                'validator' => 'in:0,1,2,3,4'],
-        'other'            => ['sort' => 30, 'type' => 'tinyInteger',             'title' => 'TTED外加名額',              'validator' => 'in:0,1,2,3,4,5,6,7,8,9,10'],
+        'other'            => ['sort' => 30, 'type' => 'tinyInteger',             'title' => 'TTED外加名額',              'validator' => 'in:0,1,2,3,4,5,6,7,8,9,10,11'],
         'stdyear'          => ['sort' => 31, 'type' => 'string',   'size' => 1,   'title' => 'TTED年級',                  'validator' => 'in:1,2,3,4,5,6,7'],
         'string_dot'       => ['sort' => 32, 'type' => 'string',   'size' => 100, 'title' => '文字(逗號分隔)',            'regex'     => '/^[\x{0080}-\x{00FF},]+$/'],
         'float_hundred'    => ['sort' => 22, 'type' => 'string',   'size' => 8,   'title' => '小數(1-100,-7)',            'validator' => ['regex:/^(([0-9]|[1-9][0-9])(\\.[0-9]{1,5})?|100|-7)$/']],
@@ -53,6 +53,9 @@ class FieldRepository
         'menu'             => ['sort' => 34, 'type' => 'tinyInteger',             'title' => '選單',                      'menu' => '', 'editor' => 'menu'],
         'counties'         => ['sort' => 35, 'type' => 'string',   'size' => 2,   'title' => '縣市(六都改制)',             'function'  => 'counties', 'editor' => 'menu'],
         'gateway'          => ['sort' => 36, 'type' => 'tinyInteger',             'title' => '師資生核定培育管道',          'validator' => 'in:0,1,2', 'editor' => 'menu'],
+        'residentnumber'   => ['sort' => 37, 'type' => 'string',   'size' => 10,  'title' => '居留證號碼',                 'function' => 'residentnumber'],
+        'status'           => ['sort' => 38, 'type' => 'tinyInteger',             'title' => '狀態別: 1.休學 2.在家自學 3.身心障礙無法填答 4.語言適應因素無法填答',    'validator' => 'in:1,2,3,4', 'editor' => 'menu'],
+        'id_resident_number'   => ['sort' => 39, 'type' => 'string',   'size' => 10,  'title' => '身分證或居留證號碼',      'function' => 'id_resident_number'],
     ];
 
     protected static $database = 'rows';
@@ -90,12 +93,6 @@ class FieldRepository
 
     public function init()
     {
-        $this->field->columns->each(function ($column) {
-            if (isset(self::$rules[$column->rules]['editor']) && self::$rules[$column->rules]['editor'] == 'menu') {
-                $answers = $this->setAnswers($column);
-            }
-        });
-
         $this->construct();
 
         return $this;
@@ -140,8 +137,21 @@ class FieldRepository
 
         $amounts = [];
 
-        if ($this->field->columns->groupBy('unique')->has(1))
-            $amounts['removed'] = $this->removeRowsInTemp();
+        if ($this->field->columns->groupBy('unique')->has(1)) {
+            list($amounts['removed'], $duplicates) = $this->removeRowsInTemp();
+            foreach ($messages as $message) {
+                if ($message->pass && in_array($message->row['index'], $duplicates)) {
+                    $message->pass = false;
+                    $uniques = $this->field->columns()->where('unique', 1)->get();
+                    $titles = $uniques->implode('title', '、');
+                    $ids = $uniques->map(function ($unique) use ($message) {
+                        $message->errors[$unique->id] = [''];
+                        return $unique->id;
+                    });
+                    $message->errors[$ids->last()] = [$titles . '欄位已有其他使用者上傳'];
+                }
+            }
+        }
 
         $amounts['created'] = $this->moveRowsFromTemp();
 
@@ -261,6 +271,11 @@ class FieldRepository
                 unset($repeats[$key]);
             }
 
+            // 允許空字串重複
+            if ($column->isnull) {
+                unset($repeats[""]);
+            }
+
             if (!empty($repeats)) {
                 throw new ImportException(['repeat' => ['title' => $column->name, 'values' => $repeats]]);
             }
@@ -269,13 +284,15 @@ class FieldRepository
 
     public function cleanRow()
     {
-        $index = 0;
+        // $index = start row in excel
+        $index = 2;
         return array_map(function ($row) use (&$index) {
 
             $row_filted = array_filter(array_map('strval', $row), function ($value) { return $value != ''; });
 
             $message = (object)['pass' => false, 'limit' => false, 'empty' => empty($row_filted), 'updated' => false, 'exists' => [], 'errors' => [], 'row' => []];
 
+            $message->row['index'] = $index++;
             // skip if empty
             if ($message->empty)
                 return $message;
@@ -299,8 +316,6 @@ class FieldRepository
 
             $message->pass = !$message->limit && empty($message->errors);
 
-            $message->row['index'] = $index++;
-
             return $message;
 
         }, $this->import['rows']);
@@ -319,9 +334,14 @@ class FieldRepository
             });
         })->whereNotNull('checked.id');
 
-        $amount = DB::delete('DELETE rows ' . $query_update->toSql() . ' and rows.created_by = ' . $this->user_id);
+        $query_text = $query_update->toSql();
+        $amount = DB::delete('DELETE rows ' . $query_text . ' and rows.created_by = ' . $this->user_id);
 
-        return $amount;
+        // remove the data where create_by != $this->user_id in check table
+        $duplicates = array_map(function ($duplicate) { return $duplicate->index; }, $query_update->select('index')->where('created_by', '<>', $this->user_id)->get());
+        DB::delete('DELETE checked ' . $query_text . ' and rows.created_by <> ' . $this->user_id);
+
+        return [$amount, $duplicates];
     }
 
     private function moveRowsFromTemp()
@@ -489,7 +509,7 @@ class FieldRepository
         });
     }
 
-    public function setAnswers($column)
+    public static function setAnswers($column)
     {
         switch ($column->rules) {
             case 'counties':
@@ -506,6 +526,10 @@ class FieldRepository
 
             case 'gateway':
                 $items = ['0' => '無', '1' => '師培系所之師資生', '2' => '師培中心之師資生'];
+                break;
+
+            case 'status':
+                $items = ['1' => '休學', '2' => '在家自學', '3' => '身心障礙無法填答', '4' => '語言適應因素無法填答'];
                 break;
 
             case 'menu':
@@ -585,6 +609,12 @@ class FieldRepository
                 !isset($this->temp->counties) && $this->temp->counties = DB::table('plat_public.dbo.lists')->lists('code');
                 !in_array($column_value, $this->temp->counties, true) && array_push($column_errors, '不是正確的縣市代碼');
             },
+            'residentnumber' => function($column_value, $column, &$column_errors) {
+                !check_resident_number($column_value) && array_push($column_errors, $column->title . '無效');
+            },
+            'id_resident_number' => function($column_value, $column, &$column_errors) {
+                !check_id_res_number($column_value) && array_push($column_errors, $column->title . '無效');
+            },
         ];
         return $checkers[$name];
     }
@@ -599,31 +629,22 @@ class FieldRepository
         return $this->field->columns->fetch('name')->toArray();
     }
 
-    public function replicate($field)
+    public function replicateTo($sheet)
     {
-        $this->field->name = self::generate_table();
+        $table = self::create($this->user_id);
 
-        $this->field->lock = true;
+        $fields = $this->field->columns->map(function ($column) {
+            return $column->replicate();
+        })->all();
 
-        $this->field->save();
+        $sheet->tables()->save($table->getModel())->columns()->saveMany($fields);
 
-        $this->field->depends()->attach($field->id);
-
-        $field->columns->each(function ($column) {
-
-            $this->field->columns()->save($column->replicate());
-
-        });
+        return $table->init();
     }
 
     public function getFullDataTable()
     {
         return $this->field->database . '.dbo.' . $this->field->name;
-    }
-
-    public function getParentTable()
-    {
-        return $this->exists() ? [$this->field] : [];
     }
 
     public function remove_column($column_id)
@@ -709,5 +730,10 @@ class FieldRepository
         return Field::find(array_keys($attributes))->map(function ($field) use ($attributes) {
             return ['name' => 'c'.$field->id, 'value' => $attributes[$field->id]];
         })->lists('value', 'name');
+    }
+
+    public function getModel()
+    {
+        return $this->field;
     }
 }

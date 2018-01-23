@@ -46,7 +46,7 @@ class Field extends Eloquent {
 
     public function answers()
     {
-        return $this->hasMany(SurveyORM\Answer::class, 'column_id', 'id');
+        return $this->morphMany(SurveyORM\Answer::class, 'belong');
     }
 
     public function skip()
