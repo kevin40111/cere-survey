@@ -79,7 +79,19 @@ trait SurveyEditor
 
         $nodes = $this->editorRepository->getNodes($root);
 
-        return ['nodes' => $nodes, 'paths' => $root->getPaths()];
+        if ($root->node) {
+            $parent = [];
+            if ($root->node->type == 'checkbox') {
+                $parent['title'] = $root->node->title;
+                $parent['items'] = $root->node->questions;
+            } else {
+                $parent['title'] = $root->node->questions->first()->title;
+                $parent['items'] = $root->node->answers;
+            }
+            $parent['items']->find($root->id)->selected = true;
+        }
+
+        return ['nodes' => $nodes, 'paths' => $root->getPaths(), 'parent' => $root->node ? $parent : null];
     }
 
     public function createNode()
@@ -216,7 +228,7 @@ trait SurveyEditor
         $rule = Survey\RuleRepository::target($root)->saveExpressions(Input::get('expressions'), Input::get('type'), $page);
 
 
-        return 'save rules successed';
+        return ['rule' => $rule];
     }
 
     public function deleteRule()

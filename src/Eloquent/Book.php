@@ -33,19 +33,19 @@ class Book extends Eloquent {
     }
 
     protected $types = [
-        'explain'  => ['name' => 'explain',  'editor' => ['enter' => false, 'title' => ' ', 'questions' => ['amount' => 0], 'answers' => 0], 'title' =>'說明文字',   'icon' =>'info-outline'],
-        'select'   => ['name' => 'select',   'editor' => ['enter' => false, 'title' => false, 'questions' => ['amount' => 1], 'answers' => 100, 'answerChilderns' => true], 'title' =>'下拉式選單', 'icon' =>'arrow-drop-down-circle'],
-        'radio'    => ['name' => 'radio',    'editor' => ['enter' => false, 'title' => false, 'questions' => ['amount' => 1], 'answers' => 20, 'answerChilderns' => true], 'title' =>'單選題',     'icon' =>'radio-button-checked'],
-        'checkbox' => ['name' => 'checkbox', 'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 20, 'childrens' => true], 'answers' => 0], 'title' =>'複選題',     'icon' =>'check-box'],
-        'scale'    => ['name' => 'scale',    'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 20], 'answers' => 10], 'title' =>'量表題',     'icon' =>'list'],
-        'text'     => ['name' => 'text',     'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 20], 'answers' => 0], 'title' =>'文字填答',   'icon' =>'mode-edit'],
-        'number'   => ['name' => 'number',   'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 1], 'answers' => 0], 'title' =>'數字',   'icon' =>'mode-edit'],
-        'list'     => ['name' => 'list',     'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 0], 'answers' => 0], 'title' =>'題組',       'icon' =>'sitemap', 'disabled' => true],
-        'textarea' => ['name' => 'textarea', 'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 0], 'answers' => 0], 'title' =>'文字欄位',   'disabled' => true],
-        'table'    => ['name' => 'table',    'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 0], 'answers' => 0], 'title' =>'表格',       'disabled' => true],
-        'jump'     => ['name' => 'jump',     'editor' => ['enter' => false, 'title' => true, 'questions' => ['amount' => 0], 'answers' => 0], 'title' =>'開啟題本',   'type' =>'rule',  'disabled' => true],
-        'page'     => ['name' => 'page',     'editor' => ['enter' => true, 'title' => '說明', 'questions' => ['amount' => 0], 'answers' => 0], 'title' =>'頁',   'icon' =>'insert-drive-file', 'disabled' => true],
-        'gear'     => ['name' => 'gear',     'editor' => ['enter' => false, 'title' => '聯動資料上傳', 'questions' => ['amount' => 1, 'childrens' => true, 'createQuestion' => false], 'createAnswer'=> false, 'answers' => 40, 'answerChilderns' => false, 'uploadFile' => true,],'title' =>'連動下拉式選單','icon' =>'arrow-drop-down'],
+        'explain'  => ['name' => 'explain',  'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 0, 'text' =>''], 'answers' => 0], 'title' =>'說明文字',   'icon' =>'info-outline'],
+        'select'   => ['name' => 'select',   'editor' => ['enter' => false, 'title' => false, 'questions' => ['amount' => 1, 'text' =>'問題'], 'answers' => 100, 'answerChilderns' => true], 'title' =>'下拉式選單', 'icon' =>'arrow-drop-down-circle'],
+        'radio'    => ['name' => 'radio',    'editor' => ['enter' => false, 'title' => false, 'questions' => ['amount' => 1, 'text' =>'問題'], 'answers' => 20, 'answerChilderns' => true], 'title' =>'單選題',     'icon' =>'radio-button-checked'],
+        'checkbox' => ['name' => 'checkbox', 'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 20, 'childrens' => true, 'text' =>'選項'], 'answers' => 0], 'title' =>'複選題',     'icon' =>'check-box'],
+        'scale'    => ['name' => 'scale',    'editor' => ['enter' => false, 'title' => '請輸入問題描述', 'questions' => ['amount' => 20, 'text' =>'問題'], 'answers' => 10], 'title' =>'量表題',     'icon' =>'scale'],
+        'text'     => ['name' => 'text',     'editor' => ['enter' => false, 'title' => '請輸入問題描述', 'questions' => ['amount' => 20, 'text' =>'問題'], 'answers' => 0], 'title' =>'文字填答',   'icon' =>'mode-edit'],
+        'number'   => ['name' => 'number',   'editor' => ['enter' => false, 'title' => '請輸入問題描述', 'questions' => ['amount' => 1, 'text' =>'問題'], 'answers' => 0], 'title' =>'數字',   'icon' =>'mode-edit'],
+        'list'     => ['name' => 'list',     'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 0, 'text' =>'問題'], 'answers' => 0], 'title' =>'題組',       'icon' =>'sitemap', 'disabled' => true],
+        'textarea' => ['name' => 'textarea', 'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 0, 'text' =>'問題'], 'answers' => 0], 'title' =>'文字欄位',   'disabled' => true],
+        'table'    => ['name' => 'table',    'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 0, 'text' =>'問題'], 'answers' => 0], 'title' =>'表格',       'disabled' => true],
+        'jump'     => ['name' => 'jump',     'editor' => ['enter' => false, 'title' => true, 'questions' => ['amount' => 0], 'answers' => 0, 'text' =>'問題'], 'title' =>'開啟題本',   'type' =>'rule',  'disabled' => true],
+        'page'     => ['name' => 'page',     'editor' => ['enter' => true, 'title' => '這裡輸入的文字不會顯示在問卷中', 'questions' => ['amount' => 0, 'text' =>'問題'], 'answers' => 0], 'title' =>'頁',   'icon' =>'insert-drive-file', 'disabled' => true],
+        'gear'     => ['name' => 'gear',     'editor' => ['enter' => false, 'title' => '聯動資料上傳', 'questions' => ['amount' => 1, 'childrens' => true, 'createQuestion' => false, 'text' =>'問題'], 'createAnswer'=> false, 'answers' => 40, 'answerChilderns' => false, 'uploadFile' => true,],'title' =>'連動下拉式選單','icon' =>'arrow-drop-down'],
     ];
 
     public function getTypesAttribute()

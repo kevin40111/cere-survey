@@ -22,6 +22,16 @@
 <script src="/packages/cere/survey/js/ng/ngEditor.js"></script>
 <script src="/packages/cere/survey/js/ng/ngBrowser.js"></script>
 
+<style>
+    .fade.ng-leave {
+        transition:1s linear all;
+        opacity:1;
+    }
+    .fade.ng-leave.ng-leave-active {
+        opacity:0;
+    }
+</style>
+
 <script>
 app.requires.push('angularFileUpload');
 app.requires.push('ngEditor');

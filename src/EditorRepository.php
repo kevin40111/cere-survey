@@ -28,7 +28,7 @@ class EditorRepository
             $root->load('childrenNodes');
         }
 
-        $nodes = $root->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.node', 'answers', 'images'])->each(function ($node) {
+        $nodes = $root->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.rule', 'questions.node', 'rule','answers.rule', 'images'])->each(function ($node) {
             $node->sortByPrevious(['questions', 'answers']);
         });
 
