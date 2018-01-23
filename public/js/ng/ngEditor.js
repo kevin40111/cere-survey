@@ -32,9 +32,11 @@ angular.module('ngEditor.factories', []).factory('editorFactory', function($http
 });
 
 angular.module('ngEditor.directives', ['ngQuill'])
+
 .config(['ngQuillConfigProvider', function (ngQuillConfigProvider) {
     ngQuillConfigProvider.set(null, null, 'custom placeholder')
-  }])
+}])
+
 .directive('surveyBook', function(editorFactory) {
     return {
         restrict: 'E',
@@ -74,8 +76,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                                 </div>
                             </md-card-header>
                             <md-card-content>
-                                <ng-quill-editor placeholder="說明" ng-model="book.footer" on-editor-created="editorCreated(editor)" on-content-changed="contentChanged(editor, html, text)" on-selection-changed="selectionChanged(editor, range, oldRange, source)">
-                                </ng-quill-editor>
+                                <ng-quill-editor placeholder="說明" ng-model="book.footer"></ng-quill-editor>
                             </md-card-content>
                             <md-card-actions>
                                 <md-button ng-click="saveBookFooter()">儲存</md-button>
@@ -180,8 +181,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                 <md-card-content>
                     <md-input-container class="md-block" ng-if="type.editor.title">
                         <label>{{type.editor.title}}</label>
-                        <ng-quill-editor placeholder="{{type.editor.title}}" ng-if="node.type!='page'" ng-model="node.title" on-editor-created="editorCreated(editor)" on-content-changed="contentChanged(editor, html, text)" on-selection-changed="selectionChanged(node, editor, range, oldRange, source)" >
-                        </ng-quill-editor>
+                        <ng-quill-editor placeholder="{{type.editor.title}}" ng-if="node.type!='page'" ng-model="node.title" on-content-changed="contentChanged(editor, node)"></ng-quill-editor>
                         <textarea ng-model="node.title" ng-if="node.type=='page'" md-maxlength="2000" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
                     </md-input-container>
                     <div ng-if="type.editor.questions.amount" questions="node.questions" node="node"></div>
@@ -211,12 +211,15 @@ angular.module('ngEditor.directives', ['ngQuill'])
             scope.moveDown = surveyBookCtrl.moveDown;
             scope.toggleSidenavRight = surveyBookCtrl.toggleSidenavRight;
         },
-        controller: function($scope) {
+        controller: function($scope, $timeout) {
 
-            $scope.selectionChanged = function (node, editor, range, oldRange, source) {
-                editorFactory.ajax('saveNodeTitle', {node: node}, node).then(function(response) {
-                    angular.extend(node, response.node);
-                });
+            var pendingDebounce = null;
+
+            $scope.contentChanged = function (editor, node) {
+                $timeout.cancel(pendingDebounce);
+                pendingDebounce = $timeout(function() {
+                    $scope.saveNodeTitle(node);
+                }, 2000);
             }
             $scope.type = editorFactory.types[$scope.node.type];
 
