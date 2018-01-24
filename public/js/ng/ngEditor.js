@@ -371,7 +371,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
 
                 <div>
                     <label ng-show="node.type" for="{{::$id}}">
-                    <md-icon md-svg-icon="grally"></md-icon>
+                    <md-icon md-svg-icon="grally" ng-if="node.type != 'page'"></md-icon>
                         <input id="{{::$id}}"  style="display:none"  type="file" multiple nv-file-select uploader="uploader" />
                     </label>
                     <div class="ui input" ng-if="node.open.moving">
