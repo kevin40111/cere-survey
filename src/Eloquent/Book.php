@@ -3,7 +3,8 @@
 namespace Cere\Survey\Eloquent;
 
 use Eloquent;
-use Cere\Survey\Eloquent\Field\Field as Field;
+use Cere\Survey\Eloquent\Field\Sheet;
+use Cere\Survey\Eloquent\Field\Field;
 use Carbon\Carbon;
 
 class Book extends Eloquent {
@@ -21,6 +22,11 @@ class Book extends Eloquent {
     protected $attributes = ['lock' => false];
 
     protected $appends = ['class', 'types'];
+
+    public function sheet()
+    {
+        return $this->belongsTo(Sheet::class);
+    }
 
     public function childrenNodes()
     {

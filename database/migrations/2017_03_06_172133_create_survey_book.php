@@ -15,6 +15,7 @@ class CreateSurveyBook extends Migration {
         Schema::create('survey_book', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('file_id');
+            $table->integer('sheet_id');
             $table->string('title', 50);
             $table->boolean('lock', 200);
             $table->integer('loginRow_id')->nullable();

@@ -10,7 +10,7 @@ class FieldWriter implements WriterInterface
     function __construct($book_id, $user)
     {
         $book = Book::find($book_id);
-        $this->fieldRepository = FieldRepository::target($book->file->sheets()->first()->tables()->first(), $book->file->created_by);
+        $this->fieldRepository = FieldRepository::target($book->sheet->tables()->first(), $book->file->created_by);
         $this->user = $user;
     }
 
