@@ -116,4 +116,9 @@ class SurveyFile extends CommFile
             return ['sended' => false];
         }
     }
+
+    public function exportSheet()
+    {
+        SheetRepository::target($this->book->sheet)->exportAllRows();
+    }
 }
