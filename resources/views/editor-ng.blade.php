@@ -21,6 +21,11 @@
 <script src="/js/angular-file-upload.min.js"></script>
 <script src="/packages/cere/survey/js/ng/ngEditor.js"></script>
 <script src="/packages/cere/survey/js/ng/ngBrowser.js"></script>
+<script src="/packages/cere/survey/js/quill.min.js"></script>
+<script src="/packages/cere/survey/js/ng-quill.min.js"></script>
+
+<link rel="stylesheet" href="/packages/cere/survey/js/quill.snow.min.css">
+<link rel="stylesheet" href="/packages/cere/survey/js/quill.bubble.min.css">
 
 <style>
     .fade.ng-leave {

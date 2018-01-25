@@ -66,13 +66,17 @@ angular.module('ngSurvey.directives', [])
                         填寫加掛題本
                     </md-button>
                 </div>
-                <div style="padding:20px; text-align:center; color:grey">
-                    {{book.footer}}
-                </div>
+                <md-card>
+                    <md-card-title>
+                        <md-card-title-text class="ql-editor" ng-bind-html="trustAsHtml(book.footer)"></md-card-title-text>
+                    </md-card-title>
+                </<md-card>
             </div>
         `,
-        controller: function($scope) {
-
+        controller: function($scope, $sce) {
+            $scope.trustAsHtml = function(string) {
+                return $sce.trustAsHtml(string);
+            };
             surveyFactory.get('getPage', {book: $scope.book}, $scope.book).then(function(response) {
                 $scope.page = response.page;
                 angular.extend(surveyFactory.answers, response.answers);
@@ -137,7 +141,7 @@ angular.module('ngSurvey.directives', [])
                 <md-card>
                     <md-card-title>
                         <md-card-title-text>
-                        <span class="md-headline" ng-bind-html="node.title.split('\n').join('<br/>')"></span>
+                        <span class="md-headline ql-editor" ng-bind-html="trustAsHtml(node.title.split('\n').join('<br/>'))"></span>
                         </md-card-title-text>
                     </md-card-title>
                     <md-card-content>
@@ -151,8 +155,10 @@ angular.module('ngSurvey.directives', [])
                 <survey-node ng-if="childrens" ng-repeat="children in childrens" node="children"></survey-node>
             </div>
         `,
-        controller: function($scope) {
-
+        controller: function($scope, $sce) {
+            $scope.trustAsHtml = function(string) {
+                return $sce.trustAsHtml(string);
+            };
             //$scope.node.saving = true;
             //$scope.node = {saving: true};
 

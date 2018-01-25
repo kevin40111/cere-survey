@@ -80,6 +80,8 @@ class EditorRepository
     {
         $item = $class::find($id);
 
+        $title = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', "", $title);
+
         strlen($title) <= 2000 && $item->update(['title' => $title]);
 
         return $item;

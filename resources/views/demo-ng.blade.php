@@ -9,7 +9,11 @@
         </div>
     </md-content>
 </md-content>
+<link rel="stylesheet" href="/packages/cere/survey/js/quill.snow.min.css">
+<link rel="stylesheet" href="/packages/cere/survey/js/quill.bubble.min.css">
+<style>
 
+</style>
 <script type="text/ng-template" id="list">
     @include('survey::template_question_list')
 </script>
