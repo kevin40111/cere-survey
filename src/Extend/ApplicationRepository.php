@@ -31,33 +31,39 @@ class ApplicationRepository
 
     public function setApplicableOptions($selected)
     {
-        $this->book->applicableOptions()->delete();
+        $extend = $this->book->extend;
+        if(!isset($extend)) {
+            $extend = new SurveyORM\ExtendRule;
+        }
 
-        $this->book->optionFields()->sync($selected['fields']);
-        $this->book->column_id = $selected['conditionColumn_id'];
-        $this->book->save();
+        $extend->book_id = $this->book->id;
+        $extend->rule = $selected;
+        $extend->save();
     }
 
     public function getApplicableOptions()
     {
         $columns = $this->book->optionFields()->wherePivot('target', 'login')->get()->lists('id');
         $questions = $this->book->optionFields()->wherePivot('target', 'main')->get()->lists('id');
-        $file = $this->book->no_population ? \Files::find($this->book->no_pop_id) : \Files::find($this->book->auth['fieldFile_id']);
+        $file = \Files::find($this->book->auth['fieldFile_id']);
+        $extend = $this->book->extend;
 
-        $optionColumns = !is_null($file) ? $file->sheets->first()->tables->first()->columns->each(function ($column) use ($columns) {
-            $column->selected = in_array($column->id, $columns);
+        $optionColumns = !is_null($file) ? $file->sheets->first()->tables->first()->columns->each(function ($column) use ($extend) {
+            $column->selected = isset($extend->rule->fields[$column->id]) ? true : false;
         }) : [];
 
-        $optionQuestions = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($questions) {
-            $optionQuestions = $page->getQuestions();
-            foreach ($optionQuestions as $index => $optionQuestion) {
-                $optionQuestions[$index]['selected'] = in_array($optionQuestion['id'], $questions);
+        $optionQuestions = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($extend) {
+            $questions = $page->getQuestions();
+
+            foreach ($questions as &$question) {
+                $question["selected"] = isset($extend->rule->fields[$question->id]) ? true : false;
             }
-            return array_merge($carry, $optionQuestions);
+
+            return $carry + [$page->id => $questions];
         }, []);
 
         return [
-            'conditionColumn_id' => $this->book->column_id,
+            'extend' => $this->book->extend,
             'options' => [
                 'columns' => $optionColumns,
                 'questions' => $optionQuestions,

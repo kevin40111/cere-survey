@@ -114,4 +114,9 @@ class Book extends Eloquent {
     {
         return $this->morphOne('Cere\Survey\Eloquent\Rule', 'effect');
     }
+
+    public function extend()
+    {
+        return $this->hasOne('Cere\Survey\Eloquent\ExtendRule', 'book_id');
+    }
 }

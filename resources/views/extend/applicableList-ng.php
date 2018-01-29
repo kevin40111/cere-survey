@@ -10,20 +10,31 @@
                 <md-list flex>
                     <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>主題本進入加掛題本判斷條件欄位</h4></md-subheader>
                     <md-list-item>
-                        <md-select placeholder="請選擇" ng-model="applicable.conditionColumn_id" style="width: 920px">
+                        <md-select placeholder="請選擇" ng-model="applicable.extend.rule.conditionColumn_id" style="width: 920px">
                             <md-option ng-value="column.id" ng-repeat="column in applicable.options.columns">{{column.title}}</md-option>
                         </md-select>
                     </md-list-item>
-                    <md-list-item ng-if="empty">
-                        <div class="ui negative message" flex>
-                            <div class="header">請選擇欄位</div>
-                        </div>
+                    <md-divider ></md-divider>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>可申請母體欄位數量限制</h4></md-subheader>
+                    <md-list-item>
+                        <md-input-container>
+                            <label>母體欄位數量限制</label>
+                            <input type="number" ng-model="applicable.extend.rule.columnsLimit" />
+                        </md-input-container>
                     </md-list-item>
                     <md-divider ></md-divider>
                     <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>可申請母體名單變項</h4></md-subheader>
                     <md-list-item ng-repeat="column in applicable.options.columns">
                         <p>{{column.title}}</p>
                         <md-checkbox class="md-secondary" ng-model="column.selected" ng-true-value="true" ng-false-value="" aria-label="{{column.title}}"></md-checkbox>
+                    </md-list-item>
+                    <md-divider ></md-divider>
+                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>可申請題目數量限制</h4></md-subheader>
+                    <md-list-item>
+                        <md-input-container>
+                            <label>題目數量限制</label>
+                            <input type="number" ng-model="applicable.extend.rule.fieldsLimit" />
+                        </md-input-container>
                     </md-list-item>
                     <md-divider ></md-divider>
                     <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>可申請主題本題目</h4></md-subheader>
@@ -66,10 +77,19 @@
         }
 
         $scope.setApplicableOptions = function() {
-            var fields = getFields();
-            if ($scope.applicable.conditionColumn_id) {
+            // var fields = getFields();
+            var fields = [];
+
+            if ($scope.applicable.extend.rule.conditionColumn_id) {
                 $scope.disabled = true;
-                $http({method: 'POST', url: 'setApplicableOptions', data:{selected: {'fields': fields, 'conditionColumn_id': $scope.applicable.conditionColumn_id}}})
+                $http({method: 'POST', url: 'setApplicableOptions', data:{
+                    selected: {
+                        'fieldsLimit': $scope.applicable.extend.rule.fieldsLimit,
+                        'columnsLimit' : $scope.applicable.extend.rule.columnsLimit,
+                        'fields': fields,
+                        'conditionColumn_id': $scope.applicable.extend.rule.conditionColumn_id}
+                    }
+                })
                 .success(function(data, status, headers, config) {
                     $scope.disabled = false;
                     $scope.empty = false;
