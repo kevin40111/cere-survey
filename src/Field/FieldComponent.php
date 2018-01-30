@@ -14,6 +14,7 @@ use Plat\Files\CommFile;
 use Illuminate\Support\MessageBag;
 use Cere\Survey\Field\SheetRepository;
 use Cere\Survey\Field\FieldRepository;
+use Plat\Files\FileType;
 
 /**
  * Rows data Repository.
@@ -85,6 +86,22 @@ class FieldComponent extends CommFile
         $sheet = $this->file->sheets()->save(SheetRepository::create()->sheet);
 
         SheetRepository::target($sheet)->init();
+    }
+
+    /**
+     * @todo instead create
+     */
+    public static function createComponent(array $attributes = ['title' => ''], User $user)
+    {
+        $type = FileType::where('class', self::class)->first();
+
+        $file = Files::create(array_merge(['type' => $type->id, 'created_by' => $user->id], $attributes));
+
+        $sheet = $file->sheets()->save(SheetRepository::create()->sheet);
+
+        SheetRepository::target($sheet)->init();
+
+        return new self($file, $user);
     }
 
     /**

@@ -9,6 +9,7 @@ use Mail;
 use Plat\Files\CommFile;
 use Cere\Survey\SurveyEditor;
 use Cere\Survey\Field\SheetRepository;
+use Cere\Survey\Field\FieldComponent;
 use Cere\Survey\Extend\Apply;
 
 class SurveyFile extends CommFile
@@ -24,7 +25,7 @@ class SurveyFile extends CommFile
         parent::__construct($file, $user);
 
         if ($this->file->exists) {
-            $this->__SurveyEditorConstruct(SheetRepository::target($this->file->sheets()->first())->field());
+            $this->__SurveyEditorConstruct(SheetRepository::target($this->file->book->sheet)->field());
         }
 
         $this->book = $this->file->book;
@@ -53,15 +54,22 @@ class SurveyFile extends CommFile
         ];
     }
 
+    /**
+     * @todo to static
+     **/
     public function create()
     {
-        $commFile = parent::create();
+        parent::create();
 
-        $sheet = $this->file->sheets()->save(SheetRepository::create()->sheet);
+        $this->book = $this->file->book()->create(['title' => $this->file->title, 'lock' => false]);
 
-        SheetRepository::target($sheet)->init();
+        $fieldComponent = FieldComponent::createComponent(['title' => $this->file->title], $this->user);
 
-        $this->file->book()->create(['title' => $this->file->title, 'lock' => false]);
+        $this->book->sheet()->associate($fieldComponent->file->sheets()->first());
+
+        $this->book->save();
+
+        return $this;
     }
 
     public function queryOrganizations()
@@ -107,5 +115,10 @@ class SurveyFile extends CommFile
         } catch (Exception $e){
             return ['sended' => false];
         }
+    }
+
+    public function exportSheet()
+    {
+        SheetRepository::target($this->book->sheet)->exportAllRows();
     }
 }
