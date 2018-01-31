@@ -30,7 +30,7 @@
 
                     <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>釋出的母體問卷之題目欄位 (請勾選)</h4></md-subheader>
                     <md-list-item>
-                        <button class="ui blue button" flex= 30 ng-click="showQuestion($event)">新增題目</button>
+                        <button class="ui blue button" flex="30" ng-click="showQuestion($event)">新增題目</button>
                     </md-list-item>
                     <md-divider ></md-divider>
                     <md-subheader class="md-no-sticky" md-colors="{color: 'red'}">共釋出{{selected.length}}個欄位(含母體)</md-subheader>
@@ -91,6 +91,7 @@
         $scope.getApplicableOptions();
 
         $scope.setApplicableOptions = function() {
+            console.log($scope.conditionColumn_id);
             if ($scope.conditionColumn_id) {
                 $scope.disabled = true;
                 $http({method: 'POST', url: 'setApplicableOptions', data:{

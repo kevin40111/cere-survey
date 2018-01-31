@@ -35,7 +35,7 @@ class ApplicationRepository
         if (! isset($extend)) {
             $this->book->extend()->save(new SurveyORM\ExtendRule(['rule' => $selected]));
         } else {
-            $this->book->extend->update(['rule' => $selected]);
+            $this->book->extend()->update(['rule' => $selected]);
         }
     }
 
