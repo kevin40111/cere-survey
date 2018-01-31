@@ -6,21 +6,11 @@ use Cere\Survey\Eloquent as SurveyORM;
 use Input;
 use View;
 
-trait Apply
+trait ApplyExtend
 {
-    public function application()
-    {
-        return 'survey::extend.application-ng';
-    }
-
     public function confirm()
     {
         return 'survey::extend.confirm-ng';
-    }
-
-    public function applicableList()
-    {
-        return 'survey::extend.applicableList-ng';
     }
 
     public function userApplication()
@@ -45,16 +35,6 @@ trait Apply
     public function resetApplication()
     {
         return ApplicationRepository::book($this->book)->resetApplication();
-    }
-
-    public function setApplicableOptions()
-    {
-        ApplicationRepository::book($this->book)->setApplicableOptions(Input::get('selecteds'));
-    }
-
-    public function getApplicableOptions()
-    {
-        return ApplicationRepository::book($this->book)->getApplicableOptions(Input::get('rowsFileId'));
     }
 
     public function getApplications()
