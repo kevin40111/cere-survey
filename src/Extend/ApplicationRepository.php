@@ -68,21 +68,6 @@ class ApplicationRepository
         ];
     }
 
-    private function getConditionColumn()
-    {
-        return \Row\Column::find($this->book->column_id);
-    }
-
-    private function getParentList()
-    {
-        $no_population = \Files::all()->filter(function ($file) {
-            return ($file->created_by ==  Auth::user()->id) ? (is_null($file->book) ? false : $file->book->no_pop_id) : false;
-        })->map(function($file) {
-            return $file->book->no_pop_id;
-        })->toArray();
-        return $this->book->file->select('id', 'title')->where('created_by', '=', Auth::user()->id)->where('type','=','30')->whereNotIn('id', $no_population)->get();
-    }
-
     private function resetApplicableOptions()
     {
         $this->deleteRelatedApplications();
@@ -100,17 +85,6 @@ class ApplicationRepository
     private function deleteApplicableOptions()
     {
         $this->book->applicableOptions()->delete();
-    }
-
-    private function deleteCondition()
-    {
-        $book = $this->book;
-        $book->column_id = NULL;
-        $book->rowsFile_id = NULL;
-        $book->no_population = 0;
-        $book->lock = false;
-        $book->loginRow_id = NULL;
-        $book->save();
     }
 
     public function getApplicationPages()
