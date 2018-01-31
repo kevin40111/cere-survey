@@ -32,44 +32,35 @@ class ApplicationRepository
     public function setApplicableOptions($selected)
     {
         $extend = $this->book->extend;
-        if(!isset($extend)) {
-            $extend = new SurveyORM\ExtendRule;
+        if (! isset($extend)) {
+            $this->book->extend()->save(new SurveyORM\ExtendRule(['rule' => $selected]));
+        } else {
+            $this->book->extend->update(['rule' => $selected]);
         }
-
-        $extend->book_id = $this->book->id;
-        $extend->rule = $selected;
-        $extend->save();
     }
 
     public function getApplicableOptions()
     {
-        $columns = $this->book->optionFields()->wherePivot('target', 'login')->get()->lists('id');
-        $questions = $this->book->optionFields()->wherePivot('target', 'main')->get()->lists('id');
         $file = \Files::find($this->book->auth['fieldFile_id']);
 
-        $extend = $this->book->extend;
-        if(!isset($extend)) {
-            $extend = new SurveyORM\ExtendRule;
-            $extend->save();
-            $extend = $this->book->extend;
-        }
+        $extend = $this->book->extend ?: new SurveyORM\ExtendRule;
 
         $optionColumns = !is_null($file) ? $file->sheets->first()->tables->first()->columns->each(function ($column) use ($extend) {
-            $column->selected = in_array($column->id, $extend->rule['fields']) ? true : false;
+            $column->selected = in_array($column->id, $extend->rule['fields']);
         }) : [];
 
         $optionQuestions = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($extend) {
             $questions = $page->getQuestions();
 
             foreach ($questions as &$question) {
-                $question["selected"] = in_array($question['id'], $extend->rule['fields']) ? true : false;
+                $question["selected"] = in_array($question['id'], $extend->rule['fields']);
             }
 
             return $carry + [$page->id => $questions];
         }, []);
 
         return [
-            'extend' => $this->book->extend,
+            'rule' => $extend->rule,
             'options' => [
                 'columns' => $optionColumns,
                 'questions' => $optionQuestions,

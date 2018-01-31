@@ -74,15 +74,15 @@
         $scope.getApplicableOptions = function() {
             $http({method: 'POST', url: 'getApplicableOptions', data:{}})
             .success(function(data, status, headers, config) {
-                fieldsFactory.selected = data.extend.rule.fields;
+                fieldsFactory.selected = data.rule.fields;
                 fieldsFactory.columns = data.options.columns;
                 fieldsFactory.questions = data.options.questions;
 
                 $scope.selected = fieldsFactory.selected;
                 $scope.columns = fieldsFactory.columns;
-                $scope.fieldsLimit = data.extend.rule.fieldsLimit;
-                $scope.columnsLimit = data.extend.rule.columnsLimit;
-                $scope.conditionColumn_id = data.extend.rule.conditionColumn_id
+                $scope.fieldsLimit = data.rule.fieldsLimit;
+                $scope.columnsLimit = data.rule.columnsLimit;
+                $scope.conditionColumn_id = data.rule.conditionColumn_id
             })
             .error(function(e){
                 console.log(e);
