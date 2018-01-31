@@ -3,7 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateSurveyApplication extends Migration {
+class CreateSurveyApplications extends Migration {
 
     /**
      * Run the migrations.
@@ -12,12 +12,13 @@ class CreateSurveyApplication extends Migration {
      */
     public function up()
     {
-        Schema::create('survey_application', function (Blueprint $table) {
+        Schema::create('survey_extend_applications', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('book_id');
             $table->integer('member_id');
             $table->boolean('extension');
             $table->boolean('reject');
+            $table->text('fields');
             $table->integer('ext_book_id')->nullable();
             $table->timestamps();
             $table->softDeletes();
