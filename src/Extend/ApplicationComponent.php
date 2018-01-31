@@ -8,16 +8,49 @@ use Cere\Survey\Eloquent as SurveyORM;
 use Input;
 use View;
 use Plat\Files\CommFile;
+use Cere\Survey\SurveyEditor;
+use Cere\Survey\Field\SheetRepository;
+use Cere\Survey\Field\FieldComponent;
 
 class ApplicationComponent extends CommFile
 {
+    use SurveyEditor {
+        SurveyEditor::__construct as private __SurveyEditorConstruct;
+    }
+
     function __construct(Files $file, User $user)
     {
         parent::__construct($file, $user);
 
         $this->configs = $this->file->configs->lists('value', 'name');
 
-        $this->book = SurveyORM\book::find($this->configs['book_id']);
+        $this->mainBook = SurveyORM\book::find($this->configs['main_book_id']);
+
+        if (! $this->file->book) {
+            $this->create();
+        }
+
+        $this->book = $this->file->book;
+
+        $this->__SurveyEditorConstruct(SheetRepository::target($this->book->sheet)->field());
+    }
+
+    /**
+     * @todo to static
+     **/
+    public function create()
+    {
+        parent::create();
+
+        $this->book = $this->file->book()->create(['title' => $this->file->title, 'lock' => false]);
+
+        $fieldComponent = FieldComponent::createComponent(['title' => $this->file->title], $this->user);
+
+        $this->book->sheet()->associate($fieldComponent->file->sheets()->first());
+
+        $this->book->save();
+
+        return $this;
     }
 
     public function is_full()
@@ -27,12 +60,17 @@ class ApplicationComponent extends CommFile
 
     public function get_views()
     {
-        return ['application'];
+        return ['contract', 'open', 'application'];
+    }
+
+    public function contract()
+    {
+        return 'survey::extend.apply.contract';
     }
 
     public function application()
     {
-        return 'survey::extend.application-ng';
+        return 'survey::extend.apply.application-ng';
     }
 
     public function userApplication()
@@ -44,24 +82,24 @@ class ApplicationComponent extends CommFile
     {
         $selected = Input::get('selected');
 
-        return ApplicationRepository::book($this->book)->setAppliedOptions($selected);
+        return ApplicationRepository::book($this->mainBook)->setAppliedOptions($selected);
     }
 
     public function getAppliedOptions()
     {
         $member_id = Input::get('member_id');
 
-        return ApplicationRepository::book($this->book)->getAppliedOptions($member_id);
+        return ApplicationRepository::book($this->mainBook)->getAppliedOptions($member_id);
     }
 
     public function resetApplication()
     {
-        return ApplicationRepository::book($this->book)->resetApplication();
+        return ApplicationRepository::book($this->mainBook)->resetApplication();
     }
 
     public function getApplications()
     {
-        $applications = $this->book->applications->load('members.organizations.now', 'members.user', 'members.contact');
+        $applications = $this->mainBook->applications->load('members.organizations.now', 'members.user', 'members.contact');
 
         return ['applications' => $applications];
     }
@@ -69,7 +107,7 @@ class ApplicationComponent extends CommFile
     public function activeExtension()
     {
         $application_id = Input::get('application_id');
-        $application = $this->book->applications()->where('id', $application_id)->first();
+        $application = $this->mainBook->applications()->where('id', $application_id)->first();
         if (!$application->reject) {
             SurveyORM\Book::find($application->ext_book_id)->update(array('lock' => true));
         }
@@ -81,7 +119,7 @@ class ApplicationComponent extends CommFile
 
     public function reject()
     {
-        $application = $this->book->applications()->where('id', Input::get('application_id'))->first();
+        $application = $this->mainBook->applications()->where('id', Input::get('application_id'))->first();
 
         $application = ApplicationRepository::application($application)->reject();
 
@@ -90,7 +128,7 @@ class ApplicationComponent extends CommFile
 
     public function getApplicationPages()
     {
-        $pagination = ApplicationRepository::book($this->book)->getApplicationPages();
+        $pagination = ApplicationRepository::book($this->mainBook)->getApplicationPages();
 
         return ['currentPage' => $pagination->getCurrentPage(), 'lastPage' => $pagination->getLastPage()];
     }
@@ -104,7 +142,7 @@ class ApplicationComponent extends CommFile
 
     public function applicationStatus()
     {
-        $application = $this->book->applications()->OfMe()->first();
+        $application = $this->mainBook->applications()->OfMe()->first();
         if (is_null($application)) {
             return ['status' => null];
         } else {
