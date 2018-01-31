@@ -2,15 +2,37 @@
 
 namespace Cere\Survey\Extend;
 
+use User;
+use Files;
 use Cere\Survey\Eloquent as SurveyORM;
 use Input;
 use View;
+use Plat\Files\CommFile;
 
-trait ApplyExtend
+class ApplicationComponent extends CommFile
 {
-    public function confirm()
+    function __construct(Files $file, User $user)
     {
-        return 'survey::extend.confirm-ng';
+        parent::__construct($file, $user);
+
+        $this->configs = $this->file->configs->lists('value', 'name');
+
+        $this->book = SurveyORM\book::find($this->configs['book_id']);
+    }
+
+    public function is_full()
+    {
+        return false;
+    }
+
+    public function get_views()
+    {
+        return ['application'];
+    }
+
+    public function application()
+    {
+        return 'survey::extend.application-ng';
     }
 
     public function userApplication()

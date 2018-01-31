@@ -6,9 +6,9 @@ use Input;
 
 trait ApplySet
 {
-    public function application()
+    public function confirm()
     {
-        return 'survey::extend.application-ng';
+        return 'survey::extend.confirm-ng';
     }
 
     public function applicableList()
