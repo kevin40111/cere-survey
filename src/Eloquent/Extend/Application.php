@@ -4,6 +4,8 @@ namespace Cere\Survey\Eloquent\Extend;
 
 use Eloquent;
 use Auth;
+use Cere\Survey\Eloquent\Field\Field;
+use Cere\Survey\Eloquent\Extend\Option;
 
 class Application extends Eloquent {
 
@@ -24,9 +26,14 @@ class Application extends Eloquent {
         return $this->belongsTo('Cere\Survey\Eloquent\Book', 'book_id', 'id');
     }
 
-    public function appliedOptions()
+    public function Option()
     {
-        return $this->belongsToMany('Cere\Survey\Eloquent\ApplicableOption', 'survey_applied_options', 'application_id', 'applicable_option_id');
+        return $this->belongsTo(Option::class);
+    }
+
+    public function appliedFields()
+    {
+        return $this->belongsToMany(Field::class, 'survey_applied_options');
     }
 
     public function members()

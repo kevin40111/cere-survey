@@ -6,6 +6,7 @@ use Eloquent;
 use Cere\Survey\Eloquent\Field\Sheet;
 use Cere\Survey\Eloquent\Field\Field;
 use Carbon\Carbon;
+use Cere\Survey\Eloquent\Extend\Option;
 
 class Book extends Eloquent {
 
@@ -117,6 +118,6 @@ class Book extends Eloquent {
 
     public function extend()
     {
-        return $this->hasOne('Cere\Survey\Eloquent\ExtendRule', 'book_id');
+        return $this->hasOne(Option::class);
     }
 }

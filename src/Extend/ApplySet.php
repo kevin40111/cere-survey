@@ -23,6 +23,6 @@ trait ApplySet
 
     public function getApplicableOptions()
     {
-        return SettingRepository::book($this->book)->getApplicableOptions(Input::get('rowsFileId'));
+        return SettingRepository::book($this->book)->getApplicableOptions();
     }
 }

@@ -1,10 +1,10 @@
 <?php
 
-namespace Cere\Survey\Eloquent;
+namespace Cere\Survey\Eloquent\Extend;
 
 use Eloquent;
 
-class ExtendRule extends Eloquent {
+class Option extends Eloquent {
 
     protected $connection = 'survey';
 
@@ -13,6 +13,11 @@ class ExtendRule extends Eloquent {
     public $timestamps = false;
 
     protected $fillable = ['book_id', 'rule'];
+
+    public function applications()
+    {
+        return $this->hasMany(Application::class);
+    }
 
     public function getRuleAttribute($rule)
     {

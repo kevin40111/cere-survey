@@ -87,9 +87,7 @@ class ApplicationComponent extends CommFile
 
     public function getAppliedOptions()
     {
-        $member_id = Input::get('member_id');
-
-        return ApplicationRepository::book($this->mainBook)->getAppliedOptions($member_id);
+        return ApplicationRepository::book($this->mainBook)->getAppliedOptions();
     }
 
     public function resetApplication()

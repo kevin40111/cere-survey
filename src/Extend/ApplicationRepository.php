@@ -7,6 +7,7 @@ use Auth;
 use Input;
 use DB;
 use Cere\Survey\Eloquent\Field\Field;
+use Cere\Survey\RuleRepository;
 
 class ApplicationRepository
 {
@@ -32,6 +33,7 @@ class ApplicationRepository
     public function setAppliedOptions($selected)
     {
         $application = $this->book->applications()->OfMe()->withTrashed()->first();
+
         if ($application) {
             $application->restore();
         } else {
@@ -41,58 +43,23 @@ class ApplicationRepository
             $application->save();
         }
 
-        $extBook = SurveyORM\Book::find($application->ext_book_id);
-        RuleRepository::target($extBook)->saveExpressions($selected['rules']);
-
-        $application->appliedOptions()->sync($selected['columns']);
+        $application->appliedFields()->sync($selected['optionFields']);
 
         return $this->getAppliedOptions();
     }
 
-    public function getAppliedOptions($member_id = NULL)
+    public function getAppliedOptions()
     {
-        $application = isset($member_id) ? $this->book->applications()->where('member_id', Input::get('member_id'))->first() : $this->book->applications()->OfMe()->first();
-        if ($application) {
-            $appliedOptions =  $application->appliedOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
-                return $applicableOption->survey_applicable_option_type == Field::class ? 'applicableColumns' : 'applicableQuestions';
-            });
-            $edited = true;
-            $options = $appliedOptions;
+        $member = Auth::user()->members()->orderBy('logined_at', 'desc')->first();
 
-            $extBook = SurveyORM\Book::find($application->ext_book_id);
-            $extBookDoc = $extBook->file->docs()->OfMe()->first();
-            $rule = RuleRepository::target($extBook)->getRule();
-            $organizationsSelected = array_map(function($rule){
-                return \Plat\Project\OrganizationDetail::find($rule['value']);
-            }, $rule->expressions[0]['conditions']);
-        } else {
-            $applicableOption = $this->book->applicableOptions->load('surveyApplicableOption')->groupBy(function($applicableOption) {
-                return $applicableOption->survey_applicable_option_type == Field::class ? 'applicableColumns' : 'applicableQuestions';
-            });
-            $edited = false;
-            $options = $applicableOption;
-            $extBookDoc = [];
-            $organizationsSelected = [];
-        }
+        $application = $this->book->extend->applications()->where('member_id', $member->id)->first();
 
-        $columns = isset($options['applicableColumns']) ? $options['applicableColumns'] : [];
-        $questions = isset($options['applicableQuestions']) ? $options['applicableQuestions'] : [];
-        $extColumn = \Row\Column::find($this->book->column_id);
-        $organizations = Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->organizations->map(function($organization){
-            return $organization->now;
-        })->toArray();
+        $appliedFields = ! $application ? [] : $application->appliedFields->lists('id');
 
         return [
-            'book' => $this->book,
-            'columns' => $columns,
-            'questions' => $questions,
-            'edited' => $edited,
-            'extBook' => $extBookDoc,
-            'extColumn' => $extColumn,
-            'organizations' => [
-                'lists' => $organizations,
-                'selected' => $organizationsSelected,
-            ],
+            'optionFields' => Field::find($this->book->extend->rule['fields'])->each(function($optionField) use ($appliedFields) {
+                $optionField->selected = in_array($optionField->id, $appliedFields);
+            }),
         ];
     }
 
