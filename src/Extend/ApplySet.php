@@ -18,11 +18,11 @@ trait ApplySet
 
     public function setApplicableOptions()
     {
-        ApplicationRepository::book($this->book)->setApplicableOptions(Input::get('selected'));
+        SettingRepository::book($this->book)->setApplicableOptions(Input::get('selecteds'));
     }
 
     public function getApplicableOptions()
     {
-        return ApplicationRepository::book($this->book)->getApplicableOptions(Input::get('rowsFileId'));
+        return SettingRepository::book($this->book)->getApplicableOptions(Input::get('rowsFileId'));
     }
 }
