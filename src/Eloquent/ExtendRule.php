@@ -21,7 +21,6 @@ class ExtendRule extends Eloquent {
             'fieldsLimit' => isset($rule['fieldsLimit']) ? $rule['fieldsLimit'] : 0,
             'columnsLimit' => isset($rule['columnsLimit']) ? $rule['columnsLimit'] : 0,
             'fields' => isset($rule['fields']) ? $rule['fields'] : [],
-            'conditionColumn_id' => isset($rule['conditionColumn_id']) ? $rule['conditionColumn_id'] : NULL,
         ];
     }
 
@@ -31,7 +30,6 @@ class ExtendRule extends Eloquent {
             'fieldsLimit' => isset($value['fieldsLimit']) ? $value['fieldsLimit'] : 0,
             'columnsLimit' => isset($value['columnsLimit']) ? $value['columnsLimit'] : 0,
             'fields' => isset($value['fields']) ? $value['fields'] : [],
-            'conditionColumn_id' => isset($value['conditionColumn_id']) ? $value['conditionColumn_id'] : NULL,
         ]);
     }
 }

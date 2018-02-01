@@ -29,13 +29,13 @@ class ApplicationRepository
         return $instance;
     }
 
-    public function setApplicableOptions($selected)
+    public function setApplicableOptions($selecteds)
     {
         $extend = $this->book->extend;
         if (! isset($extend)) {
-            $this->book->extend()->save(new SurveyORM\ExtendRule(['rule' => $selected]));
+            $this->book->extend()->save(new SurveyORM\ExtendRule(['rule' => $selecteds]));
         } else {
-            $this->book->extend()->update(['rule' => $selected]);
+            $this->book->extend->update(['rule' => $selecteds]);
         }
     }
 
@@ -49,7 +49,7 @@ class ApplicationRepository
             $column->selected = in_array($column->id, $extend->rule['fields']);
         }) : [];
 
-        $optionQuestions = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($extend) {
+        $pages = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($extend) {
             $questions = $page->getQuestions();
 
             foreach ($questions as &$question) {
@@ -63,7 +63,7 @@ class ApplicationRepository
             'rule' => $extend->rule,
             'options' => [
                 'columns' => $optionColumns,
-                'questions' => $optionQuestions,
+                'pages' => $pages,
             ],
         ];
     }

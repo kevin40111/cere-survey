@@ -49,7 +49,7 @@ trait Apply
 
     public function setApplicableOptions()
     {
-        ApplicationRepository::book($this->book)->setApplicableOptions(Input::get('selected'));
+        ApplicationRepository::book($this->book)->setApplicableOptions(Input::get('selecteds'));
     }
 
     public function getApplicableOptions()
