@@ -11,6 +11,7 @@ use Cere\Survey\SurveyEditor;
 use Cere\Survey\Field\SheetRepository;
 use Cere\Survey\Field\FieldComponent;
 use Cere\Survey\Extend\ApplySettingTrait;
+use Cere\Survey\Extend\CensornTrait;
 
 class SurveyFile extends CommFile
 {
@@ -19,6 +20,8 @@ class SurveyFile extends CommFile
     }
 
     use ApplySettingTrait;
+
+    use CensornTrait;
 
     function __construct(Files $file, User $user)
     {

@@ -7,11 +7,6 @@ use Cere\Survey\Extend\Setting\SettingRepository;
 
 trait ApplySettingTrait
 {
-    public function confirm()
-    {
-        return 'survey::extend.setting.confirm-ng';
-    }
-
     public function applicableList()
     {
         return 'survey::extend.setting.applicableList-ng';

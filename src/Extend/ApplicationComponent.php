@@ -96,42 +96,6 @@ class ApplicationComponent extends CommFile
         return ApplicationRepository::book($this->mainBook)->resetApplication();
     }
 
-    public function getApplications()
-    {
-        $applications = $this->mainBook->applications->load('members.organizations.now', 'members.user', 'members.contact');
-
-        return ['applications' => $applications];
-    }
-
-    public function activeExtension()
-    {
-        $application_id = Input::get('application_id');
-        $application = $this->mainBook->applications()->where('id', $application_id)->first();
-        if (!$application->reject) {
-            SurveyORM\Book::find($application->ext_book_id)->update(array('lock' => true));
-        }
-        $application->extension = !$application->extension;
-        $application->save();
-
-        return ['application' => $application];
-    }
-
-    public function reject()
-    {
-        $application = $this->mainBook->applications()->where('id', Input::get('application_id'))->first();
-
-        $application = ApplicationRepository::application($application)->reject();
-
-        return ['application' => $application];
-    }
-
-    public function getApplicationPages()
-    {
-        $pagination = ApplicationRepository::book($this->mainBook)->getApplicationPages();
-
-        return ['currentPage' => $pagination->getCurrentPage(), 'lastPage' => $pagination->getLastPage()];
-    }
-
     public function checkExtBookLocked()
     {
         $locked = SurveyORM\Book::find(Input::get('book_id'))->lock;

@@ -55,35 +55,4 @@ class SettingRepository
             ],
         ];
     }
-
-    private function deleteRelatedApplications()
-    {
-        $this->book->applications->each(function($application){
-            $application->delete();
-        });
-    }
-
-    public function getApplicationPages()
-    {
-        $members_id = $this->book->applications->load('members')->fetch('members.id')->all();
-        return \Plat\Member::with('user')->whereIn('id', $members_id)->paginate(10);
-    }
-
-    private function createApplication()
-    {
-        return $this->book->applications()->create([
-            'member_id' => Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->id,
-        ]);
-    }
-
-    public function reject()
-    {
-        if (!$this->application->reject) {
-            SurveyORM\Book::find($this->application->ext_book_id)->update(array('lock' => false));
-        }
-        $this->application->reject = !$this->application->reject;
-        $this->application->save();
-
-        return $this->application;
-    }
 }
