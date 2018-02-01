@@ -10,7 +10,7 @@ use Plat\Files\CommFile;
 use Cere\Survey\SurveyEditor;
 use Cere\Survey\Field\SheetRepository;
 use Cere\Survey\Field\FieldComponent;
-use Cere\Survey\Extend\ApplySet;
+use Cere\Survey\Extend\ApplySettingTrait;
 
 class SurveyFile extends CommFile
 {
@@ -18,7 +18,7 @@ class SurveyFile extends CommFile
         SurveyEditor::__construct as private __SurveyEditorConstruct;
     }
 
-    use ApplySet;
+    use ApplySettingTrait;
 
     function __construct(Files $file, User $user)
     {

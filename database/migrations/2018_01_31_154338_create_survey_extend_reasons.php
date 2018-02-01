@@ -3,7 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateSurveyAppliedOptions extends Migration {
+class CreateSurveyExtendReasons extends Migration {
 
     /**
      * Run the migrations.
@@ -12,10 +12,11 @@ class CreateSurveyAppliedOptions extends Migration {
      */
     public function up()
     {
-        Schema::create('survey_applied_options', function (Blueprint $table) {
+        Schema::create('survey_extend_reasons', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('application_id');
-            $table->integer('applicable_option_id');
+            $table->text('content');
+            $table->integer('apply_id');
+            $table->integer('verify_id');
         });
     }
 
@@ -26,7 +27,7 @@ class CreateSurveyAppliedOptions extends Migration {
      */
     public function down()
     {
-        Schema::drop('survey_applied_options');
+        Schema::drop('survey_extend_reasons');
     }
 
 }

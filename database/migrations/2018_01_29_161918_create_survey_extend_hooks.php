@@ -3,7 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateSurveyApplicableOptions extends Migration {
+class CreateSurveyExtendHooks extends Migration {
 
     /**
      * Run the migrations.
@@ -12,11 +12,10 @@ class CreateSurveyApplicableOptions extends Migration {
      */
     public function up()
     {
-        Schema::create('survey_applicable_options', function (Blueprint $table) {
+        Schema::create('survey_extend_hooks', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('book_id');
-            $table->integer('survey_applicable_option_id');
-            $table->string('survey_applicable_option_type', 50);
+            $table->text('options');
         });
     }
 
@@ -27,7 +26,7 @@ class CreateSurveyApplicableOptions extends Migration {
      */
     public function down()
     {
-        Schema::drop('survey_applicable_options');
+        Schema::drop('survey_extend_hooks');
     }
 
 }

@@ -6,7 +6,7 @@ use Eloquent;
 use Cere\Survey\Eloquent\Field\Sheet;
 use Cere\Survey\Eloquent\Field\Field;
 use Carbon\Carbon;
-use Cere\Survey\Eloquent\Extend\Option;
+use Cere\Survey\Eloquent\Extend;
 
 class Book extends Eloquent {
 
@@ -116,8 +116,8 @@ class Book extends Eloquent {
         return $this->morphOne('Cere\Survey\Eloquent\Rule', 'effect');
     }
 
-    public function extend()
+    public function extendHook()
     {
-        return $this->hasOne(Option::class);
+        return $this->hasOne(Extend\Hook::class);
     }
 }

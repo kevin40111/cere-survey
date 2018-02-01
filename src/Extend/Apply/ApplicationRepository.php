@@ -1,6 +1,6 @@
 <?php
 
-namespace Cere\Survey\Extend;
+namespace Cere\Survey\Extend\Apply;
 
 use Cere\Survey\Eloquent as SurveyORM;
 use Auth;
@@ -52,12 +52,12 @@ class ApplicationRepository
     {
         $member = Auth::user()->members()->orderBy('logined_at', 'desc')->first();
 
-        $application = $this->book->extend->applications()->where('member_id', $member->id)->first();
+        $application = $this->book->extendHook->applications()->where('member_id', $member->id)->first();
 
         $appliedFields = ! $application ? [] : $application->appliedFields->lists('id');
 
         return [
-            'optionFields' => Field::find($this->book->extend->rule['fields'])->each(function($optionField) use ($appliedFields) {
+            'optionFields' => Field::find($this->book->extendHook->options['fields'])->each(function($optionField) use ($appliedFields) {
                 $optionField->selected = in_array($optionField->id, $appliedFields);
             }),
         ];

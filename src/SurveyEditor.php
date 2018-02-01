@@ -19,7 +19,7 @@ trait SurveyEditor
 {
     function __construct($field)
     {
-        $this->editorRepository = new Survey\EditorRepository($field);
+        $this->editor = new Survey\Editor($field);
     }
 
     public function open()
@@ -59,7 +59,7 @@ trait SurveyEditor
 
     public function getQuestion()
     {
-        $questions = $this->editorRepository->getQuestion(Input::get('book_id'));
+        $questions = $this->editor->getQuestion(Input::get('book_id'));
 
         return ['questions' => $questions];
     }
@@ -77,7 +77,7 @@ trait SurveyEditor
 
         $root = $class::find(Input::get('root.id'));
 
-        $nodes = $this->editorRepository->getNodes($root);
+        $nodes = $this->editor->getNodes($root);
 
         if ($root->node) {
             $parent = [];
@@ -100,67 +100,67 @@ trait SurveyEditor
 
         $parent = $class::find(Input::get('parent.id'));
 
-        $node = $this->editorRepository->createNode($parent, Input::get('node'), Input::get('previous.id'));
+        $node = $this->editor->createNode($parent, Input::get('node'), Input::get('previous.id'));
 
         return ['node' => $node, 'next' => $node->next];
     }
 
     public function createQuestion()
     {
-        $question = $this->editorRepository->createQuestion(Input::get('node.id'), Input::get('previous.id'));
+        $question = $this->editor->createQuestion(Input::get('node.id'), Input::get('previous.id'));
 
         return ['question' => $question];
     }
 
     public function createAnswer()
     {
-        $answer = $this->editorRepository->createAnswer(Input::get('node.id'), Input::get('previous.id'));
+        $answer = $this->editor->createAnswer(Input::get('node.id'), Input::get('previous.id'));
 
         return ['answer' => $answer];
     }
 
     public function saveNodeTitle()
     {
-        $node = $this->editorRepository->saveTitle(Input::get('node.class'), Input::get('node.id'), Input::get('node.title'));
+        $node = $this->editor->saveTitle(Input::get('node.class'), Input::get('node.id'), Input::get('node.title'));
 
         return ['node' => $node];
     }
 
     public function saveQuestionTitle()
     {
-        $question = $this->editorRepository->saveTitle(Input::get('question.class'), Input::get('question.id'), Input::get('question.title'));
+        $question = $this->editor->saveTitle(Input::get('question.class'), Input::get('question.id'), Input::get('question.title'));
 
         return ['question' => $question];
     }
 
     public function saveAnswerTitle()
     {
-        $answer = $this->editorRepository->saveTitle(Input::get('answer.class'), Input::get('answer.id'), Input::get('answer.title'));
+        $answer = $this->editor->saveTitle(Input::get('answer.class'), Input::get('answer.id'), Input::get('answer.title'));
 
-        $this->editorRepository->updateAnswerValue($answer->node);
+        $this->editor->updateAnswerValue($answer->node);
 
         return ['answer' => $answer];
     }
 
     public function removeNode()
     {
-        $deleted = $this->editorRepository->removeNode(Input::get('node.id'));
+        $deleted = $this->editor->removeNode(Input::get('node.id'));
 
         return ['deleted' => $deleted];
     }
 
     public function removeQuestion()
     {
-        list ($deleted, $questions) = $this->editorRepository->removeQuestion(Input::get('question')['id']);
+        list ($deleted, $questions) = $this->editor->removeQuestion(Input::get('question')['id']);
 
         return ['deleted' => $deleted, 'questions' => $questions];
     }
 
     public function removeAnswer()
     {
-        list ($deleted, $answers, $node) = $this->editorRepository->removeAnswer(Input::get('answer.id'));
+        list ($deleted, $answers, $node) = $this->editor->removeAnswer(Input::get('answer.id'));
 
-        $this->editorRepository->updateAnswerValue($node);
+        $this->editor->updateAnswerValue($node);
 
         return ['deleted' => $deleted, 'answers' => $answers];
     }
@@ -174,7 +174,7 @@ trait SurveyEditor
         $item = $class::find(Input::get('item.id'))->moveUp();
 
         if ($class == '\\Plat\Eloquent\Survey\Answer') {
-            $this->editorRepository->updateAnswerValue($item->node);
+            $this->editor->updateAnswerValue($item->node);
         }
 
         return ['items' => $item->node->sortByPrevious([$relation])->$relation];
@@ -188,7 +188,7 @@ trait SurveyEditor
 
         $item = $class::find(Input::get('item.id'))->moveDown();
         if ($class == '\\Plat\Eloquent\Survey\Answer') {
-            $this->editorRepository->updateAnswerValue($item->node);
+            $this->editor->updateAnswerValue($item->node);
         }
 
         return ['items' => $item->node->sortByPrevious([$relation])->$relation];
@@ -269,7 +269,7 @@ trait SurveyEditor
     {
         $gear_file = Input::file('file_upload');
         $node_id = Input::get('node_id');
-        return $this->editorRepository->saveGearQuestion($gear_file, $node_id);
+        return $this->editor->saveGearQuestion($gear_file, $node_id);
     }
 
     public function createAuthField()
@@ -317,12 +317,12 @@ trait SurveyEditor
 
     public function removeBanner()
     {
-        return $this->editorRepository->removeBanner(Input::get('image')['node_id'], Input::get('image')['upload_id']);
+        return $this->editor->removeBanner(Input::get('image')['node_id'], Input::get('image')['upload_id']);
     }
 
     public function uploaderBanner()
     {
-        return $this->editorRepository->uploaderBanner(Input::file('file_upload'), $this->file->id, Input::get('id'));
+        return $this->editor->uploaderBanner(Input::file('file_upload'), $this->file->id, Input::get('id'));
     }
 
     public function saveBookFooter()

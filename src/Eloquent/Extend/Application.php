@@ -5,7 +5,8 @@ namespace Cere\Survey\Eloquent\Extend;
 use Eloquent;
 use Auth;
 use Cere\Survey\Eloquent\Field\Field;
-use Cere\Survey\Eloquent\Extend\Option;
+use Cere\Survey\Eloquent as SurveyORM;
+use Plat\Member;
 
 class Application extends Eloquent {
 
@@ -17,33 +18,28 @@ class Application extends Eloquent {
 
     public $timestamps = true;
 
-    protected $fillable = array('book_id', 'member_id', 'extension', 'reject', 'ext_book_id', 'updated_at', 'fields', 'created_at', 'deleted_at', 'deleted_by');
+    protected $fillable = array('extension', 'reject', 'fields', 'updated_at', 'created_at', 'deleted_at', 'deleted_by');
 
     protected $attributes = ['extension' => false, 'reject' => false];
 
     public function book()
     {
-        return $this->belongsTo('Cere\Survey\Eloquent\Book', 'book_id', 'id');
+        return $this->belongsTo(SurveyORM\Book::class);
     }
 
-    public function Option()
+    public function hook()
     {
-        return $this->belongsTo(Option::class);
-    }
-
-    public function appliedFields()
-    {
-        return $this->belongsToMany(Field::class, 'survey_applied_options');
+        return $this->belongsTo(Hook::class);
     }
 
     public function members()
     {
-        return $this->belongsTo('Plat\Member', 'member_id', 'id');
+        return $this->belongsTo(Member::class);
     }
 
-    public function scopeOfMe($query)
+    public function reasons()
     {
-        return $query->where('member_id', Auth::user()->members()->Logined()->orderBy('logined_at', 'desc')->first()->id);
+        return $this->hasMany('Cere\Survey\Eloquent\Extend\Reason', 'extend_application_id');
     }
 
     public function getExtensionAttribute($value)
@@ -69,10 +65,5 @@ class Application extends Eloquent {
         $this->attributes['rule'] = json_encode([
             'fields' => isset($value['fields']) ? $value['fields'] : [],
         ]);
-    }
-
-    public function reasons()
-    {
-        return $this->hasMany('Cere\Survey\Eloquent\Extend\Reason', 'extend_application_id');
     }
 }

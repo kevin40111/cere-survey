@@ -3,17 +3,18 @@
 namespace Cere\Survey\Extend;
 
 use Input;
+use Cere\Survey\Extend\Setting\SettingRepository;
 
-trait ApplySet
+trait ApplySettingTrait
 {
     public function confirm()
     {
-        return 'survey::extend.confirm-ng';
+        return 'survey::extend.setting.confirm-ng';
     }
 
     public function applicableList()
     {
-        return 'survey::extend.applicableList-ng';
+        return 'survey::extend.setting.applicableList-ng';
     }
 
     public function setApplicableOptions()

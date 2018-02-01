@@ -11,6 +11,7 @@ use Plat\Files\CommFile;
 use Cere\Survey\SurveyEditor;
 use Cere\Survey\Field\SheetRepository;
 use Cere\Survey\Field\FieldComponent;
+use Cere\Survey\Extend\Apply\ApplicationRepository;
 
 class ApplicationComponent extends CommFile
 {
@@ -75,7 +76,7 @@ class ApplicationComponent extends CommFile
 
     public function userApplication()
     {
-        return View::make('survey::extend.userApplication-ng');
+        return View::make('survey::extend.apply.userApplication-ng');
     }
 
     public function setAppliedOptions()

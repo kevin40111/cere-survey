@@ -12,5 +12,5 @@ class Reason extends Eloquent {
 
     public $timestamps = true;
 
-    protected $fillable = ['extend_application_id', 'content', 'verify_id'];
+    protected $fillable = ['content', 'verify_id'];
 }

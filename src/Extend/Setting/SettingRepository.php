@@ -1,6 +1,6 @@
 <?php
 
-namespace Cere\Survey\Extend;
+namespace Cere\Survey\Extend\Setting;
 
 use Cere\Survey\Eloquent as SurveyORM;
 use Auth;
@@ -17,13 +17,13 @@ class SettingRepository
         return new self($book);
     }
 
-    public function setApplicableOptions($selecteds)
+    public function setApplicableOptions($options)
     {
-        $extend = $this->book->extend;
-        if (! isset($extend)) {
-            $this->book->extend()->save(new SurveyORM\ExtendRule(['rule' => $selecteds]));
+        $extendHook = $this->book->extendHook;
+        if (! isset($extendHook)) {
+            $this->book->extendHook()->save(new SurveyORM\Extend\Hook(['options' => $options]));
         } else {
-            $this->book->extend->update(['rule' => $selecteds]);
+            $this->book->extendHook->update(['options' => $options]);
         }
     }
 
@@ -31,24 +31,24 @@ class SettingRepository
     {
         $file = \Files::find($this->book->auth['fieldFile_id']);
 
-        $extend = $this->book->extend ?: new SurveyORM\ExtendRule;
+        $extendHook = $this->book->extendHook ?: new Extend\Hook;
 
-        $optionColumns = !is_null($file) ? $file->sheets->first()->tables->first()->columns->each(function ($column) use ($extend) {
-            $column->selected = in_array($column->id, $extend->rule['fields']);
+        $optionColumns = !is_null($file) ? $file->sheets->first()->tables->first()->columns->each(function ($column) use ($extendHook) {
+            $column->selected = in_array($column->id, $extendHook->options['fields']);
         }) : [];
 
-        $pages = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($extend) {
+        $pages = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($extendHook) {
             $questions = $page->getQuestions();
 
             foreach ($questions as &$question) {
-                $question["selected"] = in_array($question['id'], $extend->rule['fields']);
+                $question["selected"] = in_array($question['id'], $extendHook->options['fields']);
             }
 
             return $carry + [$page->id => $questions];
         }, []);
 
         return [
-            'rule' => $extend->rule,
+            'options' => $extendHook->options,
             'options' => [
                 'columns' => $optionColumns,
                 'pages' => $pages,

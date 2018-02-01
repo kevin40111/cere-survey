@@ -6,7 +6,7 @@ use Plat\Files\Uploader;
 use Cere\Survey\Eloquent as SurveyORM;
 use Cere\Survey\Eloquent\Field\Field as Question;
 
-class EditorRepository
+class Editor
 {
     function __construct($filed)
     {
