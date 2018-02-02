@@ -52,18 +52,14 @@ class Application extends Eloquent {
         return (boolean)$value;
     }
 
-    public function getFieldsAttribute($rule)
+    public function getFieldsAttribute($fields)
     {
-        $rule = json_decode($rule, true);
-        return [
-            'fields' => isset($rule['fields']) ? $rule['fields'] : [],
-        ];
+        $fields = json_decode($fields, true);
+        return isset($fields) ? $fields : [];
     }
 
-    public function setFieldsAttribute($value)
+    public function setFieldsAttribute($fields)
     {
-        $this->attributes['rule'] = json_encode([
-            'fields' => isset($value['fields']) ? $value['fields'] : [],
-        ]);
+        $this->attributes['fields'] = json_encode(isset($fields) ? $fields : []);
     }
 }

@@ -30,22 +30,13 @@ class ApplicationRepository
         return $instance;
     }
 
-    public function setAppliedOptions($selected)
+    public function setAppliedOptions($fields)
     {
-        $application = $this->book->applications()->OfMe()->withTrashed()->first();
+        $member = Auth::user()->members()->orderBy('logined_at', 'desc')->first();
 
-        if ($application) {
-            $application->restore();
-        } else {
-            $application = $this->createApplication();
-            $extDoc = $this->createExtBook();
-            $application->ext_book_id = \ShareFile::find($extDoc['id'])->isFile->book->id;
-            $application->save();
-        }
+        $application = $this->book->extendHook->applications()->where('member_id', $member->id)->first();
 
-        $application->appliedFields()->sync($selected['optionFields']);
-
-        return $this->getAppliedOptions();
+        $application->update(['fields' => $fields]);
     }
 
     public function getAppliedOptions()
@@ -54,12 +45,29 @@ class ApplicationRepository
 
         $application = $this->book->extendHook->applications()->where('member_id', $member->id)->first();
 
-        $appliedFields = ! $application ? [] : $application->appliedFields->lists('id');
+        $appliedFields = $application->fields;
+
+        $file = \Files::find($this->book->auth['fieldFile_id']);
+
+        $mainListFields = !is_null($file) ? $file->sheets->first()->tables->first()->columns->each(function ($column) use ($appliedFields) {
+            $column->selected = in_array($column->id, $appliedFields);
+        }) : [];
+
+        $mainBookPages = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($appliedFields) {
+            $questions = $page->getQuestions();
+
+            foreach ($questions as &$question) {
+                $question["selected"] = in_array($question['id'], $appliedFields);
+            }
+
+            return $carry + [$page->id => $questions];
+        }, []);
 
         return [
-            'optionFields' => Field::find($this->book->extendHook->options['fields'])->each(function($optionField) use ($appliedFields) {
-                $optionField->selected = in_array($optionField->id, $appliedFields);
-            }),
+            'fields' => [
+                'mainBookPages' => $mainBookPages,
+                'mainList' => $mainListFields,
+            ],
             'limit' => [
                 'mainBook' => $this->book->extendHook->options['columnsLimit'],
                 'mainList' => $this->book->extendHook->options['fieldsLimit'],
