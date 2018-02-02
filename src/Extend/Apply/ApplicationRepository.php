@@ -60,6 +60,10 @@ class ApplicationRepository
             'optionFields' => Field::find($this->book->extendHook->options['fields'])->each(function($optionField) use ($appliedFields) {
                 $optionField->selected = in_array($optionField->id, $appliedFields);
             }),
+            'limit' => [
+                'mainBook' => $this->book->extendHook->options['columnsLimit'],
+                'mainList' => $this->book->extendHook->options['fieldsLimit'],
+            ],
         ];
     }
 
