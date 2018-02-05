@@ -37,4 +37,21 @@ class Hook extends Eloquent {
             'fields' => isset($options['fields']) ? $options['fields'] : [],
         ]);
     }
+
+    public function getConsentAttribute($value)
+    {
+        $value = json_decode($value, true);
+        return [
+            'content' => isset($value['content']) ? $value['content'] : NULL,
+            'precaution' => isset($value['precaution']) ? $value['precaution'] : NULL
+        ];
+    }
+
+    public function setConsentAttribute($value)
+    {
+        $this->attributes['consent'] = json_encode([
+            'content' => isset($value['content']) ? $value['content'] : NULL,
+            'precaution' => isset($value['precaution']) ? $value['precaution'] : NULL
+        ]);
+    }
 }

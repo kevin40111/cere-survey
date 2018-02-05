@@ -16,6 +16,7 @@ class CreateSurveyExtendHooks extends Migration {
             $table->increments('id');
             $table->integer('book_id');
             $table->text('options');
+            $table->text('consent');
         });
     }
 
