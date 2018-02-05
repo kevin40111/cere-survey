@@ -42,16 +42,24 @@ class ApplicationRepository
     {
         $application = $this->book->extendHook->applications()->where('member_id', $this->member->id)->first();
 
+        $release = $this->book->extendHook->options['fields'];
+
         $appliedFields = $application->fields;
 
         $file = \Files::find($this->book->auth['fieldFile_id']);
 
-        $mainListFields = !is_null($file) ? $file->sheets->first()->tables->first()->columns->each(function ($column) use ($appliedFields) {
+        $mainListFields = !is_null($file) ? $file->sheets->first()->tables->first()->columns->filter(function ($column) use ($release) {
+            return in_array($column->id, $release);
+        })->each(function ($column) use ($appliedFields) {
             $column->selected = in_array($column->id, $appliedFields);
         }) : [];
 
-        $mainBookPages = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($appliedFields) {
+        $mainBookPages = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($appliedFields, $release){
             $questions = $page->getQuestions();
+
+            $questions = array_filter($questions, function($question) use ($release){
+                return in_array($question['id'], $release);
+            });
 
             foreach ($questions as &$question) {
                 $question["selected"] = in_array($question['id'], $appliedFields);
