@@ -18,7 +18,7 @@ class Application extends Eloquent {
 
     public $timestamps = true;
 
-    protected $fillable = array('extension', 'reject', 'fields', 'updated_at', 'created_at', 'deleted_at', 'deleted_by');
+    protected $fillable = array('extension', 'reject', 'fields', 'updated_at', 'step', 'created_at', 'deleted_at', 'deleted_by');
 
     protected $attributes = ['extension' => false, 'reject' => false];
 

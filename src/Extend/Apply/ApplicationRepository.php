@@ -14,6 +14,7 @@ class ApplicationRepository
     function __construct($book)
     {
         $this->book = $book;
+        $this->member = Auth::user()->members()->orderBy('logined_at', 'desc')->first();
     }
 
     public static function book($book)
@@ -32,18 +33,14 @@ class ApplicationRepository
 
     public function setAppliedOptions($fields)
     {
-        $member = Auth::user()->members()->orderBy('logined_at', 'desc')->first();
-
-        $application = $this->book->extendHook->applications()->where('member_id', $member->id)->first();
+        $application = $this->book->extendHook->applications()->where('member_id', $this->member->id)->first();
 
         $application->update(['fields' => $fields]);
     }
 
     public function getAppliedOptions()
     {
-        $member = Auth::user()->members()->orderBy('logined_at', 'desc')->first();
-
-        $application = $this->book->extendHook->applications()->where('member_id', $member->id)->first();
+        $application = $this->book->extendHook->applications()->where('member_id', $this->member->id)->first();
 
         $appliedFields = $application->fields;
 
@@ -75,6 +72,13 @@ class ApplicationRepository
         ];
     }
 
+    public function getApplication()
+    {
+        $application = $this->book->extendHook->applications()->where('member_id', $this->member->id)->first();
+
+        return ['application' => $application];
+    }
+
     public function resetApplication()
     {
         $application = $this->book->applications()->OfMe()->withTrashed()->first();
@@ -101,5 +105,34 @@ class ApplicationRepository
         $folderComponent->setDoc($doc);
 
         return $folderComponent->createComponent()['doc'];
+    }
+
+    public function applicationStatus($stepPointer)
+    {
+        $application = $this->book->extendHook->applications()->where('member_id', $this->member->id)->first();
+
+        if($stepPointer == 1 or $stepPointer == -1) {
+            $application->step += $stepPointer;
+
+            $application->step < 0 && $application->step = 0;
+            $application->step > 6 && $application->step = 6;
+
+            $application->save();
+        }
+
+        return $application->step;
+    }
+
+    public function getBookFinishQuestions()
+    {
+        $book = $this->book->extendHook->applications()->where('member_id', $this->member->id)->first()->book;
+
+        $BookPages = $book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($appliedFields) {
+            $questions = $page->getQuestions();
+
+            return $carry + [$page->id => $questions];
+        }, []);
+
+        return $BookPages;
     }
 }

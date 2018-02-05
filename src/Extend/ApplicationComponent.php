@@ -6,12 +6,14 @@ use User;
 use Files;
 use Cere\Survey\Eloquent as SurveyORM;
 use Input;
+use Redirect;
 use View;
 use Plat\Files\CommFile;
 use Cere\Survey\SurveyEditor;
 use Cere\Survey\Field\SheetRepository;
 use Cere\Survey\Field\FieldComponent;
 use Cere\Survey\Extend\Apply\ApplicationRepository;
+use Request;
 
 class ApplicationComponent extends CommFile
 {
@@ -59,19 +61,19 @@ class ApplicationComponent extends CommFile
         return false;
     }
 
+    public function master()
+    {
+        return View::make('survey::extend.apply.master');
+    }
+
     public function get_views()
     {
-        return ['contract', 'open', 'application'];
+        return ['open'];
     }
 
     public function contract()
     {
         return 'survey::extend.apply.contract';
-    }
-
-    public function application()
-    {
-        return 'survey::extend.apply.application-ng';
     }
 
     public function userApplication()
@@ -91,6 +93,11 @@ class ApplicationComponent extends CommFile
         return ApplicationRepository::book($this->mainBook)->getAppliedOptions();
     }
 
+    public function getApplication()
+    {
+        return ApplicationRepository::book($this->mainBook)->getApplication();
+    }
+
     public function resetApplication()
     {
         return ApplicationRepository::book($this->mainBook)->resetApplication();
@@ -103,20 +110,35 @@ class ApplicationComponent extends CommFile
         return  ['ext_locked' => $locked];
     }
 
-    public function applicationStatus()
+    public function getBookFinishQuestions()
     {
-        $application = $this->mainBook->applications()->OfMe()->first();
-        if (is_null($application)) {
-            return ['status' => null];
-        } else {
-            if ($application->extension ==  $application->reject) {
-                $status = '0';
-            } else if ($application->reject) {
-                $status = '1';
-            } else {
-                $status = '2';
-            }
-            return ['status' => $status];
+        return ApplicationRepository::book($this->mainBook)->getBookFinishQuestions();
+    }
+
+    public function open()
+    {
+        $stepStatue = ApplicationRepository::book($this->mainBook)->applicationStatus(Input::get('step'));
+
+        switch($stepStatue){
+            case 0:
+                return 'survey::extend.apply.contract';
+            break;
+
+            case 1:
+                return 'survey::extend.apply.editor-ng';
+            break;
+
+            case 2:
+                return 'survey::extend.apply.bookFinish';
+            break;
+
+            case 3:
+                return 'survey::extend.apply.application-ng';
+            break;
+
+            case 4:
+                return 'survey::extend.apply.audit';
+            break;
         }
     }
 }

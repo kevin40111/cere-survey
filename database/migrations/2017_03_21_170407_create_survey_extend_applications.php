@@ -18,6 +18,7 @@ class CreateSurveyExtendApplications extends Migration {
             $table->integer('member_id');
             $table->boolean('extension');
             $table->boolean('reject');
+            $table->int('step')->default(0);
             $table->text('fields');
             $table->integer('ext_book_id')->nullable();
             $table->timestamps();
