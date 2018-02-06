@@ -142,8 +142,8 @@
                 $scope.columns = data.options.columns;
                 $scope.pages = data.options.pages;
 
-                $scope.fieldsLimit = data.rule.fieldsLimit;
-                $scope.columnsLimit = data.rule.columnsLimit;
+                $scope.fieldsLimit = data.selectedOptions.fieldsLimit;
+                $scope.columnsLimit = data.selectedOptions.columnsLimit;
             })
             .error(function(e){
                 console.log(e);

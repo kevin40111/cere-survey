@@ -49,7 +49,7 @@ class SettingRepository
         }, []);
 
         return [
-            'options' => $extendHook->options,
+            'selectedOptions' => $extendHook->options,
             'options' => [
                 'columns' => $optionColumns,
                 'pages' => $pages,
