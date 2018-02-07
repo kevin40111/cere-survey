@@ -1,67 +1,95 @@
 <md-content ng-cloak layout="column" ng-controller="application" layout-align="start center">
     <div style="width:960px">
-        <md-card style="width: 100%">
-            <md-card-header md-colors="{background: 'indigo'}">
-                <md-card-header-text>
-                    <span class="md-title">設定加掛申請選項</span>
-                </md-card-header-text>
-            </md-card-header>
-            <md-content>
-                <md-list flex>
-                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>可申請母體欄位數量限制</h4></md-subheader>
-                    <md-list-item>
-                        <md-input-container>
-                            <label>母體欄位數量限制</label>
-                            <input type="number" ng-model="columnsLimit" />
-                        </md-input-container>
-                    </md-list-item>
-                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>加掛者可申請的母體名單欄位 (請勾選)</h4></md-subheader>
-                    <md-list-item ng-if="applicable.column.length == 0">
-                        <div class="ui negative message" flex>
-                            <div class="header">請先完成登入設定</div>
+        <md-tabs  md-dynamic-height md-border-bottom md-selected="selectIndex">
+            <md-tab label="同意書及注意事項">
+                <md-card>
+                    <md-card-header md-colors="{background: 'indigo'}">
+                        <md-card-header-text>
+                            <span class="md-title">設定加掛申請同意書</span>
+                        </md-card-header-text>
+                    </md-card-header>
+                    <md-content>
+                        <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>編輯加掛申請注意事項</h4></md-subheader>
+                        <div style="margin:10px">
+                            <ng-quill-editor placeholder="編輯加掛申請注意事項" ng-model="consent.content"></ng-quill-editor>
                         </div>
-                    </md-list-item>
-                    <md-list-item ng-repeat="column in columns">
-                        <p>{{column.title}}</p>
-                        <md-checkbox class="md-secondary" ng-model="column.selected"></md-checkbox>
-                    </md-list-item>
-                    <md-divider ></md-divider>
-                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>可申請題目數量限制</h4></md-subheader>
-                    <md-list-item>
-                        <md-input-container>
-                            <label>題目數量限制</label>
-                            <input type="number" ng-model="fieldsLimit" />
-                        </md-input-container>
-                    </md-list-item>
-                    <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>釋出的母體問卷之題目欄位 (請勾選)</h4></md-subheader>
-                    <md-list-item>
-                        <button class="ui blue button" flex="30" ng-click="showQuestion($event)">新增題目</button>
-                    </md-list-item>
-                    <md-divider ></md-divider>
-                    <md-subheader class="md-no-sticky">
-                        <button class="ui small blue button" ng-click="selectAllPage(pages[page])">全選此頁</button>
-                        <button class="ui small blue button" ng-click="delete()">刪除</button>
-                        <md-button ng-click="prePage(page)">上一頁</md-button>
-                        <md-input-container>
-                            <md-select placeholder="請選擇" ng-model="page">
-                                <md-option ng-repeat="(key,page) in pages" ng-value="key" >{{$index+1}}</md-option>
-                            </md-select>
-                        </md-input-container>
-                        <md-button ng-click="nextPage(page)">下一頁</md-button>
-                        <span md-colors="{color: 'red'}">共釋出{{getFields().length}}個欄位(含母體)</span>
-                    </md-subheader>
-                    <div style="height:300px; overflow:scroll;">
-                        <md-list>
-                            <md-list-item ng-repeat="question in pages[page] | filter:{selected: true}">
-                                {{question.title}}
-                                <md-checkbox class="md-secondary" ng-model="question.delete" aria-label="{{question.title}}"></md-checkbox>
+                        <md-divider ></md-divider>
+                        <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>編輯加掛申請同意書</h4></md-subheader>
+                        <div style="margin:10px">
+                            <ng-quill-editor placeholder="編輯加掛申請同意書" ng-model="consent.precaution"></ng-quill-editor>
+                        </div>
+                    </md-content>
+                </md-card>
+                <md-button class="md-raised md-primary" ng-click="selectIndex=1" style="width: 100%;height: 50px;font-size: 18px">下一頁</md-button>
+            </md-tab>
+            <md-tab label="設定加掛申請">
+                <md-card>
+                    <md-card-header md-colors="{background: 'indigo'}">
+                        <md-card-header-text>
+                            <span class="md-title">設定加掛申請選項</span>
+                        </md-card-header-text>
+                    </md-card-header>
+                    <md-content>
+                        <md-list flex>
+                            <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>可申請母體欄位數量限制</h4></md-subheader>
+                            <md-list-item>
+                                <md-input-container>
+                                    <label>母體欄位數量限制</label>
+                                    <input type="number" ng-model="columnsLimit" />
+                                </md-input-container>
                             </md-list-item>
+                            <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>加掛者可申請的母體名單欄位 (請勾選)</h4></md-subheader>
+                            <md-list-item ng-if="applicable.column.length == 0">
+                                <div class="ui negative message" flex>
+                                    <div class="header">請先完成登入設定</div>
+                                </div>
+                            </md-list-item>
+                            <md-list-item ng-repeat="column in columns">
+                                <p>{{column.title}}</p>
+                                <md-checkbox class="md-secondary" ng-model="column.selected"></md-checkbox>
+                            </md-list-item>
+                            <md-divider ></md-divider>
+                            <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>可申請題目數量限制</h4></md-subheader>
+                            <md-list-item>
+                                <md-input-container>
+                                    <label>題目數量限制</label>
+                                    <input type="number" ng-model="fieldsLimit" />
+                                </md-input-container>
+                            </md-list-item>
+                            <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>釋出的母體問卷之題目欄位 (請勾選)</h4></md-subheader>
+                            <md-list-item>
+                                <button class="ui blue button" flex="30" ng-click="showQuestion($event)">新增題目</button>
+                            </md-list-item>
+                            <md-divider ></md-divider>
+                            <md-subheader class="md-no-sticky">
+                                <button class="ui small blue button" ng-click="selectAllPage(pages[page])">全選此頁</button>
+                                <button class="ui small blue button" ng-click="delete()">刪除</button>
+                                <md-button ng-click="prePage(page)">上一頁</md-button>
+                                <md-input-container>
+                                    <md-select placeholder="請選擇" ng-model="page">
+                                        <md-option ng-repeat="(key,page) in pages" ng-value="key" >{{$index+1}}</md-option>
+                                    </md-select>
+                                </md-input-container>
+                                <md-button ng-click="nextPage(page)">下一頁</md-button>
+                                <span md-colors="{color: 'red'}">共釋出{{getFields().length}}個欄位(含母體)</span>
+                            </md-subheader>
+                            <div style="height:300px; overflow:scroll;">
+                                <md-list>
+                                    <md-list-item ng-repeat="question in pages[page] | filter:{selected: true}">
+                                        {{question.title}}
+                                        <md-checkbox class="md-secondary" ng-model="question.delete" aria-label="{{question.title}}"></md-checkbox>
+                                    </md-list-item>
+                                </md-list>
+                            </div>
                         </md-list>
-                    </div>
-                </md-list>
-            </md-content>
-        </md-card>
-        <md-button class="md-raised md-primary md-display-2" ng-click="setApplicableOptions()" style="width: 100%;height: 50px;font-size: 18px" ng-disabled="disabled">儲存</md-button>
+                    </md-content>
+                </md-card>
+                <div layout="row">
+                    <md-button class="md-raised md-primary " ng-click="selectIndex=0" style="width: 49%;height: 50px;font-size: 18px">上一頁</md-button>
+                    <md-button class="md-raised md-primary " ng-click="setApplicableOptions()" style="width: 49%;height: 50px;font-size: 18px" ng-disabled="disabled">儲存</md-button>
+                </div>
+            </md-tab>
+        </md-tabs>
     </div>
 </md-content>
 <script>
@@ -69,6 +97,7 @@
     app.controller('application', function ($scope, $http, $filter, $mdDialog){
         $scope.columns = [];
         $scope.questions = [];
+        $scope.consent = {};
 
         $scope.delete = function(){
             angular.forEach($scope.pages, function(questions){
@@ -107,7 +136,7 @@
                     'fieldsLimit': $scope.fieldsLimit,
                     'columnsLimit' : $scope.columnsLimit,
                     'fields': $scope.getFields()
-                }
+                },
             }})
             .success(function(data, status, headers, config) {
                 $scope.disabled = false;
@@ -117,6 +146,18 @@
             });
         }
 
+        $scope.setApplicableOptions = function() {
+            $scope.disabled = true;
+            $http({method: 'POST', url: 'setApplicableConsent', data:{
+                consent: $scope.consent,
+            }})
+            .success(function(data, status, headers, config) {
+               console.log(data);
+            })
+            .error(function(e){
+                console.log(e);
+            });
+        }
         $scope.getFields = function()
         {
             var fields = $filter('filter')($scope.columns, {selected: true}).map(function(column) {

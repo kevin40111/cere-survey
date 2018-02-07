@@ -1,2 +1,46 @@
-<div ng-include="'master'"></div>
-<md-button class="md-raised md-primary" href="open">同意</md-button>
+<md-content ng-cloak layout="column" ng-controller="contract" layout-align="start center">
+    <div ng-include="'master'"></div>
+        <div style="width:960px">
+            <md-card style="width: 100%">
+                <md-card-header md-colors="{background: 'indigo'}">
+                    <md-card-header-text>
+                        <span class="md-title">加掛申請同意書</span>
+                    </md-card-header-text>
+                </md-card-header>
+                <md-content>
+                    <md-list flex>
+                        <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>加掛申請期限： <span md-colors="{color:'grey'}">123</span></h4></md-subheader>
+                        <md-divider></md-divider>
+                        <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>加掛申請注意事項: </h4></md-subheader>
+                        <md-list-item ng-bind-html="trustAsHtml(consent.content)"></md-list-item>
+                        <md-divider></md-divider>
+                        <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>加掛申請同意書: </h4></md-subheader>
+                        <md-list-item>
+                            <div ng-bind-html="trustAsHtml(consent.precaution)"></div>
+                            <md-radio-group ng-model="consent.agree" class="md-primary">
+                                <md-radio-button value="0" class="md-primary">同意</md-radio-button>
+                                <md-radio-button value="1" class="md-primary">不同意</md-radio-button>
+                            <md-radio-group>
+                        </md-list-item>
+                    </md-list>
+                </md-content>
+            </md-card>
+        </div>
+</md-content>
+<script>
+app.controller('contract', function ($scope, $sce, $http){
+    $scope.trustAsHtml = function(string) {
+        return $sce.trustAsHtml(string);
+    };
+    $scope.getAppliedOptions = function() {
+        $http({method: 'POST', url: 'getAppliedOptions', data:{}})
+        .success(function(data, status, headers, config) {
+            $scope.consent = data.consent;
+        })
+        .error(function(e){
+            console.log(e);
+        });
+    }
+    $scope.getAppliedOptions();
+});
+</script>
