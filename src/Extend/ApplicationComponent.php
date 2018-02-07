@@ -88,6 +88,11 @@ class ApplicationComponent extends CommFile
         return ApplicationRepository::book($this->mainBook)->setAppliedOptions($selected);
     }
 
+    public function getConsent()
+    {
+        return ApplicationRepository::book($this->mainBook)->getConsent();
+    }
+
     public function getAppliedOptions()
     {
         return ApplicationRepository::book($this->mainBook)->getAppliedOptions();

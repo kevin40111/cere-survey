@@ -17,6 +17,8 @@
                         <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>加掛申請同意書: </h4></md-subheader>
                         <md-list-item>
                             <div ng-bind-html="trustAsHtml(consent.precaution)"></div>
+                        </md-list-item>
+                        <md-list-item>
                             <md-radio-group ng-model="consent.agree" class="md-primary">
                                 <md-radio-button value="0" class="md-primary">同意</md-radio-button>
                                 <md-radio-button value="1" class="md-primary">不同意</md-radio-button>
@@ -32,15 +34,16 @@ app.controller('contract', function ($scope, $sce, $http){
     $scope.trustAsHtml = function(string) {
         return $sce.trustAsHtml(string);
     };
-    $scope.getAppliedOptions = function() {
-        $http({method: 'POST', url: 'getAppliedOptions', data:{}})
+    $scope.getConsent = function() {
+        $http({method: 'POST', url: 'getConsent', data:{}})
         .success(function(data, status, headers, config) {
+            console.log(data);
             $scope.consent = data.consent;
         })
         .error(function(e){
             console.log(e);
         });
     }
-    $scope.getAppliedOptions();
+    $scope.getConsent();
 });
 </script>

@@ -31,6 +31,11 @@ class ApplicationRepository
         return $instance;
     }
 
+    public function getConsent()
+    {
+        $consent = $this->book->extendHook->consent;
+        return ['consent' => $consent];
+    }
     public function setAppliedOptions($fields)
     {
         $application = $this->book->extendHook->applications()->where('member_id', $this->member->id)->first();
