@@ -56,4 +56,21 @@ class SettingRepository
             ],
         ];
     }
+
+    public function getConsent()
+    {
+        $extendHook = $this->book->extendHook ?: new Hook;
+
+        return ['consent' => $extendHook->consent];
+    }
+
+    public function setConsent($consent)
+    {
+        $extendHook = $this->book->extendHook;
+        if (! isset($extendHook)) {
+            $this->book->extendHook()->save(new Hook(['consent' => $consent]));
+        } else {
+            $this->book->extendHook->update(['consent' => $consent]);
+        }
+    }
 }

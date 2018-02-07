@@ -21,4 +21,14 @@ trait ApplySettingTrait
     {
         return SettingRepository::book($this->book)->getApplicableOptions();
     }
+
+    public function getConsent()
+    {
+        return SettingRepository::book($this->book)->getConsent();
+    }
+
+    public function setConsent()
+    {
+        return SettingRepository::book($this->book)->setConsent(Input::get('consent'));
+    }
 }

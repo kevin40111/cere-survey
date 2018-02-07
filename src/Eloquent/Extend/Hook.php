@@ -12,7 +12,7 @@ class Hook extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = ['options'];
+    protected $fillable = ['options', 'consent'];
 
     public function applications()
     {

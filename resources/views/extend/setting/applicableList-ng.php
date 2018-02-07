@@ -20,7 +20,7 @@
                         </div>
                     </md-content>
                 </md-card>
-                <md-button class="md-raised md-primary" ng-click="selectIndex=1" style="width: 100%;height: 50px;font-size: 18px">下一頁</md-button>
+                <md-button class="md-raised md-primary" ng-click="setConsent()" style="width: 100%;height: 50px;font-size: 18px">儲存</md-button>
             </md-tab>
             <md-tab label="設定加掛申請">
                 <md-card>
@@ -114,6 +114,28 @@
             })
         }
 
+        $scope.getConsent = function(){
+            $http({method: 'POST', url: 'getConsent', data:{}})
+            .success(function(data, status, headers, config) {
+                angular.extend($scope.consent, data.consent);
+            })
+            .error(function(e){
+                console.log(e);
+            });
+        }
+
+        $scope.getConsent();
+
+        $scope.setConsent = function(){
+            $http({method: 'POST', url: 'setConsent', data:{consent:$scope.consent}})
+            .success(function(data, status, headers, config) {
+
+            })
+            .error(function(e){
+                console.log(e);
+            });
+        }
+
         $scope.getApplicableOptions = function() {
             $http({method: 'POST', url: 'getApplicableOptions', data:{}})
             .success(function(data, status, headers, config) {
@@ -146,20 +168,7 @@
             });
         }
 
-        $scope.setApplicableOptions = function() {
-            $scope.disabled = true;
-            $http({method: 'POST', url: 'setApplicableConsent', data:{
-                consent: $scope.consent,
-            }})
-            .success(function(data, status, headers, config) {
-               console.log(data);
-            })
-            .error(function(e){
-                console.log(e);
-            });
-        }
-        $scope.getFields = function()
-        {
+        $scope.getFields = function() {
             var fields = $filter('filter')($scope.columns, {selected: true}).map(function(column) {
                 return column.id;
             });
