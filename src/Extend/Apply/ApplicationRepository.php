@@ -120,18 +120,9 @@ class ApplicationRepository
         return $folderComponent->createComponent()['doc'];
     }
 
-    public function applicationStatus($stepPointer)
+    public function getApplicationStatus()
     {
         $application = $this->book->extendHook->applications()->where('member_id', $this->member->id)->first();
-
-        if($stepPointer == 1 or $stepPointer == -1) {
-            $application->step += $stepPointer;
-
-            $application->step < 0 && $application->step = 0;
-            $application->step > 6 && $application->step = 6;
-
-            $application->save();
-        }
 
         return $application->step;
     }
@@ -140,7 +131,7 @@ class ApplicationRepository
     {
         $book = $this->book->extendHook->applications()->where('member_id', $this->member->id)->first()->book;
 
-        $BookPages = $book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($appliedFields) {
+        $BookPages = $book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
             $questions = $page->getQuestions();
 
             return $carry + [$page->id => $questions];

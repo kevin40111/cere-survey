@@ -63,6 +63,10 @@ class ApplicationComponent extends CommFile
 
     public function master()
     {
+        $stepStatue = ApplicationRepository::book($this->mainBook)->getApplicationStatus();
+
+        View::share('step', $stepStatue);
+
         return View::make('survey::extend.apply.master');
     }
 
@@ -122,7 +126,7 @@ class ApplicationComponent extends CommFile
 
     public function open()
     {
-        $stepStatue = ApplicationRepository::book($this->mainBook)->applicationStatus(Input::get('step'));
+        $stepStatue = ApplicationRepository::book($this->mainBook)->getApplicationStatus();
 
         switch($stepStatue){
             case 0:
