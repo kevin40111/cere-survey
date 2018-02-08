@@ -28,7 +28,7 @@
             <md-list flex>
                 <md-subheader class="md-no-sticky"  md-colors="{color: 'indigo-800'}"><h4>可申請的母體名單數量: <span  md-colors="{color: 'grey'}">{{columnsLimit}}</span></h4></md-subheader>
                 <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>申請母體名單欄位(請勾選)：</h4></md-subheader>
-                <md-list-item ng-repeat="column in columns | filter:{release: true}">
+                <md-list-item ng-repeat="column in columns">
                     <p>{{column.title}}</p>
                     <md-checkbox ng-click="toggle(column, $event)" ng-checked="column.selected" aria-label="{{column.title}}" ng-disabled="disabled"></md-checkbox>
                 </md-list-item>
@@ -45,14 +45,14 @@
                     <button class="ui small blue button" ng-click="delete(pages[page])" ng-disabled="disabled">刪除</button>
                     <md-input-container>
                         <md-select placeholder="請選擇" ng-model="page">
-                            <md-option ng-repeat="page in release(pages)" ng-value="page" >{{$index+1}}</md-option>
+                            <md-option ng-repeat="page in release(pages)" ng-value="page">{{$index+1}}</md-option>
                         </md-select>
                     </md-input-container>
                     <span md-colors="{color: 'red'}">共新增{{getSelected().length}}個欄位(含母體)</span>
                 </md-subheader>
                 <div style="height:300px; overflow:scroll;">
                 <md-list>
-                    <md-list-item ng-repeat="question in pages[page] | filter:{selected: true}">
+                    <md-list-item ng-repeat="question in pages[page]| filter:{selected:true}">
                         {{question.title}}
                         <md-checkbox class="md-secondary" ng-model="question.deleted" aria-label="{{question.title}}" ng-disabled="disabled"></md-checkbox>
                     </md-list-item>
@@ -142,15 +142,9 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
         var field = [];
         var release_length = 0;
         angular.forEach(pages, function(questions,key){
-            angular.forEach(questions, function(question){
-                if(question.release){
-                    release_length ++ ;
-                }
-            })
-            if(release_length>0){
+            if(questions != 0){
                 field.push(key);
             }
-            release_length = 0;
         })
         return field;
     }
@@ -193,7 +187,7 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
 
                 $scope.selectAllPage = function(value, ev){
                     var release = [];
-                    release = $filter('filter')(value, {release: true, selected: false}).length;
+                    release = $filter('filter')(value, {selected: false}).length;
 
                     if($scope.getFields().length + release > $scope.fieldsLimit){
                         $scope.limitMessage(ev);
@@ -255,8 +249,8 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
                                     </md-select>
                                 </md-input-container>
                                 <md-list>
-                                    <md-list-item ng-repeat="question in pages[page] | filter:{release: true}">
-                                        {{question.title}}{{page.release.length}}
+                                    <md-list-item ng-repeat="question in pages[page]">
+                                        {{question.title}}
                                         <md-checkbox class="md-secondary" ng-hide="question.selected" aria-label="question.selected" ng-model="question.picked" ng-change="toggle(question, $event)"></md-checkbox>
                                     </md-list-item>
                                 </md-list>
