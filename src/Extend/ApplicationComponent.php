@@ -27,8 +27,6 @@ class ApplicationComponent extends CommFile
 
         $this->configs = $this->file->configs->lists('value', 'name');
 
-        $this->mainBook = SurveyORM\book::find($this->configs['main_book_id']);
-
         if ($this->file->book) {
             $this->book = $this->file->book;
             $this->__SurveyEditorConstruct(SheetRepository::target($this->book->sheet)->field());
@@ -42,12 +40,7 @@ class ApplicationComponent extends CommFile
 
     public function get_views()
     {
-        return ['contract', 'open'];
-    }
-
-    public function contract()
-    {
-        return 'survey::extend.apply.contract';
+        return ['open'];
     }
 
     public function open()
@@ -82,19 +75,6 @@ class ApplicationComponent extends CommFile
     public function getBookFinishQuestions()
     {
         return ApplicationRepository::instance($this->book->application)->getBookFinishQuestions();
-    }
-
-    public function agreeContract()
-    {
-        $book = $this->file->book()->create(['title' => $this->file->title, 'lock' => false]);
-
-        $fieldComponent = FieldComponent::createComponent(['title' => $this->file->title], $this->user);
-
-        $book->sheet()->associate($fieldComponent->file->sheets()->first());
-
-        $book->save();
-
-        ApplicationRepository::create($this->mainBook->extendHook, $book->id);
     }
 
     public function nextStep()

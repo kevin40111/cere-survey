@@ -27,7 +27,7 @@
                     </md-list>
                 </md-content>
                 <md-card-actions layout="column">
-                    <md-button flex ng-click="agree()" ng-disabled="!consent.agree">送出</md-button>
+                    <md-button flex href="agreeContract" ng-disabled="!consent.agree">送出</md-button>
                 </md-card-actions>
             </md-card>
         </div>
@@ -48,12 +48,5 @@ app.controller('contract', function ($scope, $sce, $http, $window){
         });
     }
     $scope.getConsent();
-
-    $scope.agree = function() {
-        $http({method: 'POST', url: 'agreeContract', data:{}})
-        .success(function(data, status, headers, config) {
-            $window.location.href = 'open';
-        })
-    }
 });
 </script>

@@ -12,6 +12,10 @@ use Cere\Survey\Field\SheetRepository;
 use Cere\Survey\Field\FieldComponent;
 use Cere\Survey\Extend\ApplySettingTrait;
 use Cere\Survey\Extend\CensornTrait;
+use Plat\Files\FolderComponent;
+use Cere\Survey\Extend\Apply\ApplicationRepository;
+use ShareFile;
+use Redirect;
 
 class SurveyFile extends CommFile
 {
@@ -43,7 +47,7 @@ class SurveyFile extends CommFile
 
     public function get_views()
     {
-        return ['open', 'demo', 'application','confirm', 'applicableList', 'browser', 'surveyTime', 'loginCondition'];
+        return ['open', 'demo', 'application','confirm', 'applicableList', 'browser', 'surveyTime', 'loginCondition', 'contract'];
     }
 
     public static function tools()
@@ -73,6 +77,36 @@ class SurveyFile extends CommFile
         $this->book->save();
 
         return $this;
+    }
+
+    public function contract()
+    {
+        return 'survey::extend.apply.contract';
+    }
+
+    public function agreeContract()
+    {
+        Input::replace(['fileInfo' => ['type' => 31, 'title' => $this->file->title . ' 加掛題本']]);
+
+        $folderComponent = new FolderComponent($this->doc->folder->isFile, $this->user);
+
+        $folderComponent->setDoc($this->doc->folder);
+
+        $doc = $folderComponent->createComponent()['doc'];
+
+        $component = ShareFile::find($doc['id']);
+
+        $book = $component->isFile->book()->create(['title' => $component->isFile->title, 'lock' => false]);
+
+        $fieldComponent = FieldComponent::createComponent(['title' => $component->isFile->title], $this->user);
+
+        $book->sheet()->associate($fieldComponent->file->sheets()->first());
+
+        $book->save();
+
+        ApplicationRepository::create($this->book->extendHook, $book->id);
+
+        return Redirect::to($doc['link']);
     }
 
     public function queryOrganizations()
