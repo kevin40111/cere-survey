@@ -61,23 +61,23 @@ class ApplicationComponent extends CommFile
         return false;
     }
 
-    public function master()
-    {
-        $stepStatue = ApplicationRepository::book($this->mainBook)->getApplicationStatus();
-
-        View::share('step', $stepStatue);
-
-        return View::make('survey::extend.apply.master');
-    }
-
     public function get_views()
     {
         return ['open'];
     }
 
-    public function contract()
+    public function open()
     {
-        return 'survey::extend.apply.contract';
+        return ApplicationRepository::book($this->mainBook)->getStep()['view'];
+    }
+
+    public function master()
+    {
+        $application = ApplicationRepository::book($this->mainBook)->getApplication();
+
+        View::share('step', $application->step);
+
+        return View::make('survey::extend.apply.master');
     }
 
     public function userApplication()
@@ -104,7 +104,9 @@ class ApplicationComponent extends CommFile
 
     public function getApplication()
     {
-        return ApplicationRepository::book($this->mainBook)->getApplication();
+        $application = ApplicationRepository::book($this->mainBook)->getApplication();
+
+        return ['application' => $application];
     }
 
     public function resetApplication()
@@ -124,30 +126,10 @@ class ApplicationComponent extends CommFile
         return ApplicationRepository::book($this->mainBook)->getBookFinishQuestions();
     }
 
-    public function open()
+    public function nextStep()
     {
-        $stepStatue = ApplicationRepository::book($this->mainBook)->getApplicationStatus();
+        ApplicationRepository::book($this->mainBook)->nextStep();
 
-        switch($stepStatue){
-            case 0:
-                return 'survey::extend.apply.contract';
-            break;
-
-            case 1:
-                return 'survey::extend.apply.editor-ng';
-            break;
-
-            case 2:
-                return 'survey::extend.apply.bookFinish';
-            break;
-
-            case 3:
-                return 'survey::extend.apply.application-ng';
-            break;
-
-            case 4:
-                return 'survey::extend.apply.audit';
-            break;
-        }
+        return Redirect::back();
     }
 }

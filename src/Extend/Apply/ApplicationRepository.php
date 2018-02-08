@@ -11,6 +11,14 @@ use Cere\Survey\RuleRepository;
 
 class ApplicationRepository
 {
+    private $steps = [
+        ['view' => 'survey::extend.apply.contract', 'method' => 'stepContract'],
+        ['view' => 'survey::extend.apply.editor-ng'],
+        ['view' => 'survey::extend.apply.bookFinish'],
+        ['view' => 'survey::extend.apply.application'],
+        ['view' => 'survey::extend.apply.audit'],
+    ];
+
     function __construct($book)
     {
         $this->book = $book;
@@ -87,9 +95,7 @@ class ApplicationRepository
 
     public function getApplication()
     {
-        $application = $this->book->extendHook->applications()->where('member_id', $this->member->id)->first();
-
-        return ['application' => $application];
+        return $this->book->extendHook->applications()->where('member_id', $this->member->id)->first();
     }
 
     public function resetApplication()
@@ -120,13 +126,6 @@ class ApplicationRepository
         return $folderComponent->createComponent()['doc'];
     }
 
-    public function getApplicationStatus()
-    {
-        $application = $this->book->extendHook->applications()->where('member_id', $this->member->id)->first();
-
-        return $application->step;
-    }
-
     public function getBookFinishQuestions()
     {
         $book = $this->book->extendHook->applications()->where('member_id', $this->member->id)->first()->book;
@@ -138,5 +137,30 @@ class ApplicationRepository
         }, []);
 
         return $BookPages;
+    }
+
+    public function getStep()
+    {
+        $application = $this->book->extendHook->applications()->where('member_id', $this->member->id)->first();
+
+        return $this->steps[$application->step];
+    }
+
+    public function nextStep()
+    {
+        $application = $this->book->extendHook->applications()->where('member_id', $this->member->id)->first();
+
+        if (method_exists($this, $this->steps[$application->step]['method'])) {
+            call_user_func_array([$this, $this->steps[$application->step]['method']], []);
+        }
+
+        $application->step++;
+
+        $application->save();
+    }
+
+    public function stepContract()
+    {
+        $application = $this->book->extendHook->applications()->where('member_id', $this->member->id)->first();
     }
 }
