@@ -91,19 +91,9 @@ class Book extends Eloquent {
         ]);
     }
 
-    public function applicableOptions()
+    public function application()
     {
-        return $this->hasMany('Cere\Survey\Eloquent\ApplicableOption', 'book_id', 'id');
-    }
-
-    public function applications()
-    {
-        return $this->hasMany('Cere\Survey\Eloquent\Application', 'book_id', 'id');
-    }
-
-    public function optionFields()
-    {
-        return $this->morphedByMany(Field::class, 'survey_applicable_option');
+        return $this->hasOne(Extend\Application::class);
     }
 
     public function file()

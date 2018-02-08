@@ -20,17 +20,20 @@
                         </md-list-item>
                         <md-list-item>
                             <md-radio-group ng-model="consent.agree" class="md-primary">
-                                <md-radio-button value="0" class="md-primary">同意</md-radio-button>
-                                <md-radio-button value="1" class="md-primary">不同意</md-radio-button>
+                                <md-radio-button value="1" class="md-primary">同意</md-radio-button>
+                                <md-radio-button ng-value="false" class="md-primary">不同意</md-radio-button>
                             <md-radio-group>
                         </md-list-item>
                     </md-list>
                 </md-content>
+                <md-card-actions layout="column">
+                    <md-button flex ng-click="agree()" ng-disabled="!consent.agree">送出</md-button>
+                </md-card-actions>
             </md-card>
         </div>
 </md-content>
 <script>
-app.controller('contract', function ($scope, $sce, $http){
+app.controller('contract', function ($scope, $sce, $http, $window){
     $scope.trustAsHtml = function(string) {
         return $sce.trustAsHtml(string);
     };
@@ -45,5 +48,12 @@ app.controller('contract', function ($scope, $sce, $http){
         });
     }
     $scope.getConsent();
+
+    $scope.agree = function() {
+        $http({method: 'POST', url: 'agreeContract', data:{}})
+        .success(function(data, status, headers, config) {
+            $window.location.href = 'open';
+        })
+    }
 });
 </script>

@@ -29,31 +29,10 @@ class ApplicationComponent extends CommFile
 
         $this->mainBook = SurveyORM\book::find($this->configs['main_book_id']);
 
-        if (! $this->file->book) {
-            $this->create();
+        if ($this->file->book) {
+            $this->book = $this->file->book;
+            $this->__SurveyEditorConstruct(SheetRepository::target($this->book->sheet)->field());
         }
-
-        $this->book = $this->file->book;
-
-        $this->__SurveyEditorConstruct(SheetRepository::target($this->book->sheet)->field());
-    }
-
-    /**
-     * @todo to static
-     **/
-    public function create()
-    {
-        parent::create();
-
-        $this->book = $this->file->book()->create(['title' => $this->file->title, 'lock' => false]);
-
-        $fieldComponent = FieldComponent::createComponent(['title' => $this->file->title], $this->user);
-
-        $this->book->sheet()->associate($fieldComponent->file->sheets()->first());
-
-        $this->book->save();
-
-        return $this;
     }
 
     public function is_full()
@@ -63,72 +42,64 @@ class ApplicationComponent extends CommFile
 
     public function get_views()
     {
-        return ['open'];
+        return ['contract', 'open'];
+    }
+
+    public function contract()
+    {
+        return 'survey::extend.apply.contract';
     }
 
     public function open()
     {
-        return ApplicationRepository::book($this->mainBook)->getStep()['view'];
+        return ApplicationRepository::instance($this->book->application)->getStep()['view'];
     }
 
     public function master()
     {
-        $application = ApplicationRepository::book($this->mainBook)->getApplication();
-
-        View::share('step', $application->step);
+        View::share('step', $this->book->application->step);
 
         return View::make('survey::extend.apply.master');
-    }
-
-    public function userApplication()
-    {
-        return View::make('survey::extend.apply.userApplication-ng');
     }
 
     public function setAppliedOptions()
     {
         $selected = Input::get('selected');
 
-        return ApplicationRepository::book($this->mainBook)->setAppliedOptions($selected);
+        return ApplicationRepository::instance($this->book->application)->setAppliedOptions($selected);
     }
 
     public function getConsent()
     {
-        return ApplicationRepository::book($this->mainBook)->getConsent();
+        return ApplicationRepository::instance($this->book->application)->getConsent();
     }
 
     public function getAppliedOptions()
     {
-        return ApplicationRepository::book($this->mainBook)->getAppliedOptions();
-    }
-
-    public function getApplication()
-    {
-        $application = ApplicationRepository::book($this->mainBook)->getApplication();
-
-        return ['application' => $application];
-    }
-
-    public function resetApplication()
-    {
-        return ApplicationRepository::book($this->mainBook)->resetApplication();
-    }
-
-    public function checkExtBookLocked()
-    {
-        $locked = SurveyORM\Book::find(Input::get('book_id'))->lock;
-
-        return  ['ext_locked' => $locked];
+        return ApplicationRepository::instance($this->book->application)->getAppliedOptions();
     }
 
     public function getBookFinishQuestions()
     {
-        return ApplicationRepository::book($this->mainBook)->getBookFinishQuestions();
+        return ApplicationRepository::instance($this->book->application)->getBookFinishQuestions();
+    }
+
+    public function agreeContract()
+    {
+        $book = $this->file->book()->create(['title' => $this->file->title, 'lock' => false]);
+
+        $fieldComponent = FieldComponent::createComponent(['title' => $this->file->title], $this->user);
+
+        $book->sheet()->associate($fieldComponent->file->sheets()->first());
+
+        $book->save();
+
+        ApplicationRepository::create($this->mainBook->extendHook, $book->id);
     }
 
     public function nextStep()
     {
-        ApplicationRepository::book($this->mainBook)->nextStep();
+        ApplicationRepository::instance($this->book->application)->nextStep();
 
         return Redirect::back();
     }

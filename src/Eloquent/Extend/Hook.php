@@ -3,6 +3,7 @@
 namespace Cere\Survey\Eloquent\Extend;
 
 use Eloquent;
+use Cere\Survey\Eloquent\Book;
 
 class Hook extends Eloquent {
 
@@ -17,6 +18,11 @@ class Hook extends Eloquent {
     public function applications()
     {
         return $this->hasMany(Application::class);
+    }
+
+    public function book()
+    {
+        return $this->belongsTo(Book::class);
     }
 
     public function getOptionsAttribute($options)
