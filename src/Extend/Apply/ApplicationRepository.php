@@ -15,7 +15,7 @@ class ApplicationRepository
         ['view' => 'survey::extend.apply.contract', 'method' => 'stepContract'],
         ['view' => 'survey::extend.apply.editor-ng'],
         ['view' => 'survey::extend.apply.bookFinish'],
-        ['view' => 'survey::extend.apply.application'],
+        ['view' => 'survey::extend.apply.application-ng'],
         ['view' => 'survey::extend.apply.audit'],
     ];
 
