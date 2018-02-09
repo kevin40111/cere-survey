@@ -1,17 +1,7 @@
-<div style="text-align:center;" ng-include="'stepsTemplate'"></div>
+<div layout="column" layout-align="start center">
+    <div ng-include="'stepsTemplate'"></div>
+</div>
 <div ng-controller="editorController" layout="row" style="height:100%">
-    <md-sidenav class="md-sidenav-left" md-component-id="survey-book" layout="column">
-        <md-content>
-            <md-list>
-                <md-subheader class="md-no-sticky">選擇題本</md-subheader>
-                <md-list-item ng-repeat="sbook in sbooks">
-                    <md-icon md-svg-icon="history"></md-icon>
-                    <md-checkbox class="md-secondary" ng-model="sbook.checked"></md-checkbox>
-                    <p>@{{sbook.title}}</p>
-                </md-list-item>
-            </md-list>
-        </md-content>
-    </md-sidenav>
     <survey-book ng-if="book && !book.lock" book="book">
         <md-button class="md-raised md-primary" ng-click="changeStep('nextStep')" style="font-size: 18px">完成編輯</md-button>
     </survey-book>
@@ -65,10 +55,6 @@ app.controller('editorController', function($http, $scope, $sce, $interval, $fil
     }
 
     $scope.getBook();
-
-    $scope.openBooks = function() {
-        $mdSidenav('survey-book').toggle();
-    };
 
 });
 </script>
