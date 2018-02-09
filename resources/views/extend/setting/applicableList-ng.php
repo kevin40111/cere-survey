@@ -92,8 +92,16 @@
         </md-tabs>
     </div>
 </md-content>
-<script>
+<script src="/packages/cere/survey/js/quill.min.js"></script>
+<script src="/packages/cere/survey/js/ng-quill.min.js"></script>
 
+<link rel="stylesheet" href="/packages/cere/survey/js/quill.snow.min.css">
+<link rel="stylesheet" href="/packages/cere/survey/js/quill.bubble.min.css">
+<script>
+    app.requires.push('ngQuill');
+    app.config(['ngQuillConfigProvider', function (ngQuillConfigProvider) {
+        ngQuillConfigProvider.set(null, null, 'custom placeholder')
+    }])
     app.controller('application', function ($scope, $http, $filter, $mdDialog){
         $scope.columns = [];
         $scope.questions = [];
