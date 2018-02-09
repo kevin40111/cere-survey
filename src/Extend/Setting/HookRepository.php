@@ -6,7 +6,7 @@ use Cere\Survey\Eloquent as SurveyORM;
 use Cere\Survey\Eloquent\Extend\Hook;
 use Auth;
 
-class SettingRepository
+class HookRepository
 {
     function __construct($book)
     {
@@ -32,27 +32,30 @@ class SettingRepository
     {
         $file = \Files::find($this->book->auth['fieldFile_id']);
 
-        $extendHook = $this->book->extendHook ?: new Hook;
+        $hook = $this->book->extendHook ?: new Hook;
 
-        $optionColumns = !is_null($file) ? $file->sheets->first()->tables->first()->columns->each(function ($column) use ($extendHook) {
-            $column->selected = in_array($column->id, $extendHook->options['fields']);
+        $mainListFields = !is_null($file) ? $file->sheets->first()->tables->first()->columns->each(function ($column) use ($hook) {
+            $column->selected = in_array($column->id, $hook->options['fields']);
         }) : [];
 
-        $pages = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($extendHook) {
+        $mainBookPages = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($hook) {
             $questions = $page->getQuestions();
 
             foreach ($questions as &$question) {
-                $question["selected"] = in_array($question['id'], $extendHook->options['fields']);
+                $question["selected"] = in_array($question['id'], $hook->options['fields']);
             }
 
             return $carry + [$page->id => $questions];
         }, []);
 
         return [
-            'selectedOptions' => $extendHook->options,
-            'options' => [
-                'columns' => $optionColumns,
-                'pages' => $pages,
+            'fields' => [
+                'mainBookPages' => $mainBookPages,
+                'mainList' => $mainListFields,
+            ],
+            'limit' => [
+                'mainBook' => $hook->options['columnsLimit'],
+                'mainList' => $hook->options['fieldsLimit'],
             ],
         ];
     }

@@ -47,7 +47,7 @@ class SurveyFile extends CommFile
 
     public function get_views()
     {
-        return ['open', 'demo', 'application','confirm', 'applicableList', 'browser', 'surveyTime', 'loginCondition', 'contract'];
+        return ['open', 'demo', 'application','confirm', 'extendHook', 'browser', 'surveyTime', 'loginCondition', 'contract'];
     }
 
     public static function tools()
@@ -55,7 +55,7 @@ class SurveyFile extends CommFile
         return [
             ['name' => 'confirm', 'title' => '加掛審核', 'method' => 'confirm', 'icon' => 'list'],
             ['name' => 'confirm', 'title' => '登入設定', 'method' => 'loginCondition', 'icon' => 'list'],
-            ['name' => 'applicableList', 'title' => '加掛設定', 'method' => 'applicableList', 'icon' => 'list'],
+            ['name' => 'extendHook', 'title' => '加掛設定', 'method' => 'extendHook', 'icon' => 'list'],
             ['name' => 'browser', 'title' => '題目瀏覽', 'method' => 'browser', 'icon' => 'list'],
             // ['name' => 'surveyTime', 'title' => '設定時間', 'method' => 'surveyTime', 'icon' => 'alarm'],
         ];

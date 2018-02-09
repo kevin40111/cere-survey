@@ -1,4 +1,4 @@
-<div style="text-align:center;" ng-include="'master'"></div>
+<div style="text-align:center;" ng-include="'stepsTemplate'"></div>
 <div ng-controller="editorController" layout="row" style="height:100%">
     <md-sidenav class="md-sidenav-left" md-component-id="survey-book" layout="column">
         <md-content>

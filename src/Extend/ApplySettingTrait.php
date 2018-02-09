@@ -3,32 +3,32 @@
 namespace Cere\Survey\Extend;
 
 use Input;
-use Cere\Survey\Extend\Setting\SettingRepository;
+use Cere\Survey\Extend\Setting\HookRepository;
 
 trait ApplySettingTrait
 {
-    public function applicableList()
+    public function extendHook()
     {
-        return 'survey::extend.setting.applicableList-ng';
+        return 'survey::extend.setting.hook';
     }
 
     public function setApplicableOptions()
     {
-        SettingRepository::book($this->book)->setApplicableOptions(Input::get('selecteds'));
+        HookRepository::book($this->book)->setApplicableOptions(Input::get('selecteds'));
     }
 
     public function getApplicableOptions()
     {
-        return SettingRepository::book($this->book)->getApplicableOptions();
+        return HookRepository::book($this->book)->getApplicableOptions();
     }
 
     public function getConsent()
     {
-        return SettingRepository::book($this->book)->getConsent();
+        return HookRepository::book($this->book)->getConsent();
     }
 
     public function setConsent()
     {
-        return SettingRepository::book($this->book)->setConsent(Input::get('consent'));
+        return HookRepository::book($this->book)->setConsent(Input::get('consent'));
     }
 }

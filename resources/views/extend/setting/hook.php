@@ -147,11 +147,11 @@
         $scope.getApplicableOptions = function() {
             $http({method: 'POST', url: 'getApplicableOptions', data:{}})
             .success(function(data, status, headers, config) {
-                $scope.columns = data.options.columns;
-                $scope.pages = data.options.pages;
+                $scope.columns = data.fields.mainList;
+                $scope.pages = data.fields.mainBookPages;
 
-                $scope.fieldsLimit = data.selectedOptions.fieldsLimit;
-                $scope.columnsLimit = data.selectedOptions.columnsLimit;
+                $scope.columnsLimit = data.limit.mainBook;
+                $scope.fieldsLimit = data.limit.mainList;
             })
             .error(function(e){
                 console.log(e);

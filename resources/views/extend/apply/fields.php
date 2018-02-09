@@ -16,7 +16,7 @@
 }
 </style>
 <md-content ng-cloak layout="column" ng-controller="application" layout-align="start center">
-<div ng-include="'master'"></div>
+<div ng-include="'stepsTemplate'"></div>
 <div style="width:960px">
     <md-card style="width: 100%">
         <md-card-header md-colors="{background: 'indigo'}">
@@ -129,9 +129,9 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
             $scope.disabled = false;
             $scope.columns = data.fields.mainList;
             $scope.pages = data.fields.mainBookPages;
+
             $scope.columnsLimit = data.limit.mainBook;
             $scope.fieldsLimit = data.limit.mainList;
-
         })
         .error(function(e){
             console.log(e);

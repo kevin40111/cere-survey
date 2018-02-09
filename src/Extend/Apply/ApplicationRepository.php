@@ -7,9 +7,9 @@ use Cere\Survey\Eloquent\Extend\Application;
 class ApplicationRepository
 {
     private $steps = [
-        ['view' => 'survey::extend.apply.editor-ng', 'method' => 'checkBookHasQuestion'],
-        ['view' => 'survey::extend.apply.bookFinish', 'method' => 'setBookFinish'],
-        ['view' => 'survey::extend.apply.application-ng', 'method' => 'checkApplicationSet'],
+        ['view' => 'survey::extend.apply.editor', 'method' => 'checkBookHasQuestion'],
+        ['view' => 'survey::extend.apply.book_finish', 'method' => 'setBookFinish'],
+        ['view' => 'survey::extend.apply.fields', 'method' => 'checkAppliedFields'],
         ['view' => 'survey::extend.apply.audit', 'method' => 'noCheck'],
     ];
 
@@ -102,7 +102,7 @@ class ApplicationRepository
         $method = $this->steps[$this->application->step]['method'];
 
         if (method_exists($this, $method)) {
-            if( ! call_user_func_array([$this, $method], []) ) return 0;
+            if (! call_user_func_array([$this, $method], [])) return 0;
         }
 
         $this->application->step++;
@@ -136,7 +136,7 @@ class ApplicationRepository
         return true ;
     }
 
-    public function checkApplicationSet()
+    private function checkAppliedFields()
     {
         $field = $this->application->fields;
 

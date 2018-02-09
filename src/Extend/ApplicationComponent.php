@@ -48,11 +48,11 @@ class ApplicationComponent extends CommFile
         return ApplicationRepository::instance($this->book->application)->getStep()['view'];
     }
 
-    public function master()
+    public function stepsTemplate()
     {
         View::share('step', $this->book->application->step);
 
-        return View::make('survey::extend.apply.master');
+        return View::make('survey::extend.apply.steps');
     }
 
     public function setAppliedOptions()

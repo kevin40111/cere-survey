@@ -1,5 +1,5 @@
 <md-content ng-cloak layout="column" ng-controller="book" layout-align="start center">
-    <div ng-include="'master'"></div>
+    <div ng-include="'stepsTemplate'"></div>
     <div style="width:960px">
         <md-card style="width: 100%">
             <md-card-header md-colors="{background: 'indigo'}">

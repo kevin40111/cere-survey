@@ -8,12 +8,12 @@ trait CensornTrait
 {
     public function confirm()
     {
-        return 'survey::extend.setting.confirm-ng';
+        return 'survey::extend.setting.censorn';
     }
 
     public function userApplication()
     {
-        return View::make('survey::extend.setting.userApplication-ng');
+        return View::make('survey::extend.setting.userApplication');
     }
 
     public function getApplications()
