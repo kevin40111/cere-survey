@@ -7,10 +7,10 @@ use Cere\Survey\Eloquent\Extend\Application;
 class ApplicationRepository
 {
     private $steps = [
-        ['view' => 'survey::extend.apply.editor-ng'],
-        ['view' => 'survey::extend.apply.bookFinish'],
-        ['view' => 'survey::extend.apply.application-ng'],
-        ['view' => 'survey::extend.apply.audit'],
+        ['view' => 'survey::extend.apply.editor-ng', 'method' => 'checkBookHasQuestion'],
+        ['view' => 'survey::extend.apply.bookFinish', 'method' => 'setBookFinish'],
+        ['view' => 'survey::extend.apply.application-ng', 'method' => 'checkApplicationSet'],
+        ['view' => 'survey::extend.apply.audit', 'method' => 'noCheck'],
     ];
 
     function __construct($application)
@@ -102,11 +102,44 @@ class ApplicationRepository
         $method = $this->steps[$this->application->step]['method'];
 
         if (method_exists($this, $method)) {
-            call_user_func_array([$this, $method], []);
+            if( ! call_user_func_array([$this, $method], []) ) return 0;
         }
 
         $this->application->step++;
 
         $this->application->save();
+    }
+
+    private function noCheck()
+    {
+        return true;
+    }
+
+    private function checkBookHasQuestion()
+    {
+        $questions = $this->application->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
+            $questions = $page->getQuestions();
+            return array_merge($carry, $questions);
+        }, []);
+
+        return sizeof($questions) > 0;
+    }
+
+    private function setBookFinish()
+    {
+        $book = $this->application->hook->book;
+
+        $book->lock = true;
+
+        $book->save();
+
+        return true ;
+    }
+
+    public function checkApplicationSet()
+    {
+        $field = $this->application->fields;
+
+        return isset($field) && sizeof($field) >= 0;
     }
 }

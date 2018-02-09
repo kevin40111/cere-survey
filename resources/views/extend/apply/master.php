@@ -1,11 +1,6 @@
 <div style="text-align:center;margin-top:20px;display:inline-flex">
 	<div style="">
 		<div class="ui steps">
-			<div class="step <?php echo $step==null ? 'active':''?>">
-				<div class="content">
-					<div class="title">同意書</div>
-				</div>
-			</div>
 			<div class="step <?php echo $step==0 ? 'active':''?>">
 				<div class="content">
 					<div class="title">編製加掛問卷</div>
