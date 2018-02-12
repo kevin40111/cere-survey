@@ -7,10 +7,10 @@ use Cere\Survey\Eloquent\Extend\Application;
 class ApplicationRepository
 {
     private $steps = [
-        ['view' => 'survey::extend.apply.editor', 'method' => 'checkBookHasQuestion'],
-        ['view' => 'survey::extend.apply.book_finish', 'method' => 'setBookFinish'],
-        ['view' => 'survey::extend.apply.fields', 'method' => 'checkAppliedFields'],
-        ['view' => 'survey::extend.apply.audit', 'method' => 'noCheck'],
+        ['view' => 'survey::extend.apply.editor', 'method' => 'checkBookHasQuestion', 'pre_method' => 'noCheck'],
+        ['view' => 'survey::extend.apply.book_finish', 'method' => 'setBookFinish', 'pre_method' => 'noCheck'],
+        ['view' => 'survey::extend.apply.fields', 'method' => 'checkAppliedFields', 'pre_method' => 'setBookEdit'],
+        ['view' => 'survey::extend.apply.audit', 'method' => 'noCheck', 'pre_method' => 'noCheck'],
     ];
 
     function __construct($application)
@@ -110,6 +110,19 @@ class ApplicationRepository
         $this->application->save();
     }
 
+    public function preStep()
+    {
+        $method = $this->steps[$this->application->step]['pre_method'];
+
+        if (method_exists($this, $method)) {
+            if( ! call_user_func_array([$this, $method], []) ) return 0;
+        }
+
+        $this->application->step--;
+
+        $this->application->save();
+    }
+
     private function noCheck()
     {
         return true;
@@ -123,6 +136,17 @@ class ApplicationRepository
         }, []);
 
         return sizeof($questions) > 0;
+    }
+
+    private function setBookEdit()
+    {
+        $book = $this->application->hook->book;
+
+        $book->lock = false;
+
+        $book->save();
+
+        return true ;
     }
 
     private function setBookFinish()

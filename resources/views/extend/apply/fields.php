@@ -30,19 +30,19 @@
                 <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>申請母體名單欄位(請勾選)：</h4></md-subheader>
                 <md-list-item ng-repeat="column in columns">
                     <p>{{column.title}}</p>
-                    <md-checkbox ng-click="toggle(column, $event)" ng-checked="column.selected" aria-label="{{column.title}}" ng-disabled="disabled"></md-checkbox>
+                    <md-checkbox ng-click="toggle(column, $event)" ng-checked="column.selected" aria-label="{{column.title}}"></md-checkbox>
                 </md-list-item>
                 <md-divider ></md-divider>
                 <md-subheader class="md-no-sticky"  md-colors="{color: 'indigo-800'}"><h4>可加入母體問卷之題目欄位的數量： <span  md-colors="{color: 'grey'}">{{fieldsLimit}}</span></h4></md-subheader>
                 <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>釋出的母體問卷之題目欄位 (請勾選)</h4></md-subheader>
                 <md-list-item>
-                    <button class="ui blue button" flex="30" ng-click="showQuestion($event)" ng-disabled="disabled">新增題目</button>
+                    <button class="ui blue button" flex="30" ng-click="showQuestion($event)">新增題目</button>
                 </md-list-item>
 
                 <md-divider ></md-divider>
                 <md-subheader class="md-no-sticky">
-                    <button class="ui small blue button" ng-click="selectAllPage(pages[page])" ng-disabled="disabled">全選此頁</button>
-                    <button class="ui small blue button" ng-click="delete(pages[page])" ng-disabled="disabled">刪除</button>
+                    <button class="ui small blue button" ng-click="selectAllPage(pages[page])">全選此頁</button>
+                    <button class="ui small blue button" ng-click="delete(pages[page])">刪除</button>
                     <md-input-container>
                         <md-select placeholder="請選擇" ng-model="page">
                             <md-option ng-repeat="page in release(pages)" ng-value="page">{{$index+1}}</md-option>
@@ -54,17 +54,16 @@
                 <md-list>
                     <md-list-item ng-repeat="question in pages[page]| filter:{selected:true}">
                         {{question.title}}
-                        <md-checkbox class="md-secondary" ng-model="question.deleted" aria-label="{{question.title}}" ng-disabled="disabled"></md-checkbox>
+                        <md-checkbox class="md-secondary" ng-model="question.deleted" aria-label="{{question.title}}"></md-checkbox>
                     </md-list-item>
                 </md-list>
                 </div>
             </md-list>
         </md-content>
     </md-card>
-
     <div layout="row">
-        <md-button class="md-raised md-primary" ng-click="setAppliedOptions()" style="width: 50%;height: 50px;font-size: 18px" ng-disabled="disabled">送出審核</md-button>
-        <md-button class="md-raised md-primary"ng-if="edited" style="width: 50%;height: 50px;font-size: 18px" href="open">上一步</md-button>
+        <md-button class="md-raised md-primary" ng-click="changeStep('preStep')" style="width: 50%;height: 50px;font-size: 18px">上一步</md-button>
+        <md-button class="md-raised md-primary" ng-click="changeStep('nextStep')" style="width: 50%;height: 50px;font-size: 18px">送出審核</md-button>
     </div>
 </div>
 </md-content>
@@ -74,11 +73,16 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
     $scope.edited = [];
     $scope.extBook = {};
     $scope.extColumn = {};
-    $scope.allStatus = [
-        {key: ' 0 ', title: '審核中'},
-        {key: ' 1 ', title: '退件'},
-        {key: ' 2 ', title: '審核通過'}
-    ];
+
+    $scope.changeStep = function(method) {
+        $http({method: 'POST', url: method, data:{}})
+        .success(function(data, status, headers, config) {
+            location.reload();
+        })
+        .error(function(e){
+            console.log(e);
+        });
+    }
 
     $scope.delete = function(){
         angular.forEach($scope.pages, function(questions){
@@ -87,6 +91,8 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
                 question.deleted = false;
             });
         })
+
+        $scope.setAppliedOptions();
     }
 
     $scope.toggle = function(column, ev){
@@ -102,6 +108,7 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
         }else{
             column.selected = false;
         }
+        $scope.setAppliedOptions();
     }
 
     $scope.limitMessage = function(ev){
@@ -126,7 +133,6 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
     $scope.getAppliedOptions = function() {
         $http({method: 'POST', url: 'getAppliedOptions', data:{}})
         .success(function(data, status, headers, config) {
-            $scope.disabled = false;
             $scope.columns = data.fields.mainList;
             $scope.pages = data.fields.mainBookPages;
 
@@ -165,7 +171,6 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
         $http({method: 'POST', url: 'setAppliedOptions', data:{selected: $scope.getSelected()}})
         .success(function(data, status, headers, config) {
             angular.extend($scope, data);
-            $scope.disabled = true;
         })
         .error(function(e){
             console.log(e);
@@ -182,6 +187,7 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
                 $scope.fieldsLimit = application.fieldsLimit;
                 $scope.limitMessage = application.limitMessage;
                 $scope.release = application.release;
+                $scope.setAppliedOptions = application.setAppliedOptions;
 
                 console.log($scope.pages);
 
@@ -227,6 +233,7 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
                     })
                     console.log($scope.pages);
                     $mdDialog.hide();
+                    $scope.setAppliedOptions();
                 }
 
             },

@@ -15,6 +15,9 @@
     <survey-book ng-if="book && !book.lock" book="book"></survey-book>
     <node-browser ng-if="book.lock" book="book.id"></node-browser>
 </div>
+<div style="text-align:center;" ng-controller="stepController">
+    <md-button class="md-raised md-primary" ng-click="changeStep('nextStep')" style="width: 50%;height: 50px;font-size: 18px">完成編輯</md-button>
+</div>
 
 <script src="/js/angular-file-upload.min.js"></script>
 <script src="/packages/cere/survey/js/ng/ngEditor.js"></script>
@@ -39,8 +42,20 @@
 app.requires.push('angularFileUpload');
 app.requires.push('ngEditor');
 app.requires.push('ngBrowser');
-app.controller('editorController', function($http, $scope, $sce, $interval, $filter, $mdSidenav) {
 
+app.controller('stepController', function($http, $scope) {
+    $scope.changeStep = function(method) {
+        $http({method: 'POST', url: method, data:{}})
+        .success(function(data, status, headers, config) {
+            location.reload();
+        })
+        .error(function(e){
+            console.log(e);
+        });
+    }
+})
+
+app.controller('editorController', function($http, $scope, $sce, $interval, $filter, $mdSidenav) {
     $scope.getBook = function() {
         $scope.$parent.main.loading = true;
         $http({method: 'POST', url: 'getBook', data:{}})

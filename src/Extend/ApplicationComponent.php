@@ -83,4 +83,11 @@ class ApplicationComponent extends CommFile
 
         return Redirect::back();
     }
+
+    public function preStep()
+    {
+        ApplicationRepository::instance($this->book->application)->preStep();
+
+        return Redirect::back();
+    }
 }
