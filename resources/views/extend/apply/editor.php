@@ -12,11 +12,10 @@
             </md-list>
         </md-content>
     </md-sidenav>
-    <survey-book ng-if="book && !book.lock" book="book"></survey-book>
+    <survey-book ng-if="book && !book.lock" book="book">
+        <md-button class="md-raised md-primary" ng-click="changeStep('nextStep')" style="font-size: 18px">完成編輯</md-button>
+    </survey-book>
     <node-browser ng-if="book.lock" book="book.id"></node-browser>
-</div>
-<div style="text-align:center;" ng-controller="stepController">
-    <md-button class="md-raised md-primary" ng-click="changeStep('nextStep')" style="width: 50%;height: 50px;font-size: 18px">完成編輯</md-button>
 </div>
 
 <script src="/js/angular-file-upload.min.js"></script>
@@ -43,18 +42,6 @@ app.requires.push('angularFileUpload');
 app.requires.push('ngEditor');
 app.requires.push('ngBrowser');
 
-app.controller('stepController', function($http, $scope) {
-    $scope.changeStep = function(method) {
-        $http({method: 'POST', url: method, data:{}})
-        .success(function(data, status, headers, config) {
-            location.reload();
-        })
-        .error(function(e){
-            console.log(e);
-        });
-    }
-})
-
 app.controller('editorController', function($http, $scope, $sce, $interval, $filter, $mdSidenav) {
     $scope.getBook = function() {
         $scope.$parent.main.loading = true;
@@ -66,6 +53,16 @@ app.controller('editorController', function($http, $scope, $sce, $interval, $fil
             console.log(e);
         });
     };
+
+    $scope.changeStep = function(method) {
+        $http({method: 'POST', url: method, data:{}})
+        .success(function(data, status, headers, config) {
+            location.reload();
+        })
+        .error(function(e){
+            console.log(e);
+        });
+    }
 
     $scope.getBook();
 
