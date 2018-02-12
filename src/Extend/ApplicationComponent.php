@@ -79,15 +79,15 @@ class ApplicationComponent extends CommFile
 
     public function nextStep()
     {
-        ApplicationRepository::instance($this->book->application)->nextStep();
+        $messages = ApplicationRepository::instance($this->book->application)->nextStep();
 
-        return Redirect::back();
+        return ['messages' => $messages];
     }
 
     public function preStep()
     {
-        ApplicationRepository::instance($this->book->application)->preStep();
+        $messages = ApplicationRepository::instance($this->book->application)->preStep();
 
-        return Redirect::back();
+        return ['messages' => $messages];
     }
 }

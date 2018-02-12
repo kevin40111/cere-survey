@@ -7,10 +7,10 @@ use Cere\Survey\Eloquent\Extend\Application;
 class ApplicationRepository
 {
     private $steps = [
-        ['view' => 'survey::extend.apply.editor', 'method' => 'checkBookHasQuestion', 'pre_method' => 'noCheck'],
-        ['view' => 'survey::extend.apply.book_finish', 'method' => 'setBookFinish', 'pre_method' => 'noCheck'],
-        ['view' => 'survey::extend.apply.fields', 'method' => 'checkAppliedFields', 'pre_method' => 'setBookEdit'],
-        ['view' => 'survey::extend.apply.audit', 'method' => 'noCheck', 'pre_method' => 'noCheck'],
+        ['view' => 'survey::extend.apply.editor', 'next_method' => 'checkBookHasQuestion', 'pre_method' => 'noCheck'],
+        ['view' => 'survey::extend.apply.book_finish', 'next_method' => 'setBookFinish', 'pre_method' => 'noCheck'],
+        ['view' => 'survey::extend.apply.fields', 'next_method' => 'checkAppliedFields', 'pre_method' => 'setBookEdit'],
+        ['view' => 'survey::extend.apply.audit', 'next_method' => 'noCheck', 'pre_method' => 'noCheck'],
     ];
 
     function __construct($application)
@@ -99,33 +99,35 @@ class ApplicationRepository
 
     public function nextStep()
     {
-        $method = $this->steps[$this->application->step]['method'];
+        $method = $this->steps[$this->application->step]['next_method'];
 
-        if (method_exists($this, $method)) {
-            if (! call_user_func_array([$this, $method], [])) return 0;
+        $errors = method_exists($this, $method) ? call_user_func_array([$this, $method], []) : [];
+
+        if (empty($errors)) {
+            $this->application->step++;
+            $this->application->save();
         }
 
-        $this->application->step++;
-
-        $this->application->save();
+        return $errors;
     }
 
     public function preStep()
     {
         $method = $this->steps[$this->application->step]['pre_method'];
 
-        if (method_exists($this, $method)) {
-            if( ! call_user_func_array([$this, $method], []) ) return 0;
+        $errors = method_exists($this, $method) ? call_user_func_array([$this, $method], []) : [];
+
+        if (empty($errors)) {
+            $this->application->step--;
+            $this->application->save();
         }
 
-        $this->application->step--;
-
-        $this->application->save();
+        return $errors;
     }
 
     private function noCheck()
     {
-        return true;
+        return [];
     }
 
     private function checkBookHasQuestion()
@@ -135,7 +137,7 @@ class ApplicationRepository
             return array_merge($carry, $questions);
         }, []);
 
-        return sizeof($questions) > 0;
+        return sizeof($questions) > 0 ? [] : [['description' => '您沒有新增題目']];
     }
 
     private function setBookEdit()
@@ -146,7 +148,7 @@ class ApplicationRepository
 
         $book->save();
 
-        return true ;
+        return [];
     }
 
     private function setBookFinish()
@@ -157,13 +159,11 @@ class ApplicationRepository
 
         $book->save();
 
-        return true ;
+        return [];
     }
 
     private function checkAppliedFields()
     {
-        $field = $this->application->fields;
-
-        return isset($field) && sizeof($field) >= 0;
+        return [];
     }
 }

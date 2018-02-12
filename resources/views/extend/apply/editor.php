@@ -3,7 +3,10 @@
 </div>
 <div ng-controller="editorController" layout="row" style="height:100%">
     <survey-book ng-if="book && !book.lock" book="book">
-        <md-button class="md-raised md-primary" ng-click="changeStep('nextStep')" style="font-size: 18px">完成編輯</md-button>
+        <div layout="row">
+            <h1 ng-repeat="message in messages" md-colors="{color: 'red'}">{{message.description}}</h1>
+            <md-button class="md-raised md-primary" ng-click="changeStep('nextStep')" style="font-size: 18px">完成編輯</md-button>
+        </div>
     </survey-book>
     <node-browser ng-if="book.lock" book="book.id"></node-browser>
 </div>
@@ -47,7 +50,10 @@ app.controller('editorController', function($http, $scope, $sce, $interval, $fil
     $scope.changeStep = function(method) {
         $http({method: 'POST', url: method, data:{}})
         .success(function(data, status, headers, config) {
-            location.reload();
+            $scope.messages = data.messages;
+            if (data.messages.length === 0) {
+                location.reload();
+            }
         })
         .error(function(e){
             console.log(e);
