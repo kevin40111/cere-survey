@@ -90,4 +90,14 @@ class ApplicationComponent extends CommFile
 
         return ['messages' => $messages];
     }
+
+    public function backToEdit()
+    {
+        ApplicationRepository::instance($this->book->application)->backToEdit();
+    }
+
+    public function backToApply()
+    {
+        ApplicationRepository::instance($this->book->application)->backToApply();
+    }
 }

@@ -78,6 +78,7 @@ class ApplicationRepository
                 'mainBook' => $this->application->hook->options['columnsLimit'],
                 'mainList' => $this->application->hook->options['fieldsLimit'],
             ],
+            'status' => $this->application->status,
         ];
     }
 
@@ -165,5 +166,31 @@ class ApplicationRepository
     private function checkAppliedFields()
     {
         return [];
+    }
+
+    public function backToEdit()
+    {
+        $application = $this->application;
+
+        $application->step = 0;
+
+        $application->status = 0;
+
+        $book = $application->book;
+
+        $book->lock = false;
+
+        $application->push();
+    }
+
+    public function backToApply()
+    {
+        $application = $this->application;
+
+        $application->step = 2;
+
+        $application->status = 0;
+
+        $application->save();
     }
 }
