@@ -56,7 +56,7 @@ app.directive('surveyPage', function(){
                         {{question.question_number}}
                     </td>
                     <td ng-if="question.rowspan>=1" rowspan="{{question.rowspan}}"> {{getParentNode(key,question,page)}}{{question.question_title}}</td>
-                    <td>{{translateQustionType(question)}}</td>
+                    <td>{{types[question.node.type]}}</td>
                     <td>{{question.id}}</td>
                     <td>
                         <span ng-repeat="(key,answer) in question.node.answers">
@@ -70,71 +70,47 @@ app.directive('surveyPage', function(){
         <div>
         `,
         controller: function($scope){
-            $scope.questionAnalysis = function(page){
-                var browser_page = page;
+            $scope.questionAnalysis = function(){
                 var field = [];
                 var question_number = 1;
                 var answer_number = 1;
 
-                for(var i=0; i<browser_page.length; i++){
-                    browser_page[i] = $scope.getQuestionTitle(browser_page[i]);
-                    if(field.indexOf(browser_page[i].node.id)==-1){
-                        field.push(browser_page[i].node.id);
-                        browser_page[i].question_number = question_number++;
-                        browser_page[i].answer_number = answer_number;
-                    }else if(browser_page[i].node.type=='scale'){
-                        field.push(browser_page[i].node.id);
-                        browser_page[i].question_number = question_number;
+                for(var i=0; i<$scope.page.length; i++){
+                    $scope.getQuestionTitle($scope.page[i]);
+                    if(field.indexOf($scope.page[i].node.id)==-1){
+                        field.push($scope.page[i].node.id);
+                        $scope.page[i].question_number = question_number++;
+                        $scope.page[i].answer_number = answer_number;
+                    }else if($scope.page[i].node.type=='scale'){
+                        field.push($scope.page[i].node.id);
+                        $scope.page[i].question_number = question_number;
                     }
                     else{
-                        browser_page[i].answer_number = ++answer_number;
-                        browser_page[i].rowspan = 0;
+                        $scope.page[i].answer_number = ++answer_number;
+                        $scope.page[i].rowspan = 0;
                         continue;
                     }
-                    browser_page[i].rowspan = 0;
-                    for(var x=i; x<page.length; x++){
-                        if(browser_page[i].node.id==page[x].node.id){
-                            if(browser_page[i].node.type == "scale"){
-                                browser_page[i].rowspan = 1;
+                    $scope.page[i].rowspan = 0;
+                    for(var x=i; x<$scope.page.length; x++){
+                        if($scope.page[i].node.id==$scope.page[x].node.id){
+                            if($scope.page[i].node.type == "scale"){
+                                $scope.page[i].rowspan = 1;
                             }else{
-                                browser_page[i].rowspan++;
+                                $scope.page[i].rowspan++;
                             }
                         }
                     }
                 }
-                return $scope.page = browser_page;
             }
 
-            $scope.translateQustionType = function(question){
-                switch(question.node.type){
-                    case "radio":
-                    return "單選題";
-                    break;
-
-                    case "text":
-                    return "文字填答";
-                    break;
-
-                    case "scale":
-                    return "量表題";
-                    break;
-
-                    case "checkbox":
-                    return "複選題";
-                    break;
-
-                    case "select":
-                    return "下拉式選單";
-                    break;
-
-                    case "number":
-                    return "數子題";
-                    break;
-
-                    case "explain":
-                    return "說明文字";
-                    break;
-                }
+            $scope.types = {
+                'radio': '單選題',
+                'text': '文字填答',
+                'scale': '量表題',
+                'checkbox': '複選題',
+                'select': '下拉式選單',
+                'number': '數子題',
+                'explain': '說明文字',
             }
 
             $scope.checkParentNodeType = function(question){
@@ -203,9 +179,8 @@ app.directive('surveyPage', function(){
                     question.question_title = question.title;
                     break;
                 }
-                return question;
             }
-            $scope.questionAnalysis($scope.page);
+            $scope.questionAnalysis();
         }
     }
 })
