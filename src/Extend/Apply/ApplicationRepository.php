@@ -83,7 +83,7 @@ class ApplicationRepository
 
     public function getBookFinishQuestions()
     {
-        $BookPages = $this->application->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
+        $BookPages = $this->application->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
             $questions = $page->getQuestions();
 
             return $carry + [$page->id => $questions];
