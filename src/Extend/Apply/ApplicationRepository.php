@@ -66,7 +66,9 @@ class ApplicationRepository
                 $question["selected"] = in_array($question['id'], $appliedFields);
             }
 
-            return $carry + [$page->id => array_values($questions)];
+            array_push($carry, ['questions' => $questions]);
+
+            return $carry;
         }, []);
 
         return [
