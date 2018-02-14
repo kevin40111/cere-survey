@@ -197,7 +197,7 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
                                 <md-list>
                                     <md-list-item ng-repeat="question in page.questions">
                                         <p>{{question.title}}</p>
-                                        <md-checkbox class="md-secondary" ng-model="question.picked" ng-change="checkLimit(question)" aria-label="{{question.title}}"></md-checkbox>
+                                        <md-checkbox class="md-secondary" ng-model="question.picked" ng-checked="question.selected" ng-disabled="question.selected" ng-change="checkLimit(question)" aria-label="{{question.title}}"></md-checkbox>
                                     </md-list-item>
                                 </md-list>
                             </div>
