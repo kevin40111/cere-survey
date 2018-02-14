@@ -57,17 +57,14 @@
                                 </md-input-container>
                             </md-list-item>
                             <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>釋出的母體問卷之題目欄位 (請勾選)</h4></md-subheader>
-                            <md-list-item>
-                                <button class="ui blue button" flex="30" ng-click="showQuestion($event)">新增題目</button>
-                            </md-list-item>
-                            <md-divider ></md-divider>
                             <md-subheader class="md-no-sticky">
-                                <button class="ui small blue button" ng-click="selectAllPage(pages[page])">全選此頁</button>
+                                <button class="ui blue button" flex="30" ng-click="showQuestion($event)">新增題目</button>
+                                <button class="ui small blue button" ng-click="selectAllQuestions(page)">全選此頁</button>
                                 <button class="ui small blue button" ng-click="delete()">刪除</button>
-                                <md-button ng-click="prePage(page)">上一頁</md-button>
+                                <md-button ng-click="prePage(page)" ng-disabled="pages.indexOf(page) === 0">上一頁</md-button>
                                 <md-input-container>
                                     <md-select placeholder="請選擇" ng-model="page">
-                                        <md-option ng-repeat="(key,page) in pages" ng-value="key" >{{$index+1}}</md-option>
+                                        <md-option ng-repeat="page in pages" ng-value="page" >{{$index+1}}</md-option>
                                     </md-select>
                                 </md-input-container>
                                 <md-button ng-click="nextPage(page)">下一頁</md-button>
@@ -75,7 +72,7 @@
                             </md-subheader>
                             <div style="height:300px; overflow:scroll;">
                                 <md-list>
-                                    <md-list-item ng-repeat="question in pages[page] | filter:{selected: true}">
+                                    <md-list-item ng-repeat="question in page.questions | filter:{selected: true}">
                                         {{question.title}}
                                         <md-checkbox class="md-secondary" ng-model="question.delete" aria-label="{{question.title}}"></md-checkbox>
                                     </md-list-item>
@@ -108,16 +105,16 @@
         $scope.consent = {};
 
         $scope.delete = function(){
-            angular.forEach($scope.pages, function(questions){
-                $filter('filter')(questions, {delete: true}).forEach(function(question){
+            angular.forEach($scope.pages, function(page){
+                $filter('filter')(page.questions, {delete: true}).forEach(function(question){
                     question.selected = false;
                     question.delete = false;
                 })
             })
         }
 
-        $scope.selectAllPage = function(page){
-            angular.forEach(page, function(question){
+        $scope.selectAllQuestions = function(page){
+            angular.forEach(page.questions, function(question){
                 question.delete = true;
             })
         }
@@ -152,6 +149,10 @@
 
                 $scope.columnsLimit = data.limit.mainBook;
                 $scope.fieldsLimit = data.limit.mainList;
+
+                if ($scope.pages.length > 0) {
+                    $scope.page = $scope.pages[0];
+                }
             })
             .error(function(e){
                 console.log(e);
@@ -181,8 +182,8 @@
                 return column.id;
             });
 
-            angular.forEach($scope.pages, function(questions){
-                fields = $filter('filter')(questions, {selected: true}).map(function(question){
+            angular.forEach($scope.pages, function(page){
+                fields = $filter('filter')(page.questions, {selected: true}).map(function(question){
                     return question.id;
                 }).concat(fields);
             })
@@ -196,15 +197,19 @@
                 controller: function($scope, $mdDialog){
                     $scope.pages = application.pages;
 
-                    $scope.selectAllPage = function(page){
-                        angular.forEach(page, function(question){
+                    if ($scope.pages.length > 0) {
+                        $scope.page = $scope.pages[0];
+                    }
+
+                    $scope.selectAllQuestions = function(page){
+                        angular.forEach(page.questions, function(question){
                             question.picked = true;
                         })
                     }
 
                     $scope.save = function() {
-                        angular.forEach($scope.pages, function(questions){
-                            $filter('filter')(questions, {picked: true}).forEach(function(question){
+                        angular.forEach($scope.pages, function(page){
+                            $filter('filter')(page.questions, {picked: true}).forEach(function(question){
                                 question.selected = true;
                                 question.picked = false;
                             });
@@ -226,15 +231,15 @@
                         <md-dialog-content style=" height:600px; overflow:scroll">
                             <div class="md-dialog-content">
                                 <div>
-                                    <md-button class="md-raised md-primary" ng-click="selectAllPage(pages[page])">全選此頁</md-button>
+                                    <md-button class="md-raised md-primary" ng-click="selectAllQuestions(page)">全選此頁</md-button>
                                     <md-button ng-click="prePage(page)">上一頁</md-button>
                                     <md-input-container>
                                         <md-select placeholder="請選擇" ng-model="page">
-                                            <md-option ng-repeat="(key,page) in pages" ng-value="key" >{{$index+1}}</md-option>
+                                            <md-option ng-repeat="page in pages" ng-value="page">{{$index+1}}</md-option>
                                         </md-select>
                                     </md-input-container>
                                     <md-button ng-click="nextPage(page)">下一頁</md-button>
-                                    <applicable-column page="pages[page]"></applicable-column>
+                                    <applicable-column page="page"></applicable-column>
                                 </div>
                             </div>
                         </md-dialog-content>
@@ -263,9 +268,9 @@
             },
             template: `
                 <md-list>
-                    <md-list-item ng-repeat="question in page">
+                    <md-list-item ng-repeat="question in page.questions">
                         {{question.title}}
-                        <md-checkbox class="md-secondary" ng-hide="question.selected" ng-model="question.picked" aria-label="question"></md-checkbox>
+                        <md-checkbox class="md-secondary" ng-checked="question.selected" ng-model="question.picked" ng-disabled="question.selected" aria-label="question"></md-checkbox>
                     </md-list-item>
                 </md-list>
             `
