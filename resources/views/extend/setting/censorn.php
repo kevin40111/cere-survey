@@ -116,7 +116,7 @@
                     </td>
                     <td>
                         <md-button aria-label="加掛問卷" class="md-icon-button" ng-click="openBrowser(application.ext_book_id)">
-                            <md-icon md-menu-origin md-svg-icon="description" ng-style="{color: application.ext_book_locked }"></md-icon>
+                            <md-icon md-menu-origin md-svg-icon="description" ng-style="{color: application.book.lock ? 'red' : 'blue'}"></md-icon>
                         </md-button>
                     </td>
                     <td>{{ application.members.contact.title }}</td>
@@ -188,9 +188,6 @@
             $http({method: 'POST', url: 'getApplications', data:{}})
             .success(function(data, status, headers, config) {
                $scope.applications = data.applications;
-               for (var i in $scope.applications) {
-                   $scope.checkExtBookLocked($scope.applications[i]);
-               };
                $scope.sheetLoaded = true;
                $scope.getApplicationPages();
             })
@@ -207,7 +204,6 @@
             .success(function(data, status, headers, config) {
                 application.saving = false;
                 angular.extend(application, data.application);
-                $scope.checkExtBookLocked(application);
             })
             .error(function(e) {
                 console.log(e);
@@ -220,7 +216,6 @@
             .success(function(data, status, headers, config) {
                 application.saving = false;
                 angular.extend(application, data.application);
-                $scope.checkExtBookLocked(application);
             })
             .error(function(e) {
                 console.log(e);
@@ -381,16 +376,6 @@
             function reOpen() {
                 openDialog();
             }
-        };
-
-        $scope.checkExtBookLocked = function(application) {
-             $http({method: 'POST', url: 'checkExtBookLocked', data:{book_id:application.ext_book_id}})
-            .success(function(data, status, headers, config) {
-               application.ext_book_locked = data.ext_locked ? 'green' : 'gray';
-            })
-            .error(function(e){
-                console.log(e);
-            });
         };
 
         $scope.sendMail = function(email) {

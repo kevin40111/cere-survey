@@ -18,7 +18,7 @@ trait CensornTrait
 
     public function getApplications()
     {
-        $applications = $this->book->extendHook->applications->load('members.organizations.now', 'members.user', 'members.contact');
+        $applications = $this->book->extendHook->applications->load('members.organizations.now', 'members.user', 'members.contact', 'book');
 
         return ['applications' => $applications];
     }
@@ -73,12 +73,5 @@ trait CensornTrait
         $this->book->extendHook->applications->each(function($application){
             $application->delete();
         });
-    }
-
-    public function checkExtBookLocked()
-    {
-        $locked = SurveyORM\Book::find(Input::get('book_id'))->lock;
-
-        return  ['ext_locked' => $locked];
     }
 }
