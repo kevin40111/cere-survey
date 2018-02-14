@@ -1,18 +1,34 @@
 <md-content ng-controller="confirm" layout-align="start center" style="height: 100%">
     <div class="ui basic segment" style="x-overflow: auto">
-        <md-input-container>
-            <label>選擇頁數</label>
-            <md-select ng-model="currentPage" ng-change="getUsers(currentPage)">
-                <md-option ng-repeat="page in pages" value="{{page}}">{{page}}</md-option>
-            </md-select>
-        </md-input-container>
+        <div layout="row">
+            <div flex="85">
+                <md-input-container flex="85">
+                    <label>選擇頁數</label>
+                    <md-select ng-model="currentPage" ng-change="getUsers(currentPage)">
+                        <md-option ng-repeat="page in pages" value="{{page}}">{{page}}</md-option>
+                    </md-select>
+                </md-input-container>
 
-        <div class="ui label">第 {{ currentPage }} 頁<div class="detail">共 {{ lastPage }} 頁</div></div>
+                <div class="ui label">第 {{ currentPage }} 頁<div class="detail">共 {{ lastPage }} 頁</div></div>
 
-        <div class="ui basic mini buttons">
-            <div class="ui button" ng-click="prev()"><i class="icon angle left arrow"></i></div>
-            <div class="ui button" ng-click="next()"><i class="icon angle right arrow"></i></div>
+                <div class="ui basic mini buttons">
+                    <div class="ui button" ng-click="prev()"><i class="icon angle left arrow"></i></div>
+                    <div class="ui button" ng-click="next()"><i class="icon angle right arrow"></i></div>
+                </div>
+            </div>
+            <div  layout="row">
+                <md-input-container style="width:150px;">
+                    <md-icon md-svg-src="find-in-page" md-container-class="myclass"></md-icon>
+                    <label>審核狀態</label>
+                    <md-select ng-model="audit_status" placeholder="審核狀態" md-container-class="auditStatus">
+                        <md-option value="all" selected>查看全部</md-option>
+                        <md-option value="only_send">已送出</md-option>
+                        <md-option ng-repeat="(key,status) in auditStatus" ng-value="key" >{{status.title}}</md-option>
+                    </md-select>
+                </md-input-container>
+            </div>
         </div>
+
 
         <table class="ui very compact table">
             <thead>
@@ -25,11 +41,11 @@
                     </th>
                     <th width="140">姓名</th>
                     <th width="250">email</th>
-                    <th width="100">加掛審核</th>
-                    <th width="100">退件</th>
+                    <th width="140">申請者狀態</th>
                     <th width="100">檢視申請表</th>
-                    <th width="100">加掛問卷</th>
-                    <th>職稱</th>
+                    <th width="120">檢視加掛問卷</th>
+                    <th width="120">審核結果</th>
+                    <th width="180">職稱</th>
                     <th width="180">電話、傳真</th>
                 </tr>
             </thead>
@@ -93,36 +109,52 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="application in applications">
+                <tr ng-show="applications.length==0">
+                    <td colspan="11"><h4 class="md-headline" md-colors="{color:'grey-500'}">目前尚未有學校送出審核</md-display-1></h4>
+                </tr>
+                <tr ng-repeat="application in applications | filter:statusFilter(audit_status) |filter: search.organization.now.name |filter: search.username">
                     <td>{{ $index+1 }}</td>
                     <td>
                         <div style="max-height:150px;overflow-y:scroll">
-                            <div ng-repeat="organization in application.members.organizations">{{ organization.now.name }}({{ organization.now.id }})</div>
+                            <div ng-repeat="organization in application.member.organizations">{{ organization.now.name }}({{ organization.now.id }})</div>
                         </div>
                     </td>
-                    <td>{{ application.members.user.username }}</td>
+                    <td>{{ application.member.user.username }}</td>
                     <td>
-                        {{ application.members.user.email }}
-                        <div ng-if="application.members.user.email2">{{ application.members.user.email2 }}</div>
+                        {{ application.member.user.email }}
+                        <div ng-if="application.members.user.email2">{{ application.member.user.email2 }}</div>
+                    </td>
+                    <td md-colors="{color:getApplicationStatus(application).color}">
+                        {{getApplicationStatus(application).date}}<br>{{getApplicationStatus(application).title}}
                     </td>
                     <td class="center aligned">
-                        <md-checkbox ng-model="application.extension" ng-disabled="application.saving || application.reject" aria-label="加掛審核" ng-change="activeExtension(application)" ng-click="sendMail(application.members.user.email)"></md-checkbox>
-                    </td>
-                    <td class="center aligned">
-                        <md-checkbox ng-model="application.reject" ng-disabled="application.saving || application.extension" aria-label="退件" ng-change="reject(application)" ng-click="sendMail(application.members.user.email)"></md-checkbox>
-                    </td>
-                    <td class="center aligned">
-                        <md-button ng-click="openApplication(application.members.id)" aria-label="檢視申請表"><md-icon md-svg-icon="assignment"></md-icon></md-button>
-                    </td>
-                    <td>
-                        <md-button aria-label="加掛問卷" class="md-icon-button" ng-click="openBrowser(application.ext_book_id)">
-                            <md-icon md-menu-origin md-svg-icon="description" ng-style="{color: application.book.lock ? 'red' : 'blue'}"></md-icon>
+                        <md-button aria-label="檢視申請表" class="md-primary" ng-click="openApplication(application)" md-colors="{background:selectStatus[application.individual_status.apply].color}" >
+                            <div md-colors="{color:'grey-A100'}">{{selectStatus[application.individual_status.apply].title}}</div>
                         </md-button>
                     </td>
-                    <td>{{ application.members.contact.title }}</td>
                     <td>
-                        <div><i class="text telephone icon"></i>{{ application.members.contact.tel }}</div>
-                        <div><i class="fax icon"></i>{{ application.members.contact.fax }}</div>
+                        <div layout="row">
+                            <md-button aria-label="加掛問卷" class="md-primary" ng-click="openBrowser(application)" md-colors="{background:selectStatus[application.individual_status.book].color}">
+                                <div md-colors="{color:'grey-A100'}">{{selectStatus[application.individual_status.book].title}}</div>
+                            </md-button>
+                            <md-icon md-svg-src="{{application.book.lock ? 'lock' : 'unlock'}}" ng-style="{color: application.book.lock ? 'green' : 'red'}" aria-label="lockStatus ">
+                        </div>
+
+                    </td>
+                    <td>
+                        <div layout="row"  flex="noshrink">
+                            <md-input-container class="md-block">
+                                <label>審核結果</label>
+                                <md-select ng-model="application.status" md-colors="{color: auditStatus[application.status].color}" ng-disabled="application.individual_status.book==1 && application.individual_status.apply==1 ? false: true ">
+                                    <md-option ng-repeat="(key,status) in auditStatus" ng-value="key">{{status.title}}</md-option>
+                                </md-select>
+                            </md-input-container>
+                        </div>
+                    </td>
+                    <td>{{ application.member.contact.title }}</td>
+                    <td>
+                        <div><i class="text telephone icon"></i>{{ application.member.contact.tel }}</div>
+                        <div><i class="fax icon"></i>{{ application.member.contact.fax }}</div>
                     </td>
 
                 </tr>
@@ -130,28 +162,6 @@
         </table>
         <md-progress-linear md-mode="indeterminate" ng-disabled="sheetLoaded"></md-progress-linear>
     </div>
-     <md-sidenav class="md-sidenav-right" md-component-id="" md-is-open="emailSender" style="min-width:40%">
-        <md-toolbar class="md-theme-light">
-        <h1 class="md-toolbar-tools">通知信寄送</h1>
-      </md-toolbar>
-      <md-content layout-padding flex="100%">
-        <form class="ui form">
-            <div class="field">
-                <label>寄送對象</label>
-                <input type="text" ng-model="email" size="100" />
-            </div>
-            <div class="field">
-                <label>標題</label>
-                <input type="text" ng-model="title" size="100" />
-            </div>
-            <div class="field">
-                <label>內文</label>
-                <textarea ng-model="context" cols="100" rows="15"></textarea>
-            </div>
-            <md-button ng-click="sendStart()">送出</md-button>
-        </form>
-    </md-content>
-    </md-sidenav>
     </md-content>
 <script src="/packages/cere/survey/js/ng/ngBrowser.js"></script>
 <script>
@@ -161,7 +171,18 @@
         $scope.currentPage = 1;
         $scope.lastPage = 0;
         $scope.pages = [];
-        $scope.emailSender = false;
+        $scope.selectStatus = [
+            {'title': '未審核', 'color':'grey-400'},
+            {'title': '合格', 'color':'teal-900'},
+            {'title': '不合格', 'color':'red-400'}
+        ];
+
+        $scope.auditStatus = [
+            {'title': '未審核', 'color':'grey-400'},
+            {'title': '通過', 'color':'teal-900'},
+            {'title': '不通過', 'color':'red-400'},
+            {'title': '取消', 'color':'grey-800'}
+        ];
 
         $scope.$watch('lastPage', function(lastPage) {
             $scope.pages = [];
@@ -187,7 +208,7 @@
             $scope.sheetLoaded = false;
             $http({method: 'POST', url: 'getApplications', data:{}})
             .success(function(data, status, headers, config) {
-               $scope.applications = data.applications;
+               $scope.applications = $filter('filter')(data.applications, {step:3});
                $scope.sheetLoaded = true;
                $scope.getApplicationPages();
             })
@@ -198,29 +219,34 @@
 
         $scope.getApplications();
 
-        $scope.activeExtension = function(application) {
-            application.saving = true;
-            $http({method: 'POST', url: 'activeExtension', data:{application_id: application.id}})
-            .success(function(data, status, headers, config) {
-                application.saving = false;
-                angular.extend(application, data.application);
-            })
-            .error(function(e) {
-                console.log(e);
-            });
-        };
-
-        $scope.reject = function(application) {
-            application.saving = true;
-            $http({method: 'POST', url: 'reject', data:{application_id: application.id}})
-            .success(function(data, status, headers, config) {
-                application.saving = false;
-                angular.extend(application, data.application);
-            })
-            .error(function(e) {
-                console.log(e);
-            });
-        };
+        $scope.getApplicationStatus = function(application){
+            var status = {};
+            status.date = $filter('date')(Date.parse(application.updated_at), 'MM/dd/yyyy');
+            if(application.step == 3){
+                if(application.status == 3){
+                    status.title = '已取消';
+                    status.color = 'grey';
+                }else {
+                    status.title = '已送出';
+                    status.color = 'teal-700';
+                }
+            }
+            return status;
+        }
+        $scope.statusFilter = function(filter_audit){
+            return function(application){
+                if(filter_audit == 'all'){
+                    return application;
+                }else if(filter_audit == 'only_send'){
+                    return application.step == 3 && application.status != 3
+                }else{
+                    return application.status == filter_audit;
+                }
+            }
+        }
+        $scope.lockStatus = function(application){
+            return application.book.lock ? 'lock' : 'unlock';
+        }
 
         $scope.queryOrganizations = function(query) {
             if (!query) {
@@ -276,68 +302,44 @@
         $scope.getApplicationPages = function() {
             $http({method: 'POST', url: 'getApplicationPages', data:{}})
             .success(function(data, status, headers, config) {
-                $scope.currentPage = data.currentPage;
-                $scope.lastPage = data.lastPage;
+                $scope.currentPage = data.current_page;
+                $scope.lastPage = data.last_page;
             })
             .error(function(e){
                 console.log(e);
             });
         };
 
-        $scope.openApplication = function(member_id) {
+        $scope.openApplication = function(application) {
             $mdDialog.show({
-                controller: function($scope){
-                    $scope.columns = [];
-                    $scope.questions = [];
-                    $scope.edited = [];
-                    $scope.getAppliedOptions = function() {
-                        $http({method: 'POST', url: 'getAppliedOptions', data:{member_id: member_id}})
+                controller: function(scope){
+                    scope.individual_status = application.individual_status;
+                    scope.member = application.member;
+                    scope.selectStatus = $scope.selectStatus;
+
+                    scope.getAppliedOptions = function() {
+                        $http({method: 'POST', url: 'getAppliedOptions', data:{id: application.id}})
                         .success(function(data, status, headers, config) {
-                            $scope.setVar(data.columns, data.questions, data.edited);
+                            scope.columns = data.fields.mainList;
+                            scope.pages = $filter('filter')(data.fields.mainBookPages, function(page){return page.length>0});
                         })
                         .error(function(e){
                             console.log(e);
                         });
                     }
+                    scope.getAppliedOptions();
 
-                    function getSeleted() {
-                        var columns = $filter('filter')($scope.columns, {selected: true}).map(function(column) {
-                            return column.id;
-                        });
-                        var questions = $filter('filter')($scope.questions, {selected: true}).map(function(question) {
-                            return question.id;
-                        });
-                        return columns.concat(questions);
+                    scope.updateIndividualStatus = function(){
+                        scope.data = {id: application.id, data: application.individual_status}
+
+                        $http({method: 'POST', url: 'updateIndividualStatus', data: scope.data})
+                            .success(function(data, status, headers, config) {
+
+                            })
+                            .error(function(e){
+                                console.log(e);
+                            });
                     }
-
-                    $scope.setAppliedOptions = function() {
-                        var selected = getSeleted();
-                        $http({method: 'POST', url: 'setAppliedOptions', data:{selected: selected, book_id: $scope.columns[0].book_id}})
-                        .success(function(data, status, headers, config) {
-                            $scope.setVar(data.columns, data.questions, data.edited);
-                        })
-                        .error(function(e){
-                            console.log(e);
-                        });
-                    }
-
-                    $scope.resetApplication = function() {
-                        $http({method: 'POST', url: 'resetApplication', data:{}})
-                        .success(function(data, status, headers, config) {
-                            $scope.setVar(data.columns, data.questions, data.edited);
-                        })
-                        .error(function(e){
-                            console.log(e);
-                        });
-                    }
-
-                    $scope.setVar = function(columns, questions, edited) {
-                        $scope.columns = columns;
-                        $scope.questions = questions;
-                        $scope.edited = edited;
-                    }
-
-                    $scope.getAppliedOptions();
                 },
                 templateUrl: 'userApplication',
                 parent: angular.element(document.body),
@@ -345,32 +347,64 @@
             })
         };
 
-        $scope.openBrowser = function(book) {
-
+        $scope.openBrowser = function(application) {
             openDialog();
 
             function openDialog() {
-                $mdPanel.open({
-                    attachTo: angular.element(document.body),
+                $mdDialog.show({
+                    parent: angular.element(document.body),
                     controller: ['$scope', dialogController],
-                    controllerAs: 'ctrl',
                     template: `
-                        <md-content ng-cloak layout="column" layout-align="start center" class="demo-dialog-content">
-                            <node-browser ng-if="book" re-open="reOpen()" book="book"></node-browser>
-                        </md-content>
+                        <md-dialog aria-label="檢視加掛問卷" class="demo-dialog-example">
+                            <md-toolbar>
+                                <div class="md-toolbar-tools">
+                                    <h2>檢視加掛問卷</h2>
+                                </div>
+                            </md-toolbar>
+                            <md-dialog-content ng-cloak class="demo-dialog-content">
+                                <div layout="row" style="font-size:1em; margin-right:10px; color:grey" layout-align="center center">
+                                    <div ng-repeat="organization in member.organizations" layout="row">加掛學校: {{ organization.now.name }} </div>
+                                    <div>&emsp;承辦人: {{member.user.username}} </div>
+                                    <div>&emsp;Email: {{member.user.email}} </div>
+                                    <div>&emsp;電話: {{member.contact.tel}}</div>
+                                </div>
+                                <div layout="column" layout-align="start center">
+                                    <node-browser ng-if="book" re-open="reOpen()" book="book"></node-browser>
+                                </div>
+                            </md-dialog-content>
+                            <md-dialog-actions style="color:grey" layout="row">
+                                <md-button aria-label="加掛卷意見" class="md-primary"><md-icon md-svg-icon="assignment"></md-icon><span>加掛卷意見</span></md-button>
+                                <span flex="5"></span>
+                                <md-input-container class="md-block" style="width:150px;">
+                                    <label>加掛卷審核</label>
+                                    <md-select ng-model="individual_status.book" ng-change="updateIndividualStatus()">
+                                        <md-option ng-repeat="(key,status) in selectStatus" ng-value="key">{{status.title}}</md-option>
+                                    </md-select>
+                                </md-input-container>
+                            </md-dialog-actions>
+                        </md-dialog>
                     `,
-                    panelClass: 'demo-dialog-example',
-                    position: $mdPanel.newPanelPosition().absolute().center(),
-                    trapFocus: true,
-                    zIndex: 150,
                     clickOutsideToClose: true,
-                    clickEscapeToClose: true,
-                    hasBackdrop: true,
                 });
             }
 
             function dialogController(scope) {
-                   scope.book = book;
+                scope.book = application.book_id;
+                scope.member = application.member;
+                scope.individual_status = application.individual_status;
+                scope.selectStatus = $scope.selectStatus;
+
+                scope.updateIndividualStatus = function(){
+                    scope.data = {id: application.id, data: application.individual_status}
+
+                    $http({method: 'POST', url: 'updateIndividualStatus', data: scope.data})
+                        .success(function(data, status, headers, config) {
+
+                        })
+                        .error(function(e){
+                            console.log(e);
+                        });
+                }
             }
 
             function reOpen() {
@@ -378,32 +412,7 @@
             }
         };
 
-        $scope.sendMail = function(email) {
-            $scope.emailSender = !$scope.emailSender;
-            $scope.email = email;
-        };
-
-        $scope.sendStart = function() {
-            $http({method: 'POST', url: 'ajax/sendMail', data:{
-                email: $scope.email,
-                title: $scope.title,
-                context: $scope.context,
-            }})
-            .success(function(data, status, headers, config) {
-                $mdToast.show(
-                  $mdToast.simple()
-                    .textContent('送出成功!')
-                    .hideDelay(1000)
-                );
-            })
-            .error(function(e){
-                console.log(e);
-            });
-        };
     });
-
-
-
 </script>
 
 <style>
@@ -413,6 +422,17 @@
     box-shadow: 0 7px 8px -4px rgba(0, 0, 0, 0.2),
       0 13px 19px 2px rgba(0, 0, 0, 0.14),
       0 5px 24px 4px rgba(0, 0, 0, 0.12);
-    width: 500px;
+    width: 800px;
+}
+.demo-dialog-content {
+    height: 600px;
+    overflow: scroll;
+}
+.auditStatus md-select-menu{
+    max-height:100%;
+    margin-top:30px;
+}
+.auditStatus md-content{
+    max-height:100%;
 }
 </style>

@@ -41,8 +41,8 @@ trait CensornTrait
 
     public function getApplicationPages()
     {
-        $members_id = $this->book->extendHook->applications->load('members')->fetch('members.id')->all();
-        return \Plat\Member::with('user')->whereIn('id', $members_id)->paginate(10);
+        $member_id = $this->book->extendHook->applications->load('member')->fetch('member.id')->all();
+        return \Plat\Member::with('user')->whereIn('id', $member_id)->paginate(10);
     }
 
     public function activeExtension()
