@@ -3,6 +3,7 @@
 namespace Cere\Survey\Extend;
 
 use Input;
+use View;
 
 trait CensornTrait
 {
@@ -18,7 +19,7 @@ trait CensornTrait
 
     public function getApplications()
     {
-        $applications = $this->book->extendHook->applications->load('members.organizations.now', 'members.user', 'members.contact', 'book');
+        $applications = $this->book->extendHook->applications->load('member.organizations.now', 'member.user', 'member.contact', 'book');
 
         return ['applications' => $applications];
     }

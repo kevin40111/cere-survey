@@ -104,7 +104,9 @@ class SurveyFile extends CommFile
 
         $book->save();
 
-        ApplicationRepository::create($this->book->extendHook, $book->id);
+        $member = $this->user->members()->logined()->orderBy('logined_at', 'desc')->first();
+
+        ApplicationRepository::create($this->book->extendHook, $book->id, $member->id);
 
         return Redirect::to($doc['link']);
     }

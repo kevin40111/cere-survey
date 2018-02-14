@@ -18,9 +18,9 @@ class ApplicationRepository
         $this->application = $application;
     }
 
-    public static function create($hook, $book_id)
+    public static function create($hook, $book_id, $member_id)
     {
-        $application = $hook->applications()->save(Application::create(['book_id' => $book_id]));
+        $application = $hook->applications()->save(Application::create(['book_id' => $book_id, 'member_id' => $member_id]));
 
         return new self($application);
     }

@@ -18,9 +18,9 @@ class Application extends Eloquent {
 
     public $timestamps = true;
 
-    protected $fillable = array('book_id', 'extension', 'status', 'fields', 'updated_at', 'step', 'created_at', 'deleted_at', 'deleted_by');
+    protected $fillable = array('book_id', 'member_id', 'extension', 'status', 'fields', 'updated_at', 'step', 'created_at', 'deleted_at', 'deleted_by');
 
-    protected $attributes = ['extension' => false, 'reject' => false];
+    protected $attributes = ['extension' => false, 'status' => 0];
 
     public function book()
     {
@@ -32,7 +32,7 @@ class Application extends Eloquent {
         return $this->belongsTo(Hook::class);
     }
 
-    public function members()
+    public function member()
     {
         return $this->belongsTo(Member::class);
     }
