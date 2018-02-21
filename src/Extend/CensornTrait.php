@@ -75,18 +75,20 @@ trait CensornTrait
     {
         $application = $this->hook->applications->find(Input::get('id'));
 
-        $columns = $this->book->sheet->tables->first()->columns->filter(function ($column) use ($application) {
-            return in_array($column->id, $application->fields);
-        })->toArray();
+        $fieldFile = \Files::find($this->book->auth['fieldFile_id']);
+
+        $columns = !is_null($fieldFile) ? $fieldFile->sheets->first()->tables->first()->columns->each(function ($column) use ($application) {
+            $column->selected = in_array($column->id, $application->fields);
+        }) : [];
 
         $questions =$this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($application){
             $questions = $page->getQuestions();
 
-            $questions = array_filter($questions, function($question) use ($application){
-                return in_array($question['id'], $application->fields);
-            });
+            foreach ($questions as &$question) {
+                $question['selected'] = in_array($question['id'], $application->fields);
+            }
 
-            array_push($carry, $questions);
+            array_push($carry, ['questions' => $questions]);
 
             return $carry;
         }, []);
