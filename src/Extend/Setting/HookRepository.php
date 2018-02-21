@@ -2,47 +2,44 @@
 
 namespace Cere\Survey\Extend\Setting;
 
-use Cere\Survey\Eloquent as SurveyORM;
 use Cere\Survey\Eloquent\Extend\Hook;
-use Auth;
+use Files;
 
 class HookRepository
 {
-    function __construct($book)
+    function __construct($hook)
     {
-        $this->book = $book;
+        $this->hook = $hook;
     }
 
-    public static function book($book)
+    public static function instance($hook)
     {
-        return new self($book);
+        return new self($hook);
+    }
+
+    public static function create($book, $file)
+    {
+        $book->extendHook()->save(new Hook(['title' => $book->title, 'file_id' => $file->id]));
     }
 
     public function setApplicableOptions($options)
     {
-        $extendHook = $this->book->extendHook;
-        if (! isset($extendHook)) {
-            $this->book->extendHook()->save(new Hook(['options' => $options]));
-        } else {
-            $this->book->extendHook->update(['options' => $options]);
-        }
+        $this->hook->update(['options' => $options]);
     }
 
     public function getApplicableOptions()
     {
-        $file = \Files::find($this->book->auth['fieldFile_id']);
+        $file = \Files::find($this->hook->book->auth['fieldFile_id']);
 
-        $hook = $this->book->extendHook ?: new Hook;
-
-        $mainListFields = !is_null($file) ? $file->sheets->first()->tables->first()->columns->each(function ($column) use ($hook) {
-            $column->selected = in_array($column->id, $hook->options['fields']);
+        $mainListFields = !is_null($file) ? $file->sheets->first()->tables->first()->columns->each(function ($column) {
+            $column->selected = in_array($column->id, $this->hook->options['fields']);
         }) : [];
 
-        $mainBookPages = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($hook) {
+        $mainBookPages = $this->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
             $questions = $page->getQuestions();
 
             foreach ($questions as &$question) {
-                $question["selected"] = in_array($question['id'], $hook->options['fields']);
+                $question["selected"] = in_array($question['id'], $this->hook->options['fields']);
             }
 
             array_push($carry, ['questions' => $questions]);
@@ -56,26 +53,19 @@ class HookRepository
                 'mainList' => $mainListFields,
             ],
             'limit' => [
-                'mainBook' => $hook->options['columnsLimit'],
-                'mainList' => $hook->options['fieldsLimit'],
+                'mainBook' => $this->hook->options['columnsLimit'],
+                'mainList' => $this->hook->options['fieldsLimit'],
             ],
         ];
     }
 
     public function getConsent()
     {
-        $extendHook = $this->book->extendHook ?: new Hook;
-
-        return ['consent' => $extendHook->consent];
+        return ['consent' => $this->hook->consent];
     }
 
     public function setConsent($consent)
     {
-        $extendHook = $this->book->extendHook;
-        if (! isset($extendHook)) {
-            $this->book->extendHook()->save(new Hook(['consent' => $consent]));
-        } else {
-            $this->book->extendHook->update(['consent' => $consent]);
-        }
+        $this->hook->update(['consent' => $consent]);
     }
 }

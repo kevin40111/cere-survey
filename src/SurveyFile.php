@@ -10,11 +10,10 @@ use Plat\Files\CommFile;
 use Cere\Survey\SurveyEditor;
 use Cere\Survey\Field\SheetRepository;
 use Cere\Survey\Field\FieldComponent;
-use Cere\Survey\Extend\ApplySettingTrait;
-use Cere\Survey\Extend\CensornTrait;
 use Plat\Files\FolderComponent;
-use Cere\Survey\Extend\Apply\ApplicationRepository;
+use Cere\Survey\Extend\Setting\HookRepository;
 use ShareFile;
+use Struct_file;
 use Redirect;
 
 class SurveyFile extends CommFile
@@ -22,10 +21,6 @@ class SurveyFile extends CommFile
     use SurveyEditor {
         SurveyEditor::__construct as private __SurveyEditorConstruct;
     }
-
-    use ApplySettingTrait;
-
-    use CensornTrait;
 
     function __construct(Files $file, User $user)
     {
@@ -53,11 +48,9 @@ class SurveyFile extends CommFile
     public static function tools()
     {
         return [
-            ['name' => 'confirm', 'title' => '加掛審核', 'method' => 'confirm', 'icon' => 'list'],
-            ['name' => 'confirm', 'title' => '登入設定', 'method' => 'loginCondition', 'icon' => 'list'],
-            ['name' => 'extendHook', 'title' => '加掛設定', 'method' => 'extendHook', 'icon' => 'list'],
+            ['name' => 'loginCondition', 'title' => '登入設定', 'method' => 'loginCondition', 'icon' => 'list'],
             ['name' => 'browser', 'title' => '題目瀏覽', 'method' => 'browser', 'icon' => 'list'],
-            // ['name' => 'surveyTime', 'title' => '設定時間', 'method' => 'surveyTime', 'icon' => 'alarm'],
+            ['name' => 'createHook', 'title' => '啟用加掛', 'method' => 'createHook', 'icon' => 'link'],
         ];
     }
 
@@ -77,38 +70,6 @@ class SurveyFile extends CommFile
         $this->book->save();
 
         return $this;
-    }
-
-    public function contract()
-    {
-        return 'survey::extend.apply.contract';
-    }
-
-    public function agreeContract()
-    {
-        Input::replace(['fileInfo' => ['type' => 31, 'title' => $this->file->title . ' 加掛題本']]);
-
-        $folderComponent = new FolderComponent($this->doc->folder->isFile, $this->user);
-
-        $folderComponent->setDoc($this->doc->folder);
-
-        $doc = $folderComponent->createComponent()['doc'];
-
-        $component = ShareFile::find($doc['id']);
-
-        $book = $component->isFile->book()->create(['title' => $component->isFile->title, 'lock' => false]);
-
-        $fieldComponent = FieldComponent::createComponent(['title' => $component->isFile->title], $this->user);
-
-        $book->sheet()->associate($fieldComponent->file->sheets()->first());
-
-        $book->save();
-
-        $member = $this->user->members()->logined()->orderBy('logined_at', 'desc')->first();
-
-        ApplicationRepository::create($this->book->extendHook, $book->id, $member->id);
-
-        return Redirect::to($doc['link']);
     }
 
     public function queryOrganizations()
@@ -159,5 +120,29 @@ class SurveyFile extends CommFile
     public function exportSheet()
     {
         SheetRepository::target($this->book->sheet)->exportAllRows();
+    }
+
+    public function createHook()
+    {
+        if (! $this->book->extendHook) {
+            Input::replace(['fileInfo' => ['type' => 32, 'title' => $this->file->title . ' 加掛設定']]);
+
+            $folderComponent = new FolderComponent($this->doc->folder->isFile, $this->user);
+
+            $folderComponent->setDoc($this->doc->folder);
+
+            $doc = $folderComponent->createComponent()['doc'];
+
+            $component = ShareFile::find($doc['id']);
+
+            HookRepository::create($this->book, $component->isFile);
+        } else {
+            $component = ShareFile::where('file_id', $this->book->extendHook->file->id)->where('target', 'user')->where('target_id', $this->user->id)->first();
+
+            $doc = Struct_file::open($component);
+        }
+
+
+        return Redirect::to($doc['link']);
     }
 }

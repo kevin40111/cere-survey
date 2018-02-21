@@ -3,6 +3,7 @@
 namespace Cere\Survey\Extend\Apply;
 
 use Cere\Survey\Eloquent\Extend\Application;
+use Cere\Survey\Field\FieldComponent;
 
 class ApplicationRepository
 {
@@ -18,9 +19,15 @@ class ApplicationRepository
         $this->application = $application;
     }
 
-    public static function create($hook, $book_id, $member_id)
+    public static function create($hook, $book, $member)
     {
-        $application = $hook->applications()->save(Application::create(['book_id' => $book_id, 'member_id' => $member_id]));
+        $fieldComponent = FieldComponent::createComponent(['title' => $book->title], $member->user);
+
+        $book->sheet()->associate($fieldComponent->file->sheets()->first());
+
+        $book->save();
+
+        $application = $hook->applications()->save(Application::create(['book_id' => $book->id, 'member_id' => $member->id]));
 
         return new self($application);
     }

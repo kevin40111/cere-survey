@@ -14,21 +14,21 @@ trait ApplySettingTrait
 
     public function setApplicableOptions()
     {
-        HookRepository::book($this->book)->setApplicableOptions(Input::get('selecteds'));
+        HookRepository::instance($this->hook)->setApplicableOptions(Input::get('selecteds'));
     }
 
     public function getApplicableOptions()
     {
-        return HookRepository::book($this->book)->getApplicableOptions();
+        return HookRepository::instance($this->hook)->getApplicableOptions();
     }
 
     public function getConsent()
     {
-        return HookRepository::book($this->book)->getConsent();
+        return HookRepository::instance($this->hook)->getConsent();
     }
 
     public function setConsent()
     {
-        return HookRepository::book($this->book)->setConsent(Input::get('consent'));
+        return HookRepository::instance($this->hook)->setConsent(Input::get('consent'));
     }
 }

@@ -4,6 +4,7 @@ namespace Cere\Survey\Eloquent\Extend;
 
 use Eloquent;
 use Cere\Survey\Eloquent\Book;
+use Files;
 
 class Hook extends Eloquent {
 
@@ -13,7 +14,7 @@ class Hook extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = ['options', 'consent'];
+    protected $fillable = ['title', 'file_id', 'options', 'consent'];
 
     public function applications()
     {
@@ -23,6 +24,11 @@ class Hook extends Eloquent {
     public function book()
     {
         return $this->belongsTo(Book::class);
+    }
+
+    public function file()
+    {
+        return $this->belongsTo(Files::class, 'file_id');
     }
 
     public function getOptionsAttribute($options)
