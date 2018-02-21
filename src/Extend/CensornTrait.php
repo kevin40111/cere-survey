@@ -69,6 +69,36 @@ trait CensornTrait
         return $this->getAppliedOptions();
     }
 
+    public function getAppliedOptions()
+    {
+        $application = $this->book->extendHook->applications->find(Input::get('id'));
+
+        $columns = $this->book->sheet->tables->first()->columns->filter(function ($column) use ($application) {
+            return in_array($column->id, $application->fields);
+        })->toArray();
+
+        $questions =$this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($application){
+            $questions = $page->getQuestions();
+
+            $questions = array_filter($questions, function($question) use ($application){
+                return in_array($question['id'], $application->fields);
+            });
+
+            array_push($carry, $questions);
+
+            return $carry;
+        }, []);
+
+        return [
+            'application' => $application->load('member.user'),
+            'fields' => [
+                'mainBookPages' => $questions,
+                'mainList' => $columns,
+            ],
+        ];
+
+    }
+
     private function deleteRelatedApplications()
     {
         $this->book->extendHook->applications->each(function($application){
