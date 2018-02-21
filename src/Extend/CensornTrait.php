@@ -105,4 +105,15 @@ trait CensornTrait
             $application->delete();
         });
     }
+
+    public function updateIndividualStatus()
+    {
+        $application = $this->book->extendHook->applications->find(Input::get('id'));
+
+        $application->individual_status = Input::get('data');
+
+        $application->save();
+
+        return $application;
+    }
 }
