@@ -7,11 +7,13 @@
                 <span class="md-title">完成的加掛問卷</span>
             </md-card-header-text>
         </md-card-header>
-        <md-content>
-            <md-list>
-                <survey-page ng-repeat="(key,page) in pages" page="page" index="$index"></survey-page>
-            </md-list>
-        </md-content>
+        <md-card-content>
+            <survey-page ng-repeat="(key,page) in pages" page="page" index="$index"></survey-page>
+        </md-card-content>
+        <md-card-actions layout="row">
+            <md-button class="md-raised md-primary" ng-click="changeStep('preStep')" style="width: 50%;height: 50px;font-size: 18px">返回編輯問卷</md-button>
+            <md-button class="md-raised md-primary" ng-click="changeStep('nextStep')" style="width: 50%;height: 50px;font-size: 18px">下一步</md-button>
+        </md-card-actions>
     </md-card>
 </div>
 </md-content>
@@ -32,6 +34,16 @@ app.controller('book', function ($scope, $http, $sce){
     $scope.trustAsHtml = function(string) {
         return $sce.trustAsHtml(string);
     };
+
+    $scope.changeStep = function(method) {
+        $http({method: 'POST', url: method, data:{}})
+        .success(function(data, status, headers, config) {
+            location.reload();
+        })
+        .error(function(e){
+            console.log(e);
+        });
+    }
 });
 app.directive('surveyPage', function(){
     return {
@@ -66,7 +78,6 @@ app.directive('surveyPage', function(){
                     </td>
                 </tr>
             </table>
-            <md-divider></md-divider>
         <div>
         `,
         controller: function($scope){
