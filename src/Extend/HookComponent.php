@@ -12,6 +12,7 @@ use Plat\Files\FolderComponent;
 use Cere\Survey\Extend\Apply\ApplicationRepository;
 use Input;
 use Redirect;
+use RequestFile;
 
 class HookComponent extends CommFile
 {
@@ -72,6 +73,33 @@ class HookComponent extends CommFile
 
         ApplicationRepository::create($this->hook, $book, $member);
 
+        $this->doc->requesteds()->where('created_by', $this->user->id)->delete();
+
+        RequestFile::updateOrCreate([
+            'target' => 'user',
+            'target_id' => 1,
+            'doc_id' => $component->id,
+            'created_by' => $this->user->id,
+            'disabled' => false,
+        ], [
+            'description' => $component->isFile->title . ' 加掛申請'
+        ]);
+
         return Redirect::to($doc['link']);
+    }
+
+    public function invite()
+    {
+        foreach (Input::get('users') as $user) {
+            RequestFile::updateOrCreate([
+                'target' => 'user',
+                'target_id' => $user['id'],
+                'doc_id' => $this->doc->id,
+                'created_by' => $this->user->id,
+                'disabled' => false,
+            ], [
+                'description' => $this->hook->book->title . ' 加掛邀請'
+            ]);
+        }
     }
 }
