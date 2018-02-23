@@ -137,7 +137,7 @@
                             <md-button aria-label="加掛問卷" class="md-primary" ng-click="openBrowser(application)" md-colors="{background:selectStatus[application.individual_status.book].color}">
                                 <div md-colors="{color:'grey-A100'}">{{selectStatus[application.individual_status.book].title}}</div>
                             </md-button>
-                            <md-icon md-svg-src="{{application.book.lock ? 'lock' : 'unlock'}}" ng-style="{color: application.book.lock ? 'green' : 'red'}" aria-label="lockStatus ">
+                            <md-icon ng-style="{color: application.book.lock ? 'green' : 'red'}" aria-label="lockStatus">lock</md-icon>
                         </div>
 
                     </td>
@@ -173,7 +173,7 @@
         $scope.pages = [];
         $scope.selectStatus = [
             {'title': '未審核', 'color':'grey-400'},
-            {'title': '合格', 'color':'teal-900'},
+            {'title': '合格', 'color':'teal-800'},
             {'title': '不合格', 'color':'red-400'}
         ];
 
@@ -373,7 +373,6 @@
                                 </div>
                             </md-dialog-content>
                             <md-dialog-actions style="color:grey" layout="row">
-                                <md-button aria-label="加掛卷意見" class="md-primary"><md-icon md-svg-icon="assignment"></md-icon><span>加掛卷意見</span></md-button>
                                 <span flex="5"></span>
                                 <md-input-container class="md-block" style="width:150px;">
                                     <label>加掛卷審核</label>

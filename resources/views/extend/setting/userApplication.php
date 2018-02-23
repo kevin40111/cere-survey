@@ -38,7 +38,7 @@
         </md-card>
     </md-dialog-content>
     <md-dialog-actions style="color:grey" layout="row">
-        <md-button aria-label="申請表意見" class="md-primary"><md-icon md-svg-icon="assignment"></md-icon><span>申請表意見</span></md-button>
+        <!-- <md-button aria-label="申請表意見" class="md-primary"><md-icon md-svg-icon="assignment"></md-icon><span>申請表意見</span></md-button> -->
         <span flex="5"></span>
         <md-input-container class="md-block" style="width:150px;">
             <label>申請表審核</label>
