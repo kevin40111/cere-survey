@@ -47,6 +47,7 @@
                     <th width="140">申請者狀態</th>
                     <th width="100">檢視申請表</th>
                     <th width="120">檢視加掛問卷</th>
+                    <th width="100">進入加掛題<br>判斷條件</th>
                     <th width="120">審核結果</th>
                 </tr>
             </thead>
@@ -107,6 +108,7 @@
                     <th></th>
                     <th></th>
                     <th></th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -146,6 +148,7 @@
                             <md-icon ng-style="{color: application.book.lock ? 'green' : 'red'}">{{application.book.lock ? 'lock': 'lock_open'}}</md-icon>
                         </div>
                     </td>
+                    <td><md-button ng-click="LoginConditions(application)" aria-label="進入加掛題判斷條件"><md-icon md-svg-icon="gallery"></md-icon></md-button></td>
                     <td>
                         <div layout="row"  flex="noshrink">
                             <md-input-container class="md-block">
@@ -419,7 +422,195 @@
             }
         };
 
-    });
+    $scope.LoginConditions = function(application){
+        $mdDialog.show({
+            parent: angular.element(document.body),
+            controller: function(scope, $mdDialog){
+
+                $http({method:'post', url:'getApplicationHangingRule', data:{id:application.id}})
+                .success(function(data, status, headers, config){
+                    scope.rule = data.rule;
+                    scope.fields = data.fields;
+                })
+                .error(function(e){
+                    console.log(e);
+                })
+                scope.compareOperators = [
+                    {key: ' && ', title: '而且'},
+                    {key: ' || ', title: '或者'}
+                ];
+
+                scope.close = function(){
+                    $mdDialog.hide();
+                }
+
+                scope.saveRule = function(){
+                    $http({method:'post', url:'setApplicationHangingRule', data:{id:application.id, rule:scope.rule.expressions}})
+                    .success(function(data, status, headers, config){
+                        console.log(data);
+                    })
+                    .error(function(e){
+                        console.log(e);
+                    })
+                }
+
+                scope.deleteRule = function(){
+                    scope.rule.expressions = [{"conditions":[{'compareType':'question'}]}];
+                    $http({method:'post', url:'setApplicationHangingRule', data:{id:application.id, rule: scope.rule.expressions}})
+                    .success(function(data, status, headers, config){
+                    })
+                    .error(function(e){
+                        console.log(e);
+                    })
+                }
+
+                scope.removeCondition = function(index, expression){
+                    expression.conditions.splice(index,1);
+                    if(index==0 && expression.conditions[0]){
+                        delete expression.conditions[0].compareOperator;
+                    }
+                }
+
+                scope.createCondition = function(index, expression){
+                    expression.conditions.splice(index+1, 0, {'compareType':'question'});
+                }
+
+                scope.createExpression = function(index, compareOperator){
+                    scope.rule.expressions.splice(index+1, 0, {"compareLogic":compareOperator, "conditions":[{'compareType':'question'}]});
+                }
+
+                scope.removeExpression = function(index){
+                    scope.rule.expressions.splice(index,1);
+                    if(index == 0 && scope.rule.expressions[0]){
+                        delete scope.rule.expressions[0].compareLogic;
+                    }
+                }
+            },
+
+            template: `
+                <md-dialog aria-label="進入加掛題本判斷條件" class="demo-dialog-example">
+                    <md-toolbar md-scroll-shrink>
+                        <div class="md-toolbar-tools">
+                            <h2>進入加掛題本判斷條件</h2>
+                            <div flex></div>
+                            <md-button aria-label="關閉" ng-click="close()">關閉</md-button>
+                            <md-button aria-label="儲存設定" md-colors="{background: 'default-blue'}" style="float:right" ng-click="saveRule();">
+                                儲存設定
+                            </md-button>
+                            <md-button aria-label="刪除設定" md-colors="{background: 'default-blue'}" style="float:right" ng-click="deleteRule()">
+                                刪除設定
+                            </md-button>
+                        </div>
+                    </md-toolbar>
+                    <md-dialog-content style="height:800px;">
+                        <md-card style="margin:10px;" ng-repeat="expression in rule.expressions">
+                            <md-card-header md-colors="{background: 'default-indigo'}">
+                                <div flex layout="row" layout-align="start center">
+                                    <div ng-if="!expression.compareLogic" style="margin: 0 0 0 0px">
+                                        請選擇名單，作為加掛的判斷條件
+                                    </div>
+                                    <div ng-if="expression.compareLogic">{{ (compareOperators | filter:{key:expression.compareLogic})[0].title }} </div>
+                                    <div  style="margin: 0 0 0 0px">
+                                    </div>
+                                    <span flex></span>
+                                    <div>
+                                        <md-button class="md-icon-button" aria-label="刪除" ng-click="removeExpression($index)">
+                                            <md-icon md-colors="{color: 'default-grey-A100'}" md-svg-icon="delete"></md-icon>
+                                        </md-button>
+                                    </div>
+                                </div>
+                            </md-card-header>
+                            <md-card-content>
+                                <login-condition ng-repeat="(key,condition) in expression.conditions" condition="condition" first="$first" fields="fields" remove-condition="removeCondition(key, expression)" create-condition="createCondition(key,expression)"></login-condition>
+                            </md-card-content>
+                            <md-card-actions>
+                                <md-fab-toolbar md-direction="right">
+                                    <md-fab-trigger class="align-with-text">
+                                        <md-button aria-label="menu" class="md-fab md-primary">
+                                            <md-icon md-svg-icon="list"></md-icon>
+                                        </md-button>
+                                    </md-fab-trigger>
+                                    <md-toolbar>
+                                        <md-fab-actions class="md-toolbar-tools" >
+                                            <md-button aria-label="邏輯" ng-repeat="compareOperator in compareOperators" ng-click="createExpression($index, compareOperator.key)">
+                                                {{compareOperator.title}}
+                                            </md-button>
+                                        </md-fab-actions>
+                                    </md-toolbar>
+                                </md-fab-toolbar>
+                            </md-card-actions>
+                        </md-card>
+                    </md-dialog-content>
+                </md-dialog>
+            `,
+            clickOutsideToClose: true,
+            fullscreen: $scope.customFullscreen
+        });
+    }
+});
+
+app.directive("loginCondition", function(){
+    return {
+        restrict: 'E',
+        scope: {
+            condition:'=',
+            first:'=',
+            fields:'=',
+            removeCondition:'&removeCondition',
+            createCondition:'&'
+        },
+        controller: function($scope){
+            $scope.compareBooleans = [
+                {key: ' > ', title: '大於'},
+                {key: ' < ', title: '小於'},
+                {key: ' == ', title: '等於'},
+                {key: ' != ', title: '不等於'}
+            ];
+
+            $scope.compareOperators = [
+                {key: ' && ', title: '而且'},
+                {key: ' || ', title: '或者'}
+            ];
+        },
+
+        template:`
+            <div layout="row">
+                <div layout="row">
+                    <md-input-container ng-if="!first">
+                        <label>+</label>
+                        <md-select ng-model="condition.compareOperator">
+                            <md-option ng-repeat="compareOperator in compareOperators" ng-value="compareOperator.key">{{compareOperator.title}}</md-option>
+                        </md-select>
+                    </md-input-container>
+                    <md-input-container>
+                        <label>選擇名單</label>
+                        <md-select ng-model="condition.question">
+                            <md-option ng-repeat="field in fields" ng-value="field.id">{{field.node.title}}--{{field.title}}</md-option>
+                        </md-select>
+                    </md-input-container>
+                    <md-input-container>
+                        <label>比較邏輯</label>
+                        <md-select ng-model="condition.logic">
+                            <md-option ng-repeat="compareBoolean in compareBooleans" ng-value="compareBoolean.key">{{compareBoolean.title}}</md-option>
+                        </md-select>
+                    </md-input-container>
+                    <md-input-container>
+                        <label>數值</label>
+                        <input ng-model="condition.value">
+                    </md-input-container>
+                    <md-input-container>
+                        <md-button aria-label="刪除" class="md-icon-button" ng-click="removeCondition()">
+                            <md-icon md-svg-icon="delete"></md-icon>
+                        </md-button>
+                        <md-button aria-label="新增" class="md-icon-button" ng-click="createCondition()">
+                            <md-icon md-svg-icon="add-circle-outline"></md-icon>
+                        </md-button>
+                    <md-input-container>
+                </div>
+            </div>
+        `
+    }
+})
 </script>
 
 <style>

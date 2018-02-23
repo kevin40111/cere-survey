@@ -109,6 +109,6 @@ trait CensornTrait
 
         RuleRepository::target($application->book)->saveExpressions(Input::get('rule'), 'direction', $page->id);
 
-        return ['rule' => RuleRepository::target($application->book)->getRule];
+        return ['rule' => RuleRepository::target($application->book)->getRule()];
     }
 }
