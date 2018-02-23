@@ -18,7 +18,7 @@
             </div>
             <div  layout="row">
                 <md-input-container style="width:150px;">
-                    <md-icon md-svg-src="find-in-page" md-container-class="myclass"></md-icon>
+                    <md-icon md-svg-src="find-in-page"></md-icon>
                     <label>審核狀態</label>
                     <md-select ng-model="audit_status" placeholder="審核狀態" md-container-class="auditStatus">
                         <md-option value="all" selected>查看全部</md-option>
@@ -112,7 +112,7 @@
                 <tr ng-show="applications.length==0">
                     <td colspan="11"><h4 class="md-headline" md-colors="{color:'grey-500'}">目前尚未有學校送出審核</md-display-1></h4>
                 </tr>
-                <tr ng-repeat="application in applications | filter:statusFilter(audit_status) |filter: search.organization.now.name |filter: search.username">
+                <tr ng-repeat="application in applications | filter:statusFilter(audit_status) |filter: search.organization.now.name |filter: search.username |filter: search.email">
                     <td>{{ $index+1 }}</td>
                     <td>
                         <div style="max-height:150px;overflow-y:scroll">
@@ -124,8 +124,8 @@
                         {{ application.member.user.email }}
                         <div ng-if="application.members.user.email2">{{ application.member.user.email2 }}</div>
                     </td>
-                    <td md-colors="{color:getApplicationStatus(application).color}">
-                        {{getApplicationStatus(application).date}}<br>{{getApplicationStatus(application).title}}
+                    <td md-colors="{color:application.status_color}">
+                        {{application.status_date}}<br>{{application.status_title}}
                     </td>
                     <td class="center aligned">
                         <md-button aria-label="檢視申請表" class="md-primary" ng-click="openApplication(application)" md-colors="{background:selectStatus[application.individual_status.apply].color}" >
@@ -137,7 +137,7 @@
                             <md-button aria-label="加掛問卷" class="md-primary" ng-click="openBrowser(application)" md-colors="{background:selectStatus[application.individual_status.book].color}">
                                 <div md-colors="{color:'grey-A100'}">{{selectStatus[application.individual_status.book].title}}</div>
                             </md-button>
-                            <md-icon ng-style="{color: application.book.lock ? 'green' : 'red'}" aria-label="lockStatus">lock</md-icon>
+                            <md-icon ng-style="{color: application.book.lock ? 'green' : 'red'}">{{application.book.lock ? 'lock': 'lock_open'}}</md-icon>
                         </div>
 
                     </td>
@@ -211,6 +211,7 @@
                $scope.applications = $filter('filter')(data.applications, {step:3});
                $scope.sheetLoaded = true;
                $scope.getApplicationPages();
+               $scope.getApplicationStatus($scope.applications);
             })
             .error(function(e){
                 console.log(e);
@@ -219,19 +220,17 @@
 
         $scope.getApplications();
 
-        $scope.getApplicationStatus = function(application){
-            var status = {};
-            status.date = $filter('date')(Date.parse(application.updated_at), 'MM/dd/yyyy');
-            if(application.step == 3){
-                if(application.status == 3){
-                    status.title = '已取消';
-                    status.color = 'grey';
-                }else {
-                    status.title = '已送出';
-                    status.color = 'teal-700';
+        $scope.getApplicationStatus = function(applications){
+            angular.forEach(applications, function(value, key){
+                value.status_date = $filter('date')(Date.parse(value.updated_at), 'MM/dd/yyyy');
+                if(value.status == 3){
+                    value.status_title = '已取消';
+                    value.status_color = 'grey';
+                }else{
+                    value.status_title = '已送出';
+                    value.status_color = 'teal-700';
                 }
-            }
-            return status;
+            })
         }
         $scope.statusFilter = function(filter_audit){
             return function(application){
@@ -243,9 +242,6 @@
                     return application.status == filter_audit;
                 }
             }
-        }
-        $scope.lockStatus = function(application){
-            return application.book.lock ? 'lock' : 'unlock';
         }
 
         $scope.queryOrganizations = function(query) {
