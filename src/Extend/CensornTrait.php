@@ -21,14 +21,14 @@ trait CensornTrait
 
     public function getApplications()
     {
-        $applications = $this->book->extendHook->applications->load('member.organizations.now', 'member.user', 'member.contact', 'book');
+        $applications = $this->hook->applications->load('member.organizations.now', 'member.user', 'member.contact', 'book');
 
         return ['applications' => $applications];
     }
 
     public function reject()
     {
-        $application = $this->book->extendHook->applications()->where('id', Input::get('application_id'))->first();
+        $application = $this->hook->applications()->where('id', Input::get('application_id'))->first();
 
         if (!$this->application->reject) {
             SurveyORM\Book::find($this->application->ext_book_id)->update(array('lock' => false));
@@ -43,14 +43,14 @@ trait CensornTrait
 
     public function getApplicationPages()
     {
-        $member_id = $this->book->extendHook->applications->load('member')->fetch('member.id')->all();
+        $member_id = $this->hook->applications->load('member')->fetch('member.id')->all();
         return \Plat\Member::with('user')->whereIn('id', $member_id)->paginate(10);
     }
 
     public function activeExtension()
     {
         $application_id = Input::get('application_id');
-        $application = $this->book->extendHook->applications()->where('id', $application_id)->first();
+        $application = $this->hook->applications()->where('id', $application_id)->first();
         if (!$application->reject) {
             SurveyORM\Book::find($application->ext_book_id)->update(array('lock' => true));
         }
@@ -73,7 +73,7 @@ trait CensornTrait
 
     public function getAppliedOptions()
     {
-        $application = $this->book->extendHook->applications->find(Input::get('id'));
+        $application = $this->hook->applications->find(Input::get('id'));
 
         $columns = $this->book->sheet->tables->first()->columns->filter(function ($column) use ($application) {
             return in_array($column->id, $application->fields);
@@ -103,14 +103,14 @@ trait CensornTrait
 
     private function deleteRelatedApplications()
     {
-        $this->book->extendHook->applications->each(function($application){
+        $this->hook->applications->each(function($application){
             $application->delete();
         });
     }
 
     public function updateIndividualStatus()
     {
-        $application = $this->book->extendHook->applications->find(Input::get('id'));
+        $application = $this->hook->applications->find(Input::get('id'));
 
         $application->individual_status = Input::get('data');
 
@@ -121,7 +121,7 @@ trait CensornTrait
 
     public function getApplicationHangingRule()
     {
-        $application = $this->book->extendHook->applications->find(Input::get('id'));
+        $application = $this->hook->applications->find(Input::get('id'));
 
         $fields =  $application->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
             $questions = $page->getQuestions();
@@ -136,7 +136,7 @@ trait CensornTrait
 
     public function setApplicationHangingRule()
     {
-        $application = $this->book->extendHook->applications->find(Input::get('id'));
+        $application = $this->hook->applications->find(Input::get('id'));
 
         $page = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->last();
 
