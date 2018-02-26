@@ -4,6 +4,8 @@ namespace Cere\Survey\Extend;
 
 use Input;
 use View;
+use Cere\Survey\RuleRepository;
+use Cere\Survey\Eloquent\Rule;
 
 trait CensornTrait
 {
@@ -115,5 +117,31 @@ trait CensornTrait
         $application->save();
 
         return $application;
+    }
+
+    public function getApplicationHangingRule()
+    {
+        $application = $this->book->extendHook->applications->find(Input::get('id'));
+
+        $fields =  $application->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
+            $questions = $page->getQuestions();
+            return $carry = array_merge($carry, $questions);
+        }, []);
+
+        return [
+            'fields' => $fields,
+            'rule' => $application->book->rule ? $application->book->rule : new Rule(['expressions' => [['conditions' => [['compareType' => 'question']]]]]),
+        ];
+    }
+
+    public function setApplicationHangingRule()
+    {
+        $application = $this->book->extendHook->applications->find(Input::get('id'));
+
+        $page = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->last();
+
+        RuleRepository::target($application->book)->saveExpressions(Input::get('rule'), 'direction', $page->id);
+
+        return ['rule' => RuleRepository::target($application->book)->getRule];
     }
 }
