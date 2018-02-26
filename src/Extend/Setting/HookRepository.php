@@ -61,11 +61,14 @@ class HookRepository
 
     public function getConsent()
     {
-        return ['consent' => $this->hook->consent];
+        return [
+            'consent' => $this->hook->consent,
+            'due' => $this->hook->due
+        ];
     }
 
     public function setConsent($consent)
     {
-        $this->hook->update(['consent' => $consent]);
+        $this->hook->update(['consent' => $consent['content'], 'due' => $consent['due']]);
     }
 }

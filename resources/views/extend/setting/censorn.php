@@ -28,8 +28,9 @@
                 </md-input-container>
             </div>
         </div>
-
-
+        <div  layout="row">
+            <b>加掛者申請期限 : {{start_at}} ~ {{close_at}}</b>
+        </div>
         <table class="ui very compact table">
             <thead>
                 <tr class="bottom aligned">
@@ -207,6 +208,9 @@
             $http({method: 'POST', url: 'getApplications', data:{}})
             .success(function(data, status, headers, config) {
                $scope.applications = $filter('filter')(data.applications, {step:3});
+               $scope.start_at = data.start_at;
+               $scope.close_at = data.close_at;
+
                $scope.sheetLoaded = true;
                $scope.getApplicationPages();
                $scope.getApplicationStatus($scope.applications);

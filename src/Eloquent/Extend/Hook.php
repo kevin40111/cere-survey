@@ -14,7 +14,7 @@ class Hook extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = ['title', 'file_id', 'options', 'consent'];
+    protected $fillable = ['title', 'file_id', 'options', 'consent', 'due'];
 
     public function applications()
     {
@@ -64,6 +64,21 @@ class Hook extends Eloquent {
         $this->attributes['consent'] = json_encode([
             'content' => isset($value['content']) ? $value['content'] : NULL,
             'precaution' => isset($value['precaution']) ? $value['precaution'] : NULL
+        ]);
+    }
+
+    public function getDueAttribute($time)
+    {
+        $time = json_decode($time, true);
+
+        return isset($time) ? $time : ['start' => NULL, 'close' => NULL];
+    }
+
+    public function setDueAttribute($time)
+    {
+        $this->attributes['due'] = json_encode([
+            'start' => isset($time['start']) ? $time['start'] : NULL,
+            'close' => isset($time['close']) ? $time['close'] : NULL
         ]);
     }
 }

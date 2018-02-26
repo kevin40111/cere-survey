@@ -6,6 +6,7 @@ use Input;
 use View;
 use Cere\Survey\RuleRepository;
 use Cere\Survey\Eloquent\Rule;
+use Carbon\Carbon;
 
 trait CensornTrait
 {
@@ -22,8 +23,13 @@ trait CensornTrait
     public function getApplications()
     {
         $applications = $this->hook->applications->load('member.organizations.now', 'member.user', 'member.contact', 'book');
+        $due = $this->hook->due;
 
-        return ['applications' => $applications];
+        return [
+            'applications' => $applications,
+            'start_at' => Carbon::parse($due['start'])->tz('Asia/Taipei')->toDateTimeString(),
+            'close_at' => Carbon::parse($due['close'])->tz('Asia/Taipei')->toDateTimeString(),
+        ];
     }
 
     public function getApplicationPages()

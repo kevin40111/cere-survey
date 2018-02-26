@@ -24,6 +24,28 @@
                             <ng-quill-editor placeholder="注意事項" ng-model="consent.content"></ng-quill-editor>
                         </div>
                     </md-card-content>
+                    <md-card-content>
+                        <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}">
+                            <h4>可申請時間</h4>
+                        </md-subheader>
+                        <md-input-container style="margin-bottom: 0">
+                            <label>開始時間</label>
+                            <input mdc-datetime-picker date="true" time="true" type="text" ng-model="due.start" cancel-text="取消" ok-text="確定" today-text="今天">
+                        </md-input-container>
+                        <md-button class="md-icon-button" aria-label="清除" ng-click="due.start = null">
+                            <md-icon>autorenew</md-icon>
+                        </md-button>
+                    </md-card-content>
+                    <md-card-content>
+                        <md-input-container style="margin-bottom: 0">
+                            <label>結束時間</label>
+                            <input mdc-datetime-picker date="true" time="true" type="text" ng-model="due.close" cancel-text="取消" ok-text="確定" today-text="今天">
+                        </md-input-container>
+                        <md-button class="md-icon-button" aria-label="清除" ng-click="due.close = null">
+                            <md-icon>autorenew</md-icon>
+                        </md-button>
+                    <span md-colors="{color: 'red'}" ng-if="error.datetime">開始時間不能大於結束時間</span>
+                    </md-card-content>
                     <md-card-actions layout="row">
                         <md-button class="md-raised md-primary" ng-click="setConsent()" style="width: 100%;height: 50px;font-size: 18px">儲存</md-button>
                     </md-card-actions>
@@ -111,12 +133,16 @@
 </md-content>
 <script src="/packages/cere/survey/js/quill.min.js"></script>
 <script src="/packages/cere/survey/js/ng-quill.min.js"></script>
+<script src="/packages/cere/survey/js/angular-material-datetimepicker.min.js"></script>
+<script src="/packages/cere/survey/js/moment.min.js"></script>
 
 <link rel="stylesheet" href="/packages/cere/survey/js/quill.snow.min.css">
 <link rel="stylesheet" href="/packages/cere/survey/js/quill.bubble.min.css">
+<link rel="stylesheet" href="/packages/cere/survey/js/material-datetimepicker.min.css" />
 <script>
     app.requires.push('ngQuill');
     app.requires.push('ngMessages');
+    app.requires.push('ngMaterialDatePicker');
     app.config(['ngQuillConfigProvider', function (ngQuillConfigProvider) {
         ngQuillConfigProvider.set(null, null, 'custom placeholder')
     }])
@@ -126,11 +152,13 @@
         $scope.consent = {};
         $scope.selectIndex = 0;
         $scope.isShow = {columns: '', questions: ''};
+        $scope.due = {};
 
         $scope.getConsent = function(){
             $http({method: 'POST', url: 'getConsent', data:{}})
             .success(function(data, status, headers, config) {
                 angular.extend($scope.consent, data.consent);
+                angular.extend($scope.due, data.due);
             })
             .error(function(e){
                 console.log(e);
@@ -140,7 +168,12 @@
         $scope.getConsent();
 
         $scope.setConsent = function(){
-            $http({method: 'POST', url: 'setConsent', data:{consent:$scope.consent}})
+            $http({method: 'POST', url: 'setConsent', data:{
+                consent:{
+                    'content': $scope.consent,
+                    'due': $scope.due
+                }
+            }})
             .success(function(data, status, headers, config) {
 
             })
