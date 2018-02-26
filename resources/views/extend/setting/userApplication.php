@@ -5,16 +5,29 @@
         </div>
     </md-toolbar>
     <md-dialog-content ng-cloak class="demo-dialog-content">
-        <div layout="row" style="font-size:1em; margin-right:10px; color:grey" layout-align="center center">
-            <div ng-repeat="organization in member.organizations" layout="row">加掛學校: {{ organization.now.name }} </div>
-            <div>&emsp;承辦人: {{member.user.username}} </div>
-            <div>&emsp;Email: {{member.user.email}} </div>
-            <div>&emsp;電話: {{member.contact.tel}}</div>
+        <div layout="column" style="font-size:1em; color:grey; margin:15px;" layout-align="center start">
+            <div layout="row">
+                <md-icon>adjust</md-icon>
+                <div ng-repeat="organization in member.organizations" layout="row">加掛學校: {{ organization.now.name }} </div>
+            </div>
+            <div layout="row" style="margin-top:8px;">
+                <md-icon>account_circle</md-icon>
+                <div>承辦人: {{member.user.username}} </div>
+                <div>&emsp;Email: {{member.user.email}} </div>
+                <div>&emsp;電話: {{member.contact.tel}}</div>
+            </div>
+
         </div>
         <md-card style="margin:20px 50px 20px 50px; font-family:Microsoft JhengHei">
+
             <md-card-title>
                 <md-card-title-text md-colors="{color:'default-indigo'}">
-                    <md-title>母體名單欄位</md-title>
+                    <md-title>可申請的母體名單數量:&emsp;{{columnsLimit}}</md-title>
+                </md-card-title-text>
+            </md-card-title>
+            <md-card-title>
+                <md-card-title-text md-colors="{color:'default-indigo'}">
+                    <md-title>已申請的母體名單欄位</md-title>
                 </md-card-title-text>
             </md-card-title>
             <md-card-content>
@@ -22,9 +35,15 @@
                     {{column.title}}
                 </md-list-item>
             </md-card-content>
+            <md-divider></md-divider>
             <md-card-title>
                 <md-card-title-text md-colors="{color:'default-indigo'}">
-                    <md-title>母體題目欄位</md-title>
+                    <md-title>可加入的主問卷之題目欄位的數量:&emsp;{{fieldsLimit}}</md-title>
+                </md-card-title-text>
+            </md-card-title>
+            <md-card-title>
+                <md-card-title-text md-colors="{color:'default-indigo'}">
+                    <md-title>已加入的主問卷之題目欄位</md-title>
                 </md-card-title-text>
             </md-card-title>
             <md-card-content>

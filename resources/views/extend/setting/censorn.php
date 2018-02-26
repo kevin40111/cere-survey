@@ -41,12 +41,12 @@
                     </th>
                     <th width="140">姓名</th>
                     <th width="250">email</th>
+                    <th width="180">職稱</th>
+                    <th width="180">電話、傳真</th>
                     <th width="140">申請者狀態</th>
                     <th width="100">檢視申請表</th>
                     <th width="120">檢視加掛問卷</th>
                     <th width="120">審核結果</th>
-                    <th width="180">職稱</th>
-                    <th width="180">電話、傳真</th>
                 </tr>
             </thead>
             <thead>
@@ -112,7 +112,7 @@
                 <tr ng-show="applications.length==0">
                     <td colspan="11"><h4 class="md-headline" md-colors="{color:'grey-500'}">目前尚未有學校送出審核</md-display-1></h4>
                 </tr>
-                <tr ng-repeat="application in applications | filter:statusFilter(audit_status) |filter: search.organization.now.name |filter: search.username |filter: search.email">
+                <tr ng-repeat="application in applications | filter:statusFilter(audit_status) |filter: search.organization.now.name |filter: search.username |filter: search.email" ng-click="application.focus=true" ng-class="{positive:application.focus}" ng-blur="application.focus=false">
                     <td>{{ $index+1 }}</td>
                     <td>
                         <div style="max-height:150px;overflow-y:scroll">
@@ -124,39 +124,37 @@
                         {{ application.member.user.email }}
                         <div ng-if="application.members.user.email2">{{ application.member.user.email2 }}</div>
                     </td>
-                    <td md-colors="{color:application.status_color}">
-                        {{application.status_date}}<br>{{application.status_title}}
-                    </td>
-                    <td class="center aligned">
-                        <md-button aria-label="檢視申請表" class="md-primary" ng-click="openApplication(application)" md-colors="{background:selectStatus[application.individual_status.apply].color}" >
-                            <div md-colors="{color:'grey-A100'}">{{selectStatus[application.individual_status.apply].title}}</div>
-                        </md-button>
-                    </td>
-                    <td>
-                        <div layout="row">
-                            <md-button aria-label="加掛問卷" class="md-primary" ng-click="openBrowser(application)" md-colors="{background:selectStatus[application.individual_status.book].color}">
-                                <div md-colors="{color:'grey-A100'}">{{selectStatus[application.individual_status.book].title}}</div>
-                            </md-button>
-                            <md-icon ng-style="{color: application.book.lock ? 'green' : 'red'}">{{application.book.lock ? 'lock': 'lock_open'}}</md-icon>
-                        </div>
-
-                    </td>
-                    <td>
-                        <div layout="row"  flex="noshrink">
-                            <md-input-container class="md-block">
-                                <label>審核結果</label>
-                                <md-select ng-model="application.status" md-colors="{color: auditStatus[application.status].color}" ng-disabled="application.individual_status.book==1 && application.individual_status.apply==1 ? false: true ">
-                                    <md-option ng-repeat="(key,status) in auditStatus" ng-value="key">{{status.title}}</md-option>
-                                </md-select>
-                            </md-input-container>
-                        </div>
-                    </td>
                     <td>{{ application.member.contact.title }}</td>
                     <td>
                         <div><i class="text telephone icon"></i>{{ application.member.contact.tel }}</div>
                         <div><i class="fax icon"></i>{{ application.member.contact.fax }}</div>
                     </td>
-
+                    <td md-colors="{color:application.status_color}">
+                        {{application.status_date}}<br>{{application.status_title}}
+                    </td>
+                    <td class="center aligned">
+                        <md-button aria-label="檢視申請表" class="md-primary" ng-click="openApplication(application)" ng-blur="application.focus=false" md-colors="{background:selectStatus[application.individual_status.apply].color}" >
+                            <div md-colors="{color:'grey-A100'}">{{selectStatus[application.individual_status.apply].title}}</div>
+                        </md-button>
+                    </td>
+                    <td>
+                        <div layout="row">
+                            <md-button aria-label="加掛問卷" class="md-primary" ng-click="openBrowser(application)" ng-blur="application.focus=false" md-colors="{background:selectStatus[application.individual_status.book].color}">
+                                <div md-colors="{color:'grey-A100'}">{{selectStatus[application.individual_status.book].title}}</div>
+                            </md-button>
+                            <md-icon ng-style="{color: application.book.lock ? 'green' : 'red'}">{{application.book.lock ? 'lock': 'lock_open'}}</md-icon>
+                        </div>
+                    </td>
+                    <td>
+                        <div layout="row"  flex="noshrink">
+                            <md-input-container class="md-block">
+                                <label>審核結果</label>
+                                <md-select ng-model="application.status" md-colors="{color: auditStatus[application.status].color}" ng-blur="application.focus=false" ng-disabled="application.individual_status.book==1 && application.individual_status.apply==1 ? false: true ">
+                                    <md-option ng-repeat="(key,status) in auditStatus" ng-value="key">{{status.title}}</md-option>
+                                </md-select>
+                            </md-input-container>
+                        </div>
+                    </td>
                 </tr>
             <tbody>
         </table>
@@ -172,16 +170,16 @@
         $scope.lastPage = 0;
         $scope.pages = [];
         $scope.selectStatus = [
-            {'title': '未審核', 'color':'grey-400'},
-            {'title': '合格', 'color':'teal-800'},
-            {'title': '不合格', 'color':'red-400'}
+            {'title': '未審核', 'color':'blue-grey-200'},
+            {'title': '合格', 'color':'cyan-900'},
+            {'title': '不合格', 'color':'red-200'}
         ];
 
         $scope.auditStatus = [
-            {'title': '未審核', 'color':'grey-400'},
-            {'title': '通過', 'color':'teal-900'},
-            {'title': '不通過', 'color':'red-400'},
-            {'title': '取消', 'color':'grey-800'}
+            {'title': '未審核', 'color':'blue-grey-200'},
+            {'title': '通過', 'color':'cyan-900'},
+            {'title': '不通過', 'color':'red-200'},
+            {'title': '取消', 'color':'grey-700'}
         ];
 
         $scope.$watch('lastPage', function(lastPage) {
@@ -318,6 +316,8 @@
                         .success(function(data, status, headers, config) {
                             scope.columns = data.fields.mainList;
                             scope.pages = $filter('filter')(data.fields.mainBookPages, function(page){return page.length>0});
+                            scope.columnsLimit = data.application.hook.options.columnsLimit;
+                            scope.fieldsLimit = data.application.hook.options.fieldsLimit;
                         })
                         .error(function(e){
                             console.log(e);
@@ -358,11 +358,18 @@
                                 </div>
                             </md-toolbar>
                             <md-dialog-content ng-cloak class="demo-dialog-content">
-                                <div layout="row" style="font-size:1em; margin-right:10px; color:grey" layout-align="center center">
-                                    <div ng-repeat="organization in member.organizations" layout="row">加掛學校: {{ organization.now.name }} </div>
-                                    <div>&emsp;承辦人: {{member.user.username}} </div>
-                                    <div>&emsp;Email: {{member.user.email}} </div>
-                                    <div>&emsp;電話: {{member.contact.tel}}</div>
+                                <div layout="column" style="font-size:1em; color:grey; margin:15px;" layout-align="center start">
+                                    <div layout="row">
+                                        <md-icon>adjust</md-icon>
+                                        <div ng-repeat="organization in member.organizations" layout="row">加掛學校: {{ organization.now.name }} </div>
+                                    </div>
+                                    <div layout="row" style="margin-top:8px;">
+                                        <md-icon>account_circle</md-icon>
+                                        <div>承辦人: {{member.user.username}} </div>
+                                        <div>&emsp;Email: {{member.user.email}} </div>
+                                        <div>&emsp;電話: {{member.contact.tel}}</div>
+                                    </div>
+
                                 </div>
                                 <div layout="column" layout-align="start center">
                                     <node-browser ng-if="book" re-open="reOpen()" book="book"></node-browser>

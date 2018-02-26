@@ -55,7 +55,7 @@ trait CensornTrait
         }, []);
 
         return [
-            'application' => $application->load('member.user'),
+            'application' => $application->load('member.user', 'hook'),
             'fields' => [
                 'mainBookPages' => $questions,
                 'mainList' => $columns,
