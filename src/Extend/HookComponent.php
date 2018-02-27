@@ -20,6 +20,8 @@ class HookComponent extends CommFile
 
     use CensornTrait;
 
+    use InviteTrait;
+
     function __construct(Files $file, User $user)
     {
         parent::__construct($file, $user);
@@ -34,7 +36,7 @@ class HookComponent extends CommFile
 
     public function get_views()
     {
-        return ['open', 'contract', 'extendHook', 'confirm'];
+        return ['open', 'contract', 'extendHook', 'confirm', 'invites'];
     }
 
     public static function tools()
@@ -42,6 +44,7 @@ class HookComponent extends CommFile
         return [
             ['name' => 'extendHook', 'title' => '加掛設定', 'method' => 'extendHook', 'icon' => 'list'],
             ['name' => 'confirm', 'title' => '加掛審核', 'method' => 'confirm', 'icon' => 'list'],
+            ['name' => 'invites', 'title' => '加掛邀請', 'method' => 'invites', 'icon' => 'list'],
         ];
     }
 
