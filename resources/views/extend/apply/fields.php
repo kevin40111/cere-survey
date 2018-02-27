@@ -19,52 +19,46 @@
 <div ng-include="'stepsTemplate'"></div>
 <div style="width:960px">
     <md-card style="width: 100%">
-        <md-card-header md-colors="{background: 'indigo'}">
-            <md-card-header-text>
-                <span class="md-title">加掛題申請</span>
-            </md-card-header-text>
-        </md-card-header>
-        <md-content>
-            <md-list flex>
-                <md-subheader class="md-no-sticky"  md-colors="{color: 'indigo-800'}"><h4>可申請的母體名單數量: <span  md-colors="{color: 'grey'}">{{columnsLimit}}</span></h4></md-subheader>
-                <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>申請母體名單欄位(請勾選)：</h4></md-subheader>
-                <md-list-item ng-repeat="column in columns">
-                    <p>{{column.title}}</p>
-                    <md-checkbox ng-click="toggle(column, $event)" ng-checked="column.selected" aria-label="{{column.title}}"></md-checkbox>
-                </md-list-item>
-                <md-divider ></md-divider>
-                <md-subheader class="md-no-sticky"  md-colors="{color: 'indigo-800'}"><h4>可加入母體問卷之題目欄位的數量： <span  md-colors="{color: 'grey'}">{{fieldsLimit}}</span></h4></md-subheader>
-                <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>釋出的母體問卷之題目欄位 (請勾選)</h4></md-subheader>
-                <md-list-item>
-                    <button class="ui blue button" flex="30" ng-click="showQuestion($event)">新增題目</button>
-                </md-list-item>
+        <md-card-title>
+                <md-card-title-text>
+                    <span class="md-title">可申請的母體名單欄位：(請勾選，可申請數量：{{columnsLimit}})</span>
+                </md-card-title-text>
+            </md-card-title>
 
-                <md-divider ></md-divider>
-                <md-subheader class="md-no-sticky">
-                    <button class="ui small blue button" ng-click="selectAllPage(pages[page])">全選此頁</button>
-                    <button class="ui small blue button" ng-click="delete(pages[page])">刪除</button>
-                    <md-input-container>
-                        <md-select placeholder="請選擇" ng-model="page">
-                            <md-option ng-repeat="page in release(pages)" ng-value="page">{{$index+1}}</md-option>
-                        </md-select>
-                    </md-input-container>
-                    <span md-colors="{color: 'red'}">共新增{{getSelected().length}}個欄位(含母體)</span>
-                </md-subheader>
-                <div style="height:300px; overflow:scroll;">
-                <md-list>
-                    <md-list-item ng-repeat="question in pages[page]| filter:{selected:true}">
-                        {{question.title}}
-                        <md-checkbox class="md-secondary" ng-model="question.deleted" aria-label="{{question.title}}"></md-checkbox>
+            <md-card-content>
+                <md-list flex>
+                    <md-list-item ng-repeat="column in columns">
+                        <p>{{column.title}}</p>
+                        <md-checkbox class="md-secondary" ng-model="column.selected" ng-change="toggle(column, $event)" aria-label="{{column.title}}"></md-checkbox>
                     </md-list-item>
                 </md-list>
-                </div>
-            </md-list>
-        </md-content>
+                <md-divider></md-divider>
+            </md-card-content>
+
+            <md-card-title>
+                <md-card-title-text>
+                    <span class="md-title">已選擇的母體問卷題目欄位：(可申請數量：{{fieldsLimit}})</span>
+
+                </md-card-title-text>
+            </md-card-title>
+
+            <md-card-content>
+                <md-list>
+                    <md-list-item md-colors="{backgroundColor: 'primary'}" ng-click="showQuestion($event)">
+                        <p style="text-align: center">新增題目欄位</p>
+                    </md-list-item>
+                    <md-subheader class="md-no-sticky md-primary" ng-repeat-start="page in pages" ng-if="(page.questions | filter:{selected:true}).length > 0">母體問卷第{{$index+1}}頁</md-subheader>
+                    <md-list-item ng-repeat-end ng-repeat="question in page.questions | filter: {selected: true}">
+                        <p>{{question.title}}</p>
+                        <md-icon class="md-secondary" ng-click="delete(question)" aria-label="刪除">delete</md-icon>
+                    </md-list-item>
+                </md-list>
+            </md-card-content>
+            <md-card-actions layout="row">
+                <md-button class="md-raised md-primary" flex style="height: 50px;font-size: 18px" ng-click="changeStep('preStep')">上一步</md-button>
+                <md-button class="md-raised md-primary" flex style="height: 50px;font-size: 18px" ng-click="changeStep('nextStep')">送出審核</md-button>
+            </md-card-actions>
     </md-card>
-    <div layout="row">
-        <md-button class="md-raised md-primary" ng-click="changeStep('preStep')" style="width: 50%;height: 50px;font-size: 18px">上一步</md-button>
-        <md-button class="md-raised md-primary" ng-click="changeStep('nextStep')" style="width: 50%;height: 50px;font-size: 18px">送出審核</md-button>
-    </div>
 </div>
 </md-content>
 <script>
@@ -84,29 +78,17 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
         });
     }
 
-    $scope.delete = function(){
-        angular.forEach($scope.pages, function(questions){
-            $filter('filter')(questions, {deleted: true}).forEach(function(question){
-                question.selected = false;
-                question.deleted = false;
-            });
-        })
-
+    $scope.delete = function(question){
+        question.selected = false;
         $scope.setAppliedOptions();
     }
 
     $scope.toggle = function(column, ev){
-        var fields = $filter('filter')($scope.columns, {selected: true}).map(function(field) {
-            return field.id;
-        });
-        if(column.selected == false){
-            if(fields.length < $scope.columnsLimit){
-                column.selected = true;
-            }else{
-                $scope.limitMessage();
+        if (column.selected){
+            if ($filter('filter')($scope.columns, {selected: true}).length > $scope.columnsLimit){
+                column.selected = false;
+                $scope.limitMessage(ev);
             }
-        }else{
-            column.selected = false;
         }
         $scope.setAppliedOptions();
     }
@@ -124,12 +106,6 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
         );
     }
 
-    $scope.selectAllPage = function(value){
-        angular.forEach(value, function(question){
-            question.deleted = true;
-        })
-    }
-
     $scope.getAppliedOptions = function() {
         $http({method: 'POST', url: 'getAppliedOptions', data:{}})
         .success(function(data, status, headers, config) {
@@ -144,23 +120,12 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
         });
     }
 
-    $scope.release = function(pages){
-        var field = [];
-        var release_length = 0;
-        angular.forEach(pages, function(questions,key){
-            if(questions != 0){
-                field.push(key);
-            }
-        })
-        return field;
-    }
-
     $scope.getSelected = function getSelected() {
         var fields = $filter('filter')($scope.columns, {selected: true}).map(function(field) {
             return field.id;
         });
-        angular.forEach($scope.pages, function(questions){
-            fields = $filter('filter')(questions, {selected: true}).map(function(question){
+        angular.forEach($scope.pages, function(page){
+            fields = $filter('filter')(page.questions, {selected: true}).map(function(question){
                 return question.id;
             }).concat(fields);
         })
@@ -184,54 +149,31 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
         $mdDialog.show({
             controller: function($scope, $mdDialog){
                 $scope.pages = application.pages;
-                $scope.fieldsLimit = application.fieldsLimit;
                 $scope.limitMessage = application.limitMessage;
-                $scope.release = application.release;
                 $scope.setAppliedOptions = application.setAppliedOptions;
 
-                console.log($scope.pages);
-
-                $scope.selectAllPage = function(value, ev){
-                    var release = [];
-                    release = $filter('filter')(value, {selected: false}).length;
-
-                    if($scope.getFields().length + release > $scope.fieldsLimit){
-                        $scope.limitMessage(ev);
-                    }else{
-                        angular.forEach(value, function(question){
-                            question.picked = true;
-                        })
-                    }
-                }
-
-                $scope.getFields = function(){
-                    var fields = [];
-                    angular.forEach($scope.pages, function(questions){
-                        $filter('filter')(questions, {picked: true}).map(function(question){
-                            fields.push(question.id);
-                        });
-                        $filter('filter')(questions, {selected: true}).map(function(question){
-                            fields.push(question.id);
-                        })
-                    })
-                    return fields;
+                $scope.getAmount = function(){
+                    return $scope.pages.reduce(function(amount, page) {
+                        return amount + $filter('filter')(page.questions, function(question) {
+                            return question.selected || question.picked;
+                        }).length;
+                    }, 0);
                 };
 
-                $scope.toggle = function(question, ev){
-                    if($scope.getFields().length > $scope.fieldsLimit){
+                $scope.checkLimit = function(question, ev) {
+                    if ($scope.getAmount() > application.fieldsLimit){
                         $scope.limitMessage(ev);
                         question.picked = false;
                     }
                 }
 
                 $scope.save = function() {
-                    angular.forEach($scope.pages, function(questions){
-                        $filter('filter')(questions, {picked: true}).forEach(function(question){
+                    angular.forEach($scope.pages, function(page){
+                        $filter('filter')(page.questions, {picked: true}).forEach(function(question){
                             question.selected = true;
                             question.picked = false;
                         });
                     })
-                    console.log($scope.pages);
                     $mdDialog.hide();
                     $scope.setAppliedOptions();
                 }
@@ -239,35 +181,33 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
             },
             template: `
             <md-dialog aria-label="新增欄位" style="width:1000px;">
-                <form>
-                    <md-toolbar>
-                        <div class="md-toolbar-tools">
-                            <p flex md-truncate>目前已新增{{getFields().length}}個欄位</p>
-                        </div>
-                    </md-toolbar>
+                <md-toolbar>
+                    <div class="md-toolbar-tools">
+                        <p>新增題目欄位</p>
+                    </div>
+                </md-toolbar>
 
-                    <md-dialog-content style=" height:600px; overflow:scroll">
-                        <div class="md-dialog-content">
+                <md-subheader class="md-primary">目前已新增{{getAmount()}}個欄位</md-subheader>
+
+                <md-dialog-content>
+                    <div class="md-dialog-content" style="height: 600px;overflow: scroll">
+                    <md-tabs md-dynamic-height md-border-bottom>
+                        <md-tab label="第{{$index+1}}頁" ng-repeat="page in pages">
                             <div>
-                                <md-button class="md-raised md-primary" ng-click="selectAllPage(pages[page], $event)">全選此頁</md-button>
-                                <md-input-container>
-                                    <md-select placeholder="請選擇" ng-model="page">
-                                        <md-option ng-repeat="page in release(pages)" ng-value="page">{{$index+1}}</md-option>
-                                    </md-select>
-                                </md-input-container>
                                 <md-list>
-                                    <md-list-item ng-repeat="question in pages[page]">
-                                        {{question.title}}
-                                        <md-checkbox class="md-secondary" ng-hide="question.selected" aria-label="question.selected" ng-model="question.picked" ng-change="toggle(question, $event)"></md-checkbox>
+                                    <md-list-item ng-repeat="question in page.questions">
+                                        <p>{{question.title}}</p>
+                                        <md-checkbox class="md-secondary" ng-model="question.picked" ng-checked="question.selected" ng-disabled="question.selected" ng-change="checkLimit(question)" aria-label="{{question.title}}"></md-checkbox>
                                     </md-list-item>
                                 </md-list>
                             </div>
-                        </div>
-                    </md-dialog-content>
-                    <md-dialog-actions layout="row">
-                        <md-button ng-click="save()">新增</md-button>
-                    </md-dialog-actions>
-              </form>
+                        </md-tab>
+                    </md-tabs>
+                    </div>
+                </md-dialog-content>
+                <md-dialog-actions layout="row">
+                    <md-button ng-click="save()">新增</md-button>
+                </md-dialog-actions>
             </md-dialog>
             `,
             parent: angular.element(document.body),

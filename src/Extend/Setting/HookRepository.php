@@ -45,7 +45,9 @@ class HookRepository
                 $question["selected"] = in_array($question['id'], $hook->options['fields']);
             }
 
-            return $carry + [$page->id => $questions];
+            array_push($carry, ['questions' => $questions]);
+
+            return $carry;
         }, []);
 
         return [

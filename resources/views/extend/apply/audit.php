@@ -26,11 +26,11 @@
             <md-card-content>
                 <md-list flex>
                     <md-subheader class="md-no-sticky">母體名單欄位</md-subheader>
-                    <md-list-item ng-repeat="column in columns">
+                    <md-list-item ng-repeat="column in columns | filter:{selected: true}">
                         <p>{{column.title}}</p>
                     </md-list-item>
                     <md-subheader class="md-no-sticky" ng-repeat-start="page in pages">母體問卷第{{$index+1}}頁</md-subheader>
-                    <md-list-item ng-repeat-end ng-repeat="question in page.questions">
+                    <md-list-item ng-repeat-end ng-repeat="question in page.questions | filter:{selected: true}">
                         <p>{{question.title}}</p>
                     </md-list-item>
                 </md-list>
