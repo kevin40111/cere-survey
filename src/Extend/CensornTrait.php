@@ -26,62 +26,23 @@ trait CensornTrait
         return ['applications' => $applications];
     }
 
-    public function reject()
-    {
-        $application = $this->hook->applications()->where('id', Input::get('application_id'))->first();
-
-        if (!$this->application->reject) {
-            SurveyORM\Book::find($this->application->ext_book_id)->update(array('lock' => false));
-        }
-        $this->application->reject = !$this->application->reject;
-        $this->application->save();
-
-        return $this->application;
-
-        return ['application' => $application];
-    }
-
     public function getApplicationPages()
     {
         $member_id = $this->hook->applications->load('member')->fetch('member.id')->all();
         return \Plat\Member::with('user')->whereIn('id', $member_id)->paginate(10);
     }
 
-    public function activeExtension()
-    {
-        $application_id = Input::get('application_id');
-        $application = $this->hook->applications()->where('id', $application_id)->first();
-        if (!$application->reject) {
-            SurveyORM\Book::find($application->ext_book_id)->update(array('lock' => true));
-        }
-        $application->extension = !$application->extension;
-        $application->save();
-
-        return ['application' => $application];
-    }
-
-    public function resetApplication()
-    {
-        $application = $this->book->applications()->OfMe()->withTrashed()->first();
-        $application->reject = false;
-        $application->save();
-        $extBook = SurveyORM\Book::find($application->ext_book_id);
-        RuleRepository::target($extBook)->deleteRule();
-        $this->book->applications()->OfMe()->delete();
-        return $this->getAppliedOptions();
-    }
-
     public function getAppliedOptions()
     {
         $application = $this->hook->applications->find(Input::get('id'));
 
-        $fieldFile = \Files::find($this->book->auth['fieldFile_id']);
+        $fieldFile = \Files::find($this->hook->book->auth['fieldFile_id']);
 
         $columns = !is_null($fieldFile) ? $fieldFile->sheets->first()->tables->first()->columns->each(function ($column) use ($application) {
             $column->selected = in_array($column->id, $application->fields);
         }) : [];
 
-        $questions =$this->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($application){
+        $questions =$this->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($application){
             $questions = $page->getQuestions();
 
             foreach ($questions as &$question) {
@@ -140,7 +101,7 @@ trait CensornTrait
     {
         $application = $this->hook->applications->find(Input::get('id'));
 
-        $page = $this->book->sortByPrevious(['childrenNodes'])->childrenNodes->last();
+        $page = $this->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->last();
 
         RuleRepository::target($application->book)->saveExpressions(Input::get('rule'), 'direction', $page->id);
 
