@@ -44,28 +44,26 @@ trait CensornTrait
 
         $fieldFile = \Files::find($this->hook->book->auth['fieldFile_id']);
 
-        $columns = !is_null($fieldFile) ? $fieldFile->sheets->first()->tables->first()->columns->each(function ($column) use ($application) {
+        $mainListFields = !is_null($fieldFile) ? $fieldFile->sheets->first()->tables->first()->columns->each(function ($column) use ($application) {
             $column->selected = in_array($column->id, $application->fields);
         }) : [];
 
-        $questions =$this->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($application){
+        $mainBookPages =$this->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($application){
             $questions = $page->getQuestions();
 
             foreach ($questions as &$question) {
                 $question['selected'] = in_array($question['id'], $application->fields);
             }
 
-            array_push($carry, ['questions' => $questions]);
+            array_push($carry, ['fields' => $questions]);
 
             return $carry;
         }, []);
 
         return [
             'application' => $application->load('member.user', 'hook'),
-            'fields' => [
-                'mainBookPages' => $questions,
-                'mainList' => $columns,
-            ],
+            'mainBookPages' => $mainBookPages,
+            'mainListFields' => $mainListFields,
         ];
 
     }

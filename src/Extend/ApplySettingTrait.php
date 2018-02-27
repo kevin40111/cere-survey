@@ -14,7 +14,7 @@ trait ApplySettingTrait
 
     public function setApplicableOptions()
     {
-        HookRepository::instance($this->hook)->setApplicableOptions(Input::get('selecteds'));
+        HookRepository::instance($this->hook)->setApplicableOptions(Input::get('name'), Input::get('options'));
     }
 
     public function getApplicableOptions()

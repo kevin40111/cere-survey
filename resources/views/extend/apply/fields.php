@@ -21,15 +21,15 @@
     <md-card style="width: 100%">
         <md-card-title>
                 <md-card-title-text>
-                    <span class="md-title">可申請的母體名單欄位：(請勾選，可申請數量：{{columnsLimit}})</span>
+                    <span class="md-title">可申請的母體名單欄位：(請勾選，可申請數量：{{mainListLimit.amount}})</span>
                 </md-card-title-text>
             </md-card-title>
 
             <md-card-content>
                 <md-list flex>
-                    <md-list-item ng-repeat="column in columns">
-                        <p>{{column.title}}</p>
-                        <md-checkbox class="md-secondary" ng-model="column.selected" ng-change="toggle(column, $event)" aria-label="{{column.title}}"></md-checkbox>
+                    <md-list-item ng-repeat="field in mainListLimit.fields">
+                        <p>{{field.title}}</p>
+                        <md-checkbox class="md-secondary" ng-model="field.selected" ng-change="toggle(field, $event)" aria-label="{{field.title}}"></md-checkbox>
                     </md-list-item>
                 </md-list>
                 <md-divider></md-divider>
@@ -37,8 +37,7 @@
 
             <md-card-title>
                 <md-card-title-text>
-                    <span class="md-title">已選擇的母體問卷題目欄位：(可申請數量：{{fieldsLimit}})</span>
-
+                    <span class="md-title">已選擇的母體問卷題目欄位：(可申請數量：{{mainBookLimit.amount}})</span>
                 </md-card-title-text>
             </md-card-title>
 
@@ -47,10 +46,10 @@
                     <md-list-item md-colors="{backgroundColor: 'primary'}" ng-click="showQuestion($event)">
                         <p style="text-align: center">新增題目欄位</p>
                     </md-list-item>
-                    <md-subheader class="md-no-sticky md-primary" ng-repeat-start="page in pages" ng-if="(page.questions | filter:{selected:true}).length > 0">母體問卷第{{$index+1}}頁</md-subheader>
-                    <md-list-item ng-repeat-end ng-repeat="question in page.questions | filter: {selected: true}">
-                        <p>{{question.title}}</p>
-                        <md-icon class="md-secondary" ng-click="delete(question)" aria-label="刪除">delete</md-icon>
+                    <md-subheader class="md-no-sticky md-primary" ng-repeat-start="page in mainBookLimit.pages" ng-if="(page.fields | filter:{selected:true}).length > 0">母體問卷第{{$index+1}}頁</md-subheader>
+                    <md-list-item ng-repeat-end ng-repeat="field in page.fields | filter: {selected: true}">
+                        <p>{{field.title}}</p>
+                        <md-icon class="md-secondary" ng-click="delete(field)" aria-label="刪除">delete</md-icon>
                     </md-list-item>
                 </md-list>
             </md-card-content>
@@ -63,11 +62,6 @@
 </md-content>
 <script>
 app.controller('application', function ($scope, $http, $filter, $location, $element, $mdDialog){
-    $scope.columns = [];
-    $scope.edited = [];
-    $scope.extBook = {};
-    $scope.extColumn = {};
-
     $scope.changeStep = function(method) {
         $http({method: 'POST', url: method, data:{}})
         .success(function(data, status, headers, config) {
@@ -78,15 +72,15 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
         });
     }
 
-    $scope.delete = function(question){
-        question.selected = false;
+    $scope.delete = function(field){
+        field.selected = false;
         $scope.setAppliedOptions();
     }
 
-    $scope.toggle = function(column, ev){
-        if (column.selected){
-            if ($filter('filter')($scope.columns, {selected: true}).length > $scope.columnsLimit){
-                column.selected = false;
+    $scope.toggle = function(field, ev){
+        if (field.selected) {
+            if ($filter('filter')($scope.mainListLimit.fields, {selected: true}).length > $scope.mainListLimit.amount){
+                field.selected = false;
                 $scope.limitMessage(ev);
             }
         }
@@ -109,11 +103,8 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
     $scope.getAppliedOptions = function() {
         $http({method: 'POST', url: 'getAppliedOptions', data:{}})
         .success(function(data, status, headers, config) {
-            $scope.columns = data.fields.mainList;
-            $scope.pages = data.fields.mainBookPages;
-
-            $scope.columnsLimit = data.limit.mainBook;
-            $scope.fieldsLimit = data.limit.mainList;
+            $scope.mainListLimit = data.mainListLimit;
+            $scope.mainBookLimit = data.mainBookLimit;
         })
         .error(function(e){
             console.log(e);
@@ -121,12 +112,12 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
     }
 
     $scope.getSelected = function getSelected() {
-        var fields = $filter('filter')($scope.columns, {selected: true}).map(function(field) {
+        var fields = $filter('filter')($scope.mainListLimit.fields, {selected: true}).map(function(field) {
             return field.id;
         });
-        angular.forEach($scope.pages, function(page){
-            fields = $filter('filter')(page.questions, {selected: true}).map(function(question){
-                return question.id;
+        angular.forEach($scope.mainBookLimit.pages, function(page){
+            fields = $filter('filter')(page.fields, {selected: true}).map(function(field){
+                return field.id;
             }).concat(fields);
         })
         return fields;
@@ -135,7 +126,6 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
     $scope.setAppliedOptions = function() {
         $http({method: 'POST', url: 'setAppliedOptions', data:{selected: $scope.getSelected()}})
         .success(function(data, status, headers, config) {
-            angular.extend($scope, data);
         })
         .error(function(e){
             console.log(e);
@@ -148,36 +138,35 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
         var application = $scope;
         $mdDialog.show({
             controller: function($scope, $mdDialog){
-                $scope.pages = application.pages;
+                $scope.mainBookLimit = application.mainBookLimit;
                 $scope.limitMessage = application.limitMessage;
                 $scope.setAppliedOptions = application.setAppliedOptions;
 
                 $scope.getAmount = function(){
-                    return $scope.pages.reduce(function(amount, page) {
-                        return amount + $filter('filter')(page.questions, function(question) {
-                            return question.selected || question.picked;
+                    return $scope.mainBookLimit.pages.reduce(function(amount, page) {
+                        return amount + $filter('filter')(page.fields, function(field) {
+                            return field.selected || field.picked;
                         }).length;
                     }, 0);
                 };
 
-                $scope.checkLimit = function(question, ev) {
-                    if ($scope.getAmount() > application.fieldsLimit){
+                $scope.checkLimit = function(field, ev) {
+                    if ($scope.getAmount() > application.mainBookLimit.amount){
                         $scope.limitMessage(ev);
-                        question.picked = false;
+                        field.picked = false;
                     }
                 }
 
                 $scope.save = function() {
-                    angular.forEach($scope.pages, function(page){
-                        $filter('filter')(page.questions, {picked: true}).forEach(function(question){
-                            question.selected = true;
-                            question.picked = false;
+                    angular.forEach($scope.mainBookLimit.pages, function(page){
+                        $filter('filter')(page.fields, {picked: true}).forEach(function(field){
+                            field.selected = true;
+                            field.picked = false;
                         });
                     })
                     $mdDialog.hide();
                     $scope.setAppliedOptions();
                 }
-
             },
             template: `
             <md-dialog aria-label="新增欄位" style="width:1000px;">
@@ -192,12 +181,12 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
                 <md-dialog-content>
                     <div class="md-dialog-content" style="height: 600px;overflow: scroll">
                     <md-tabs md-dynamic-height md-border-bottom>
-                        <md-tab label="第{{$index+1}}頁" ng-repeat="page in pages">
+                        <md-tab label="第{{$index+1}}頁" ng-repeat="page in mainBookLimit.pages">
                             <div>
                                 <md-list>
-                                    <md-list-item ng-repeat="question in page.questions">
-                                        <p>{{question.title}}</p>
-                                        <md-checkbox class="md-secondary" ng-model="question.picked" ng-checked="question.selected" ng-disabled="question.selected" ng-change="checkLimit(question)" aria-label="{{question.title}}"></md-checkbox>
+                                    <md-list-item ng-repeat="field in page.fields">
+                                        <p>{{field.title}}</p>
+                                        <md-checkbox class="md-secondary" ng-model="field.picked" ng-checked="field.selected" ng-disabled="field.selected" ng-change="checkLimit(field)" aria-label="{{field.title}}"></md-checkbox>
                                     </md-list-item>
                                 </md-list>
                             </div>
@@ -217,5 +206,4 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
         })
     }
 });
-
 </script>

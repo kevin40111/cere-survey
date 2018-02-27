@@ -50,42 +50,42 @@ class ApplicationRepository
 
     public function getAppliedOptions()
     {
-        $release = $this->application->hook->options['fields'];
-
         $appliedFields = $this->application->fields;
 
         $file = \Files::find($this->application->hook->book->auth['fieldFile_id']);
 
-        $mainListFields = !is_null($file) ? $file->sheets->first()->tables->first()->columns->filter(function ($column) use ($release) {
-            return in_array($column->id, $release);
-        })->each(function ($column) use ($appliedFields) {
+        $mainListFields = !is_null($file) ? $file->sheets->first()->tables->first()->columns->filter(function ($column) {
+            return in_array($column->id, $this->application->hook->main_list_limit['fields']);
+        })->values()->each(function ($column) use ($appliedFields) {
             $column->selected = in_array($column->id, $appliedFields);
         }) : [];
 
-        $mainBookPages = $this->application->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($appliedFields, $release){
+        $mainBookPages = $this->application->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($appliedFields){
             $questions = $page->getQuestions();
 
-            $questions = array_filter($questions, function($question) use ($release){
-                return in_array($question['id'], $release);
+            $questions = array_filter($questions, function($question) {
+                return in_array($question['id'], $this->application->hook->main_book_limit['fields']);
             });
 
             foreach ($questions as &$question) {
                 $question["selected"] = in_array($question['id'], $appliedFields);
             }
 
-            array_push($carry, ['questions' => $questions]);
+            if (! empty($questions)) {
+                array_push($carry, ['fields' => $questions]);
+            }
 
             return $carry;
         }, []);
 
         return [
-            'fields' => [
-                'mainBookPages' => $mainBookPages,
-                'mainList' => $mainListFields,
+            'mainListLimit' => [
+                'fields' => $mainListFields,
+                'amount' => $this->application->hook->main_list_limit['amount'],
             ],
-            'limit' => [
-                'mainBook' => $this->application->hook->options['columnsLimit'],
-                'mainList' => $this->application->hook->options['fieldsLimit'],
+            'mainBookLimit' => [
+                'pages' => $mainBookPages,
+                'amount' => $this->application->hook->main_book_limit['amount'],
             ],
             'status' => $this->application->status,
         ];

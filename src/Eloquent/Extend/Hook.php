@@ -14,7 +14,7 @@ class Hook extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = ['title', 'file_id', 'options', 'consent', 'due'];
+    protected $fillable = ['title', 'file_id', 'main_book_limit', 'main_list_limit', 'consent', 'due'];
 
     public function applications()
     {
@@ -31,21 +31,36 @@ class Hook extends Eloquent {
         return $this->belongsTo(Files::class, 'file_id');
     }
 
-    public function getOptionsAttribute($options)
+    public function getMainBookLimitAttribute($options)
     {
         $options = json_decode($options, true);
         return [
-            'fieldsLimit' => isset($options['fieldsLimit']) ? $options['fieldsLimit'] : 0,
-            'columnsLimit' => isset($options['columnsLimit']) ? $options['columnsLimit'] : 0,
+            'amount' => isset($options['amount']) ? $options['amount'] : 0,
             'fields' => isset($options['fields']) ? $options['fields'] : [],
         ];
     }
 
-    public function setOptionsAttribute($options)
+    public function setMainBookLimitAttribute($options)
     {
-        $this->attributes['options'] = json_encode([
-            'fieldsLimit' => isset($options['fieldsLimit']) ? $options['fieldsLimit'] : 0,
-            'columnsLimit' => isset($options['columnsLimit']) ? $options['columnsLimit'] : 0,
+        $this->attributes['main_book_limit'] = json_encode([
+            'amount' => isset($options['amount']) ? $options['amount'] : 0,
+            'fields' => isset($options['fields']) ? $options['fields'] : [],
+        ]);
+    }
+
+    public function getMainListLimitAttribute($options)
+    {
+        $options = json_decode($options, true);
+        return [
+            'amount' => isset($options['amount']) ? $options['amount'] : 0,
+            'fields' => isset($options['fields']) ? $options['fields'] : [],
+        ];
+    }
+
+    public function setMainListLimitAttribute($options)
+    {
+        $this->attributes['main_list_limit'] = json_encode([
+            'amount' => isset($options['amount']) ? $options['amount'] : 0,
             'fields' => isset($options['fields']) ? $options['fields'] : [],
         ]);
     }

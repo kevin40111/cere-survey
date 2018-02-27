@@ -318,10 +318,11 @@
                     scope.getAppliedOptions = function() {
                         $http({method: 'POST', url: 'getAppliedOptions', data:{id: application.id}})
                         .success(function(data, status, headers, config) {
-                            scope.columns = data.fields.mainList;
-                            scope.pages = $filter('filter')(data.fields.mainBookPages, function(page){return page.length>0});
-                            scope.columnsLimit = data.application.hook.options.columnsLimit;
-                            scope.fieldsLimit = data.application.hook.options.fieldsLimit;
+                            scope.application = data.application;
+                            scope.mainListFields = data.mainListFields;
+                            scope.mainBookPages = $filter('filter')(data.mainBookPages, function(page) {
+                                return page.fields.length>0
+                            });
                         })
                         .error(function(e){
                             console.log(e);

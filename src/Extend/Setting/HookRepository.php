@@ -22,9 +22,9 @@ class HookRepository
         $book->extendHook()->save(new Hook(['title' => $book->title, 'file_id' => $file->id]));
     }
 
-    public function setApplicableOptions($options)
+    public function setApplicableOptions($name, $options)
     {
-        $this->hook->update(['options' => $options]);
+        $this->hook->update([$name => $options]);
     }
 
     public function getApplicableOptions()
@@ -32,29 +32,29 @@ class HookRepository
         $file = \Files::find($this->hook->book->auth['fieldFile_id']);
 
         $mainListFields = !is_null($file) ? $file->sheets->first()->tables->first()->columns->each(function ($column) {
-            $column->selected = in_array($column->id, $this->hook->options['fields']);
+            $column->selected = in_array($column->id, $this->hook->main_list_limit['fields']);
         }) : [];
 
         $mainBookPages = $this->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
             $questions = $page->getQuestions();
 
             foreach ($questions as &$question) {
-                $question["selected"] = in_array($question['id'], $this->hook->options['fields']);
+                $question["selected"] = in_array($question['id'], $this->hook->main_book_limit['fields']);
             }
 
-            array_push($carry, ['questions' => $questions]);
+            array_push($carry, ['fields' => $questions]);
 
             return $carry;
         }, []);
 
         return [
-            'fields' => [
-                'mainBookPages' => $mainBookPages,
-                'mainList' => $mainListFields,
+            'mainListLimit' => [
+                'fields' => $mainListFields,
+                'amount' => $this->hook->main_list_limit['amount'],
             ],
-            'limit' => [
-                'mainBook' => $this->hook->options['columnsLimit'],
-                'mainList' => $this->hook->options['fieldsLimit'],
+            'mainBookLimit' => [
+                'pages' => $mainBookPages,
+                'amount' => $this->hook->main_book_limit['amount'],
             ],
         ];
     }

@@ -22,7 +22,7 @@
 
             <md-card-title>
                 <md-card-title-text md-colors="{color:'default-indigo'}">
-                    <md-title>可申請的母體名單數量:&emsp;{{columnsLimit}}</md-title>
+                    <md-title>可申請的母體名單數量:&emsp;{{application.hook.main_list_limit.amount}}</md-title>
                 </md-card-title-text>
             </md-card-title>
             <md-card-title>
@@ -31,14 +31,14 @@
                 </md-card-title-text>
             </md-card-title>
             <md-card-content>
-                <md-list-item ng-repeat="column in columns">
-                    {{column.title}}
+                <md-list-item ng-repeat="field in mainListFields">
+                    {{field.title}}
                 </md-list-item>
             </md-card-content>
             <md-divider></md-divider>
             <md-card-title>
                 <md-card-title-text md-colors="{color:'default-indigo'}">
-                    <md-title>可加入的主問卷之題目欄位的數量:&emsp;{{fieldsLimit}}</md-title>
+                    <md-title>可加入的主問卷之題目欄位的數量:&emsp;{{application.hook.main_book_limit.amount}}</md-title>
                 </md-card-title-text>
             </md-card-title>
             <md-card-title>
@@ -48,9 +48,9 @@
             </md-card-title>
             <md-card-content>
                 <md-list flex>
-                    <md-subheader class="md-no-sticky" ng-repeat-start="page in pages">母體問卷第{{$index+1}}頁</md-subheader>
-                    <md-list-item ng-repeat-end ng-repeat="question in page">
-                        {{$index+1}}. {{question.title}}
+                    <md-subheader class="md-no-sticky" ng-repeat-start="page in mainBookPages">母體問卷第{{$index+1}}頁</md-subheader>
+                    <md-list-item ng-repeat-end ng-repeat="field in page.fields">
+                        {{$index+1}}. {{field.title}}
                     </md-list-item>
                 </md-list>
             </md-card-content>
@@ -65,6 +65,5 @@
                 <md-option ng-repeat="(key,status) in selectStatus" ng-value="key">{{status.title}}</md-option>
             </md-select>
         </md-input-container>
-
     </md-dialog-actions>
 </md-dialog>
