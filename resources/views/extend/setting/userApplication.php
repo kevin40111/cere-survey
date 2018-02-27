@@ -4,59 +4,38 @@
             <h2>檢視申請表</h2>
         </div>
     </md-toolbar>
-    <md-dialog-content ng-cloak class="demo-dialog-content">
-        <div layout="column" style="font-size:1em; color:grey; margin:15px;" layout-align="center start">
+    <md-dialog-content ng-cloak layout="column" class="demo-dialog-content">
+        <div layout="column" layout-padding style="font-size:1em; color:grey" layout-align="center start">
             <div layout="row">
                 <md-icon>adjust</md-icon>
-                <div ng-repeat="organization in member.organizations" layout="row">加掛學校: {{ organization.now.name }} </div>
+                <div>加掛學校: <span ng-repeat-start="organization in member.organizations">{{ organization.now.name }}</span><span ng-repeat-end ng-if="!$last">、</span></div>
             </div>
-            <div layout="row" style="margin-top:8px;">
+            <div layout="row">
                 <md-icon>account_circle</md-icon>
                 <div>承辦人: {{member.user.username}} </div>
                 <div>&emsp;Email: {{member.user.email}} </div>
                 <div>&emsp;電話: {{member.contact.tel}}</div>
             </div>
-
         </div>
-        <md-card style="margin:20px 50px 20px 50px; font-family:Microsoft JhengHei">
-
-            <md-card-title>
-                <md-card-title-text md-colors="{color:'default-indigo'}">
-                    <md-title>可申請的母體名單數量:&emsp;{{application.hook.main_list_limit.amount}}</md-title>
-                </md-card-title-text>
-            </md-card-title>
-            <md-card-title>
-                <md-card-title-text md-colors="{color:'default-indigo'}">
-                    <md-title>已申請的母體名單欄位</md-title>
-                </md-card-title-text>
-            </md-card-title>
-            <md-card-content>
+        <md-progress-linear md-mode="indeterminate" ng-disabled="!loading"></md-progress-linear>
+        <md-content flex ng-if="!loading">
+            <md-subheader class="md-primary">已申請的母體名單欄位 (可申請數量 {{hook.main_list_limit.amount}})</md-subheader>
+            <md-list>
                 <md-list-item ng-repeat="field in mainListFields">
                     {{field.title}}
                 </md-list-item>
-            </md-card-content>
+            </md-list>
             <md-divider></md-divider>
-            <md-card-title>
-                <md-card-title-text md-colors="{color:'default-indigo'}">
-                    <md-title>可加入的主問卷之題目欄位的數量:&emsp;{{application.hook.main_book_limit.amount}}</md-title>
-                </md-card-title-text>
-            </md-card-title>
-            <md-card-title>
-                <md-card-title-text md-colors="{color:'default-indigo'}">
-                    <md-title>已加入的主問卷之題目欄位</md-title>
-                </md-card-title-text>
-            </md-card-title>
-            <md-card-content>
-                <md-list flex>
-                    <md-subheader class="md-no-sticky" ng-repeat-start="page in mainBookPages">母體問卷第{{$index+1}}頁</md-subheader>
-                    <md-list-item ng-repeat-end ng-repeat="field in page.fields">
-                        {{$index+1}}. {{field.title}}
-                    </md-list-item>
-                </md-list>
-            </md-card-content>
-        </md-card>
+            <md-subheader class="md-primary">已申請的主問卷之題目欄位 (可申請數量 {{hook.main_book_limit.amount}})</md-subheader>
+            <md-list>
+                <md-subheader class="md-no-sticky" ng-repeat-start="page in mainBookPages">母體問卷第{{$index+1}}頁</md-subheader>
+                <md-list-item ng-repeat-end ng-repeat="field in page.fields">
+                    {{$index+1}}. {{field.title}}
+                </md-list-item>
+            </md-list>
+        </md-content>
     </md-dialog-content>
-    <md-dialog-actions style="color:grey" layout="row">
+    <md-dialog-actions layout="row">
         <!-- <md-button aria-label="申請表意見" class="md-primary"><md-icon md-svg-icon="assignment"></md-icon><span>申請表意見</span></md-button> -->
         <span flex="5"></span>
         <md-input-container class="md-block" style="width:150px;">

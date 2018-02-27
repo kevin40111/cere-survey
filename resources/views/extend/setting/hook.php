@@ -154,12 +154,14 @@
         $scope.selectIndex = 0;
         $scope.isShow = {mainListFields: '', mainBookFields: ''};
         $scope.due = {};
+        $scope.$parent.main.loading = true;
 
-        $scope.getConsent = function(){
+        $scope.getConsent = function() {
             $http({method: 'POST', url: 'getConsent', data:{}})
             .success(function(data, status, headers, config) {
                 angular.extend($scope.consent, data.consent);
                 angular.extend($scope.due, data.due);
+                $scope.getApplicableOptions();
             })
             .error(function(e){
                 console.log(e);
@@ -192,12 +194,12 @@
                 $scope.mainBookLimit.fields = $scope.mainBookLimit.pages.reduce(function(carry, page){
                     return page.fields.concat(carry);
                 }, []);
+                $scope.$parent.main.loading = false;
             })
             .error(function(e){
                 console.log(e);
             });
         }
-        $scope.getApplicableOptions();
 
         $scope.setApplicableOptions = function(name, limit) {
             $scope.disabled = true;

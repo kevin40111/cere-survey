@@ -16,16 +16,13 @@
                     <div class="ui button" ng-click="next()"><i class="icon angle right arrow"></i></div>
                 </div>
             </div>
-            <div  layout="row">
-                <md-input-container style="width:150px;">
-                    <md-icon md-svg-src="find-in-page"></md-icon>
-                    <label>審核狀態</label>
+            <div layout="row">
+                    <md-icon>find_in_page</md-icon>
                     <md-select ng-model="audit_status" placeholder="審核狀態" md-container-class="auditStatus">
                         <md-option value="all" selected>查看全部</md-option>
                         <md-option value="only_send">已送出</md-option>
                         <md-option ng-repeat="(key,status) in auditStatus" ng-value="key" >{{status.title}}</md-option>
                     </md-select>
-                </md-input-container>
             </div>
         </div>
         <div  layout="row">
@@ -49,66 +46,6 @@
                     <th width="120">檢視加掛問卷</th>
                     <th width="100">進入加掛題<br>判斷條件</th>
                     <th width="120">審核結果</th>
-                </tr>
-            </thead>
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>
-                        <md-autocomplete
-                            md-selected-item="search.organization"
-                            md-selected-item-change="getUsers(1)"
-                            md-search-text="searchText"
-                            md-items="item in queryOrganizations(searchText)"
-                            md-item-text="item.now.name"
-                            md-min-length="2"
-                            md-delay="500"
-                            placeholder="搜尋學校名稱">
-                            <md-item-template>
-                                <span md-highlight-text="searchText" md-highlight-flags="^i">{{item.now.name}}</span>
-                            </md-item-template>
-                            <md-not-found>沒有找到與 "{{searchText}}" 相關的機構</md-not-found>
-                        </md-autocomplete>
-                    </th>
-                    <th>
-                        <md-autocomplete
-                            md-selected-item="search.username"
-                            md-selected-item-change="getUsers(1)"
-                            md-search-text="searchTextUsername"
-                            md-items="item in queryUsernames(searchTextUsername)"
-                            md-item-text="item"
-                            md-min-length="1"
-                            md-delay="500"
-                            placeholder="搜尋姓名">
-                            <md-item-template>
-                                <span md-highlight-text="searchTextUsername" md-highlight-flags="^i">{{item}}</span>
-                            </md-item-template>
-                            <md-not-found>沒有找到與 "{{searchTextUsername}}" 相關的姓名</md-not-found>
-                        </md-autocomplete>
-                    </th>
-                    <th>
-                        <md-autocomplete
-                            md-selected-item="search.email"
-                            md-selected-item-change="getUsers(1)"
-                            md-search-text="searchTextEmail"
-                            md-items="item in queryEmails(searchTextEmail)"
-                            md-item-text="item"
-                            md-min-length="3"
-                            md-delay="500"
-                            placeholder="搜尋電子郵件信箱">
-                            <md-item-template>
-                                <span md-highlight-text="searchTextEmail" md-highlight-flags="^i">{{item}}</span>
-                            </md-item-template>
-                            <md-not-found>沒有找到與 "{{searchTextEmail}}" 相關的電子郵件信箱</md-not-found>
-                        </md-autocomplete>
-                    </th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -150,13 +87,10 @@
                     </td>
                     <td><md-button ng-click="LoginConditions(application)" aria-label="進入加掛題判斷條件"><md-icon md-svg-icon="gallery"></md-icon></md-button></td>
                     <td>
-                        <div layout="row"  flex="noshrink">
-                            <md-input-container class="md-block">
-                                <label>審核結果</label>
-                                <md-select ng-model="application.status" md-colors="{color: auditStatus[application.status].color}" ng-blur="application.focus=false" ng-disabled="application.individual_status.book==1 && application.individual_status.apply==1 ? false: true ">
-                                    <md-option ng-repeat="(key,status) in auditStatus" ng-value="key">{{status.title}}</md-option>
-                                </md-select>
-                            </md-input-container>
+                        <div layout="row" flex="noshrink">
+                            <md-select ng-model="application.status" aria-label="審核結果" md-colors="{color: auditStatus[application.status].color}" ng-blur="application.focus=false" class="md-no-underline" ng-disabled="application.individual_status.book==1 && application.individual_status.apply==1 ? false: true ">
+                                <md-option ng-repeat="(key,status) in auditStatus" ng-value="key">{{status.title}}</md-option>
+                            </md-select>
                         </div>
                     </td>
                 </tr>
@@ -210,13 +144,13 @@
             $scope.sheetLoaded = false;
             $http({method: 'POST', url: 'getApplications', data:{}})
             .success(function(data, status, headers, config) {
-               $scope.applications = $filter('filter')(data.applications, {step:3});
-               $scope.start_at = data.start_at;
-               $scope.close_at = data.close_at;
-
-               $scope.sheetLoaded = true;
-               $scope.getApplicationPages();
-               $scope.getApplicationStatus($scope.applications);
+                $scope.hook = data.hook
+                $scope.applications = $filter('filter')(data.applications, {step:3});
+                $scope.start_at = data.start_at;
+                $scope.close_at = data.close_at;
+                $scope.sheetLoaded = true;
+                $scope.getApplicationPages();
+                $scope.getApplicationStatus($scope.applications);
             })
             .error(function(e){
                 console.log(e);
@@ -249,57 +183,6 @@
             }
         }
 
-        $scope.queryOrganizations = function(query) {
-            if (!query) {
-                return [];
-            }
-
-            deferred = $q.defer();
-            $http({method: 'POST', url: 'queryOrganizations', data:{query: query}})
-            .success(function(data, status, headers, config) {
-                deferred.resolve(data.organizations);
-            })
-            .error(function(e) {
-                console.log(e);
-            });
-
-            return deferred.promise;
-        };
-
-        $scope.queryUsernames = function(query) {
-            if (!query) {
-                return [];
-            }
-
-            deferred = $q.defer();
-            $http({method: 'POST', url: 'queryUsernames', data:{query: query}})
-            .success(function(data, status, headers, config) {
-                deferred.resolve(data.usernames);
-            })
-            .error(function(e) {
-                console.log(e);
-            });
-
-            return deferred.promise;
-        };
-
-        $scope.queryEmails = function(query) {
-            if (!query) {
-                return [];
-            }
-
-            deferred = $q.defer();
-            $http({method: 'POST', url: 'queryEmails', data:{query: query}})
-            .success(function(data, status, headers, config) {
-                deferred.resolve(data.emails);
-            })
-            .error(function(e) {
-                console.log(e);
-            });
-
-            return deferred.promise;
-        };
-
         $scope.getApplicationPages = function() {
             $http({method: 'POST', url: 'getApplicationPages', data:{}})
             .success(function(data, status, headers, config) {
@@ -312,20 +195,23 @@
         };
 
         $scope.openApplication = function(application) {
+            var confirmCtl = $scope;
             $mdDialog.show({
                 controller: function(scope){
                     scope.individual_status = application.individual_status;
                     scope.member = application.member;
                     scope.selectStatus = $scope.selectStatus;
+                    scope.hook = confirmCtl.hook;
 
                     scope.getAppliedOptions = function() {
+                        scope.loading = true;
                         $http({method: 'POST', url: 'getAppliedOptions', data:{id: application.id}})
                         .success(function(data, status, headers, config) {
-                            scope.application = data.application;
                             scope.mainListFields = data.mainListFields;
                             scope.mainBookPages = $filter('filter')(data.mainBookPages, function(page) {
-                                return page.fields.length>0
+                                return page.fields.length > 0;
                             });
+                            scope.loading = false;
                         })
                         .error(function(e){
                             console.log(e);
@@ -337,12 +223,12 @@
                         scope.data = {id: application.id, data: application.individual_status}
 
                         $http({method: 'POST', url: 'updateIndividualStatus', data: scope.data})
-                            .success(function(data, status, headers, config) {
+                        .success(function(data, status, headers, config) {
 
-                            })
-                            .error(function(e){
-                                console.log(e);
-                            });
+                        })
+                        .error(function(e){
+                            console.log(e);
+                        });
                     }
                 },
                 templateUrl: 'userApplication',
@@ -369,7 +255,7 @@
                                 <div layout="column" style="font-size:1em; color:grey; margin:15px;" layout-align="center start">
                                     <div layout="row">
                                         <md-icon>adjust</md-icon>
-                                        <div ng-repeat="organization in member.organizations" layout="row">加掛學校: {{ organization.now.name }} </div>
+                                        <div>加掛學校: <span ng-repeat-start="organization in member.organizations">{{ organization.now.name }}</span><span ng-repeat-end ng-if="!$last">、</span></div>
                                     </div>
                                     <div layout="row" style="margin-top:8px;">
                                         <md-icon>account_circle</md-icon>
@@ -408,12 +294,12 @@
                     scope.data = {id: application.id, data: application.individual_status}
 
                     $http({method: 'POST', url: 'updateIndividualStatus', data: scope.data})
-                        .success(function(data, status, headers, config) {
+                    .success(function(data, status, headers, config) {
 
-                        })
-                        .error(function(e){
-                            console.log(e);
-                        });
+                    })
+                    .error(function(e){
+                        console.log(e);
+                    });
                 }
             }
 

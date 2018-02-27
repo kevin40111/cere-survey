@@ -125,7 +125,7 @@ class SurveyFile extends CommFile
     public function createHook()
     {
         if (! $this->book->extendHook) {
-            Input::replace(['fileInfo' => ['type' => 32, 'title' => $this->file->title . ' 加掛設定']]);
+            Input::replace(['fileInfo' => ['type' => 32, 'title' => $this->file->title . ' 加掛管理']]);
 
             $folderComponent = new FolderComponent($this->doc->folder->isFile, $this->user);
 

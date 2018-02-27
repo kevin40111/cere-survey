@@ -26,6 +26,7 @@ trait CensornTrait
         $due = $this->hook->due;
 
         return [
+            'hook' => $this->hook,
             'applications' => $applications,
             'start_at' => Carbon::parse($due['start'])->tz('Asia/Taipei')->toDateTimeString(),
             'close_at' => Carbon::parse($due['close'])->tz('Asia/Taipei')->toDateTimeString(),
@@ -61,7 +62,6 @@ trait CensornTrait
         }, []);
 
         return [
-            'application' => $application->load('member.user', 'hook'),
             'mainBookPages' => $mainBookPages,
             'mainListFields' => $mainListFields,
         ];
