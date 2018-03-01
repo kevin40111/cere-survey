@@ -4,6 +4,7 @@ namespace Cere\Survey\Eloquent\Extend;
 
 use Eloquent;
 use Cere\Survey\Eloquent\Book;
+use Carbon\Carbon;
 use Files;
 
 class Hook extends Eloquent {
@@ -92,8 +93,8 @@ class Hook extends Eloquent {
     public function setDueAttribute($time)
     {
         $this->attributes['due'] = json_encode([
-            'start' => isset($time['start']) ? $time['start'] : NULL,
-            'close' => isset($time['close']) ? $time['close'] : NULL
+            'start' => isset($time['start']) ? Carbon::parse($time['start'])->tz('Asia/Taipei')->toDateTimeString() : NULL,
+            'close' => isset($time['close']) ? Carbon::parse($time['close'])->tz('Asia/Taipei')->toDateTimeString() : NULL
         ]);
     }
 }
