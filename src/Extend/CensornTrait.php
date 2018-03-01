@@ -32,6 +32,13 @@ trait CensornTrait
         ];
     }
 
+    public function setApplicationStatus()
+    {
+        $application = $this->hook->applications()->findOrFail(Input::get('id'));
+
+        $application->update(Input::only('status'));;
+    }
+
     public function getApplicationPages()
     {
         $member_id = $this->hook->applications->load('member')->fetch('member.id')->all();

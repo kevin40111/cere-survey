@@ -47,9 +47,9 @@ class Application extends Eloquent {
         return (boolean)$value;
     }
 
-    public function getRejectAttribute($value)
+    public function getStatusAttribute($value)
     {
-        return (boolean)$value;
+        return (integer)$value;
     }
 
     public function getFieldsAttribute($fields)

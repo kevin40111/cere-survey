@@ -88,7 +88,7 @@
                     <td><md-button ng-click="LoginConditions(application)" aria-label="進入加掛題判斷條件"><md-icon md-svg-icon="gallery"></md-icon></md-button></td>
                     <td>
                         <div layout="row" flex="noshrink">
-                            <md-select ng-model="application.status" aria-label="審核結果" md-colors="{color: auditStatus[application.status].color}" ng-blur="application.focus=false" class="md-no-underline" ng-disabled="application.individual_status.book==1 && application.individual_status.apply==1 ? false: true ">
+                            <md-select ng-model="application.status" md-colors="{color: auditStatus[application.status].color}" ng-blur="application.focus=false" ng-change="setApplicationStatus(application)" ng-disabled="application.individual_status.book==1 && application.individual_status.apply==1 ? false: true" class="md-no-underline" aria-label="審核結果">
                                 <md-option ng-repeat="(key,status) in auditStatus" ng-value="key">{{status.title}}</md-option>
                             </md-select>
                         </div>
@@ -156,6 +156,16 @@
                 console.log(e);
             });
         };
+
+        $scope.setApplicationStatus = function(application) {
+            $http({method: 'POST', url: 'setApplicationStatus', data:{id: application.id, status: application.status}})
+            .success(function(data, status, headers, config) {
+
+            })
+            .error(function(e){
+                console.log(e);
+            });
+        }
 
         $scope.getApplications();
 
