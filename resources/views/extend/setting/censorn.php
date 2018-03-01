@@ -218,9 +218,11 @@
                         $http({method: 'POST', url: 'getAppliedOptions', data:{id: application.id}})
                         .success(function(data, status, headers, config) {
                             scope.mainListFields = data.mainListFields;
-                            scope.mainBookPages = $filter('filter')(data.mainBookPages, function(page) {
+                            scope.mainBookPages = $filter('filter')(data.mainBookPages, function(page){
+                                page.fields = $filter('filter')(page.fields, {selected:true});
                                 return page.fields.length > 0;
                             });
+
                             scope.loading = false;
                         })
                         .error(function(e){

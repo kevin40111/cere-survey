@@ -21,16 +21,19 @@
         <md-content flex ng-if="!loading">
             <md-subheader class="md-primary">已申請的母體名單欄位 (可申請數量 {{hook.main_list_limit.amount}})</md-subheader>
             <md-list>
-                <md-list-item ng-repeat="field in mainListFields">
+                <md-list-item ng-repeat="field in mainListFields | filter:{selected:true}">
                     {{field.title}}
                 </md-list-item>
             </md-list>
             <md-divider></md-divider>
             <md-subheader class="md-primary">已申請的主問卷之題目欄位 (可申請數量 {{hook.main_book_limit.amount}})</md-subheader>
             <md-list>
+                <div layout="row" layout-align="end center" md-colors="{color:'default-grey'}">題目代號</div>
                 <md-subheader class="md-no-sticky" ng-repeat-start="page in mainBookPages">母體問卷第{{$index+1}}頁</md-subheader>
                 <md-list-item ng-repeat-end ng-repeat="field in page.fields">
                     {{$index+1}}. {{field.title}}
+                    <span flex></span>
+                    <div>{{field.id}}</div>
                 </md-list-item>
             </md-list>
         </md-content>
