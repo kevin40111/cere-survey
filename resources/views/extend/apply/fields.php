@@ -138,22 +138,26 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
         $mdDialog.show({
             controller: function(scope){
                 scope.changeStep = $scope.changeStep;
+                scope.close = function(){
+                    $mdDialog.hide();
+                }
             },
             template: `
                 <md-dialog arial-label="confirm check">
                     <md-dialog-content>
                         <div class="md-dialog-content">
-                            <h3>送出後將無法再做任何變更，請問確定要送出嗎?</h3>
+                            <h3>送出後將無法再做任何變更，<br>請問確定要送出嗎?</h3>
                         </div>
                     </md-dialog-content>
                     <md-dialog-actions>
                         <md-button class="md-primary md-raised" ng-click="changeStep('nextStep')">確認</md-button>
+                        <md-button class="md-accent md-raised" ng-click="close()">取消</md-button>
                     </md-dialog-actions>
                 </md-dialog>
             `,
             parent: angular.element(document.body),
             targetEvent: ev,
-            clickOutsideToClose: true
+            clickOutsideToClose: false
         });
     }
 
