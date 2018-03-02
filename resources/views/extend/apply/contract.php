@@ -9,7 +9,7 @@
                 </md-card-header>
                 <md-content>
                     <md-list flex>
-                        <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>加掛申請期限： <span md-colors="{color:'grey'}">123</span></h4></md-subheader>
+                        <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>加掛申請期限： <span md-colors="{color:'grey'}">{{start_at}}~{{close_at}}</span></h4></md-subheader>
                         <md-divider></md-divider>
                         <md-subheader class="md-no-sticky" md-colors="{color: 'indigo-800'}"><h4>加掛申請注意事項: </h4></md-subheader>
                         <md-list-item ng-bind-html="trustAsHtml(consent.content)"></md-list-item>
@@ -28,11 +28,13 @@
                 <md-card-actions layout="column">
                     <md-button flex href="agreeContract" ng-disabled="!consent.agree">送出</md-button>
                 </md-card-actions>
+                <md-progress-linear md-mode="indeterminate" ng-disabled="sheetLoad"></md-progress-linear>
             </md-card>
         </div>
 </md-content>
 <script>
 app.controller('contract', function ($scope, $sce, $http, $window){
+    $scope.sheetLoad = false;
     $scope.trustAsHtml = function(string) {
         return $sce.trustAsHtml(string);
     };
@@ -41,6 +43,9 @@ app.controller('contract', function ($scope, $sce, $http, $window){
         .success(function(data, status, headers, config) {
             console.log(data);
             $scope.consent = data.consent;
+            $scope.start_at = data.due.start;
+            $scope.close_at = data.due.close;
+            $scope.sheetLoad = true;
         })
         .error(function(e){
             console.log(e);

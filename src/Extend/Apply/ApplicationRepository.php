@@ -39,8 +39,8 @@ class ApplicationRepository
 
     public function getConsent()
     {
-        $consent = $this->application->hook->consent;
-        return ['consent' => $consent];
+        $hook = $this->application->hook;
+        return ['consent' => $hook->consent, 'due' => $hook->due];
     }
 
     public function setAppliedOptions($fields)
