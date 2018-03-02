@@ -93,10 +93,10 @@ class HookComponent extends CommFile
 
     public function invite()
     {
-        foreach (Input::get('users') as $user) {
+        foreach (Input::get('users') as $user_id) {
             RequestFile::updateOrCreate([
                 'target' => 'user',
-                'target_id' => $user['id'],
+                'target_id' => $user_id,
                 'doc_id' => $this->doc->id,
                 'created_by' => $this->user->id,
                 'disabled' => false,
@@ -104,5 +104,7 @@ class HookComponent extends CommFile
                 'description' => $this->hook->book->title . ' 加掛邀請'
             ]);
         }
+
+        return ['requested' => Input::get('users')];
     }
 }
