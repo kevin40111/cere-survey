@@ -55,7 +55,7 @@
             </md-card-content>
             <md-card-actions layout="row">
                 <md-button class="md-raised md-primary" flex style="height: 50px;font-size: 18px" ng-click="changeStep('preStep')">上一步</md-button>
-                <md-button class="md-raised md-primary" flex style="height: 50px;font-size: 18px" ng-click="changeStep('nextStep')">送出審核</md-button>
+                <md-button class="md-raised md-primary" flex style="height: 50px;font-size: 18px" ng-click="showConfirm($event)">送出審核</md-button>
             </md-card-actions>
     </md-card>
 </div>
@@ -133,6 +133,29 @@ app.controller('application', function ($scope, $http, $filter, $location, $elem
     }
 
     $scope.getAppliedOptions();
+
+    $scope.showConfirm = function(ev){
+        $mdDialog.show({
+            controller: function(scope){
+                scope.changeStep = $scope.changeStep;
+            },
+            template: `
+                <md-dialog arial-label="confirm check">
+                    <md-dialog-content>
+                        <div class="md-dialog-content">
+                            <h3>送出後將無法再做任何變更，請問確定要送出嗎?</h3>
+                        </div>
+                    </md-dialog-content>
+                    <md-dialog-actions>
+                        <md-button class="md-primary md-raised" ng-click="changeStep('nextStep')">確認</md-button>
+                    </md-dialog-actions>
+                </md-dialog>
+            `,
+            parent: angular.element(document.body),
+            targetEvent: ev,
+            clickOutsideToClose: true
+        });
+    }
 
     $scope.showQuestion = function(ev){
         var application = $scope;
