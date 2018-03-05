@@ -15,7 +15,10 @@ class CreateSurveyExtendHooks extends Migration {
         Schema::create('survey_extend_hooks', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('book_id');
-            $table->text('options');
+            $table->integer('file_id');
+            $table->string('title', 50);
+            $table->text('main_book_limit');
+            $table->text('main_list_limit');
             $table->text('consent');
             $table->text('due');
         });
