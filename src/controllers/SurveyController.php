@@ -205,11 +205,8 @@ class SurveyController extends \BaseController {
         $question = SurveyORM\Field\Field::find(Input::get('question.id'));
         $answers = $this->writer->all();
         $filler = Fill::answers($answers)->node($question->node);
-
         $filler->set($question, Input::get('value'));
-        if (! empty($filler->messages)) {
-            return ;
-        }
+
 
         foreach ($filler->getDirty() as $id => $value) {
             $this->writer->put($id, $value);

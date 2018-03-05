@@ -26,14 +26,11 @@ class Rule
         $limit = $question->node->rule()->where('type', 'limit')->first();
 
         if ($limit) {
-            $limit_size = $limit->expressions[0]['conditions'];
-
-            $limit_size = $limit_size[0]['value'];
+            $limit_size = $limit->expressions[0]['value'];
 
             $questions = $question->node->questions()->get(['id']);
-
             foreach ($questions as $question) {
-                $this->answers->{$question->id} == 1 && $limit_size--;
+                $this->answers[$question->id] == 1 && $limit_size--;
                 if($limit_size <= 0) {
                     return true;
                 }

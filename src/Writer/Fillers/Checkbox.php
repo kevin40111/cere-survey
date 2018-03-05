@@ -9,7 +9,8 @@ class Checkbox extends Filler
     public function set($question, $value)
     {
         if ($value === '1' && Rule::answers($this->answers)->checkLimit($question)) {
-            return ['已達選擇數量上限'];
+            $this->messages = ['已達選擇數量上限'];
+            return $this;
         }
 
         $this->contents[$question->id] = $value;

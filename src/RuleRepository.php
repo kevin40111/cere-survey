@@ -40,7 +40,7 @@ class RuleRepository
             $rule->update(['expressions' => $expressions, 'type' => $type]);
         }
 
-        $this->saveRulesFactor($expressions, $rule);
+        $type == 'jump' && $this->saveRulesFactor($expressions, $rule);
 
         return $rule;
     }

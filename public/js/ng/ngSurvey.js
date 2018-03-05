@@ -174,14 +174,23 @@ angular.module('ngSurvey.directives', [])
         priority: 1,
         restrict: 'A',
         require: 'ngModel',
-        controller: function($scope, $attrs) {
+        controller: function($scope, $attrs, $mdToast) {
             $scope.saveTextNgOptions = {updateOn: 'default blur', debounce:{default: 1000, blur: 0}};
             $scope.answers = surveyFactory.answers;
 
             $scope.saveAnswer = function(value) {
                 $scope.question.childrens = {};
                 surveyFactory.get('saveAnswer', {question: $scope.question, value: value}, $scope.node).then(function(response) {
-                    $scope.question.childrens = response.nodes;
+                    if(response.message) {
+                        var txt = "";
+                        response.message.forEach(function(message) {
+                            txt += message+'\n';
+                        });
+                        $mdToast.show(
+                            $mdToast.simple().textContent(txt).hideDelay(3000)
+                        );
+                    }
+
                     angular.extend(surveyFactory.answers, response.answers);
                     angular.extend(surveyFactory.skips, response.skips);
                     getChildrens();
