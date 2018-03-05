@@ -1,32 +1,51 @@
-<md-dialog aria-label="加掛題申請表" ng-cloak>
-    <md-dialog-content layout="column"  layout-align="start center">
-        <div style="width: 960px">
-            <md-card>
-                <md-card-header md-colors="{background: 'indigo'}">
-                    <md-card-header-text>
-                        <span class="md-title">加掛題申請表</span>
-                    </md-card-header-text>
-                </md-card-header>
-                <md-content>
-                    <md-list flex>
-                        <md-subheader class="md-no-sticky"><h4>變向選擇</h4></md-subheader>
-                        <md-list-item ng-repeat="column in columns" ng-if="edited">
-                            <p>{{column.survey_applicable_option.title}}</p>
-                        </md-list-item>
-                        <md-list-item ng-if="!edited">
-                            <p>無申請項目</p>
-                        </md-list-item>
-                        <md-divider ></md-divider>
-                        <md-subheader class="md-no-sticky"><h4>主題本資料串聯申請</h4></md-subheader>
-                        <md-list-item ng-repeat="question in questions" ng-if="edited">
-                            <p>{{question.survey_applicable_option.title}}</p>
-                        </md-list-item>
-                        <md-list-item ng-if="!edited">
-                            <p>無申請項目</p>
-                        </md-list-item>
-                    </md-list>
-                </md-content>
-            </md-card>
+<md-dialog aria-label="檢視申請表" class="demo-dialog-example">
+    <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h2>檢視申請表</h2>
         </div>
+    </md-toolbar>
+    <md-dialog-content ng-cloak layout="column" class="demo-dialog-content">
+        <div layout="column" layout-padding style="font-size:1em; color:grey" layout-align="center start">
+            <div layout="row">
+                <md-icon>adjust</md-icon>
+                <div>加掛學校: <span ng-repeat-start="organization in member.organizations">{{ organization.now.name }}</span><span ng-repeat-end ng-if="!$last">、</span></div>
+            </div>
+            <div layout="row">
+                <md-icon>account_circle</md-icon>
+                <div>承辦人: {{member.user.username}} </div>
+                <div>&emsp;Email: {{member.user.email}} </div>
+                <div>&emsp;電話: {{member.contact.tel}}</div>
+            </div>
+        </div>
+        <md-progress-linear md-mode="indeterminate" ng-disabled="!loading"></md-progress-linear>
+        <md-content flex ng-if="!loading">
+            <md-subheader class="md-primary">已申請的母體名單欄位 (可申請數量 {{hook.main_list_limit.amount}})</md-subheader>
+            <md-list>
+                <md-list-item ng-repeat="field in mainListFields | filter:{selected:true}">
+                    {{field.title}}
+                </md-list-item>
+            </md-list>
+            <md-divider></md-divider>
+            <md-subheader class="md-primary">已申請的主問卷之題目欄位 (可申請數量 {{hook.main_book_limit.amount}})</md-subheader>
+            <md-list>
+                <div layout="row" layout-align="end center" md-colors="{color:'default-grey'}">題目代號</div>
+                <md-subheader class="md-no-sticky" ng-repeat-start="page in mainBookPages">母體問卷第{{$index+1}}頁</md-subheader>
+                <md-list-item ng-repeat-end ng-repeat="field in page.fields">
+                    {{$index+1}}. {{field.title}}
+                    <span flex></span>
+                    <div>{{field.id}}</div>
+                </md-list-item>
+            </md-list>
+        </md-content>
     </md-dialog-content>
+    <md-dialog-actions layout="row">
+        <!-- <md-button aria-label="申請表意見" class="md-primary"><md-icon md-svg-icon="assignment"></md-icon><span>申請表意見</span></md-button> -->
+        <span flex="5"></span>
+        <md-input-container class="md-block" style="width:150px;">
+            <label>申請表審核</label>
+            <md-select ng-model="individual_status.apply" ng-change="updateIndividualStatus()">
+                <md-option ng-repeat="(key,status) in selectStatus" ng-value="key">{{status.title}}</md-option>
+            </md-select>
+        </md-input-container>
+    </md-dialog-actions>
 </md-dialog>

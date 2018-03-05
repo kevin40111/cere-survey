@@ -18,9 +18,9 @@ class Application extends Eloquent {
 
     public $timestamps = true;
 
-    protected $fillable = array('book_id', 'extension', 'status', 'fields', 'updated_at', 'step', 'created_at', 'deleted_at', 'deleted_by');
+    protected $fillable = array('book_id', 'member_id', 'extension', 'status', 'fields', 'updated_at', 'step', 'created_at', 'deleted_at', 'deleted_by', 'individual_status');
 
-    protected $attributes = ['extension' => false, 'reject' => false];
+    protected $attributes = ['extension' => false, 'status' => 0];
 
     public function book()
     {
@@ -32,7 +32,7 @@ class Application extends Eloquent {
         return $this->belongsTo(Hook::class);
     }
 
-    public function members()
+    public function member()
     {
         return $this->belongsTo(Member::class);
     }
@@ -47,9 +47,9 @@ class Application extends Eloquent {
         return (boolean)$value;
     }
 
-    public function getRejectAttribute($value)
+    public function getStatusAttribute($value)
     {
-        return (boolean)$value;
+        return (integer)$value;
     }
 
     public function getFieldsAttribute($fields)
@@ -61,5 +61,22 @@ class Application extends Eloquent {
     public function setFieldsAttribute($fields)
     {
         $this->attributes['fields'] = json_encode(isset($fields) ? $fields : []);
+    }
+
+    public function getIndividualStatusAttribute($status)
+    {
+        $status = json_decode($status, true);
+        return isset($status) ? $status : [
+            'apply' => 0,
+            'book' => 0
+        ];
+    }
+
+    public function setIndividualStatusAttribute($status)
+    {
+        $this->attributes['individual_status'] = json_encode(isset($status) ? $status : [
+            'apply' => 0,
+            'book' => 0
+        ]);
     }
 }

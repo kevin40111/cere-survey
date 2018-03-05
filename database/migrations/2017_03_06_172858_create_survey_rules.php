@@ -17,6 +17,7 @@ class CreateSurveyRules extends Migration {
             $table->string('expressions');
             $table->string('effect_type', 50);
             $table->integer('effect_id');
+            $table->integer('page_id');
             $table->timestamps();
         });
     }

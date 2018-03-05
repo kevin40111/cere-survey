@@ -3,6 +3,9 @@
 namespace Cere\Survey\Extend;
 
 use Input;
+use View;
+use Cere\Survey\RuleRepository;
+use Cere\Survey\Eloquent\Rule;
 
 trait CensornTrait
 {
@@ -18,67 +21,100 @@ trait CensornTrait
 
     public function getApplications()
     {
-        $applications = $this->book->extendHook->applications->load('members.organizations.now', 'members.user', 'members.contact');
+        $applications = $this->hook->applications->load('member.organizations.now', 'member.user', 'member.contact', 'book');
+        $due = $this->hook->due;
 
-        return ['applications' => $applications];
+        return [
+            'hook' => $this->hook,
+            'applications' => $applications,
+            'start_at' => $due['start'],
+            'close_at' => $due['close'],
+        ];
     }
 
-    public function reject()
+    public function setApplicationStatus()
     {
-        $application = $this->book->extendHook->applications()->where('id', Input::get('application_id'))->first();
+        $application = $this->hook->applications()->findOrFail(Input::get('id'));
 
-        if (!$this->application->reject) {
-            SurveyORM\Book::find($this->application->ext_book_id)->update(array('lock' => false));
-        }
-        $this->application->reject = !$this->application->reject;
-        $this->application->save();
-
-        return $this->application;
-
-        return ['application' => $application];
+        $application->update(Input::only('status'));;
     }
 
     public function getApplicationPages()
     {
-        $members_id = $this->book->extendHook->applications->load('members')->fetch('members.id')->all();
-        return \Plat\Member::with('user')->whereIn('id', $members_id)->paginate(10);
+        $member_id = $this->hook->applications->load('member')->fetch('member.id')->all();
+        return \Plat\Member::with('user')->whereIn('id', $member_id)->paginate(10);
     }
 
-    public function activeExtension()
+    public function getAppliedOptions()
     {
-        $application_id = Input::get('application_id');
-        $application = $this->book->extendHook->applications()->where('id', $application_id)->first();
-        if (!$application->reject) {
-            SurveyORM\Book::find($application->ext_book_id)->update(array('lock' => true));
-        }
-        $application->extension = !$application->extension;
-        $application->save();
+        $application = $this->hook->applications->find(Input::get('id'));
 
-        return ['application' => $application];
-    }
+        $fieldFile = \Files::find($this->hook->book->auth['fieldFile_id']);
 
-    public function resetApplication()
-    {
-        $application = $this->book->applications()->OfMe()->withTrashed()->first();
-        $application->reject = false;
-        $application->save();
-        $extBook = SurveyORM\Book::find($application->ext_book_id);
-        RuleRepository::target($extBook)->deleteRule();
-        $this->book->applications()->OfMe()->delete();
-        return $this->getAppliedOptions();
+        $mainListFields = !is_null($fieldFile) ? $fieldFile->sheets->first()->tables->first()->columns->each(function ($column) use ($application) {
+            $column->selected = in_array($column->id, $application->fields);
+        }) : [];
+
+        $mainBookPages =$this->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($application){
+            $questions = $page->getQuestions();
+
+            foreach ($questions as &$question) {
+                $question['selected'] = in_array($question['id'], $application->fields);
+            }
+
+            array_push($carry, ['fields' => $questions]);
+
+            return $carry;
+        }, []);
+
+        return [
+            'mainBookPages' => $mainBookPages,
+            'mainListFields' => $mainListFields,
+        ];
+
     }
 
     private function deleteRelatedApplications()
     {
-        $this->book->extendHook->applications->each(function($application){
+        $this->hook->applications->each(function($application){
             $application->delete();
         });
     }
 
-    public function checkExtBookLocked()
+    public function updateIndividualStatus()
     {
-        $locked = SurveyORM\Book::find(Input::get('book_id'))->lock;
+        $application = $this->hook->applications->find(Input::get('id'));
 
-        return  ['ext_locked' => $locked];
+        $application->individual_status = Input::get('data');
+
+        $application->save();
+
+        return $application;
+    }
+
+    public function getApplicationHangingRule()
+    {
+        $application = $this->hook->applications->find(Input::get('id'));
+
+        $fields =  $application->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
+            $questions = $page->getQuestions();
+            return $carry = array_merge($carry, $questions);
+        }, []);
+
+        return [
+            'fields' => $fields,
+            'rule' => $application->book->rule ? $application->book->rule : new Rule(['expressions' => [['conditions' => [['compareType' => 'question']]]]]),
+        ];
+    }
+
+    public function setApplicationHangingRule()
+    {
+        $application = $this->hook->applications->find(Input::get('id'));
+
+        $page = $this->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->last();
+
+        RuleRepository::target($application->book)->saveExpressions(Input::get('rule'), 'direction', $page->id);
+
+        return ['rule' => RuleRepository::target($application->book)->getRule()];
     }
 }

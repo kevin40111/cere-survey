@@ -3,6 +3,7 @@
 namespace Cere\Survey\Extend\Apply;
 
 use Cere\Survey\Eloquent\Extend\Application;
+use Cere\Survey\Field\FieldComponent;
 
 class ApplicationRepository
 {
@@ -18,9 +19,15 @@ class ApplicationRepository
         $this->application = $application;
     }
 
-    public static function create($hook, $book_id)
+    public static function create($hook, $book, $member)
     {
-        $application = $hook->applications()->save(Application::create(['book_id' => $book_id]));
+        $fieldComponent = FieldComponent::createComponent(['title' => $book->title], $member->user);
+
+        $book->sheet()->associate($fieldComponent->file->sheets()->first());
+
+        $book->save();
+
+        $application = $hook->applications()->save(Application::create(['book_id' => $book->id, 'member_id' => $member->id]));
 
         return new self($application);
     }
@@ -32,8 +39,8 @@ class ApplicationRepository
 
     public function getConsent()
     {
-        $consent = $this->application->hook->consent;
-        return ['consent' => $consent];
+        $hook = $this->application->hook;
+        return ['consent' => $hook->consent, 'due' => $hook->due];
     }
 
     public function setAppliedOptions($fields)
@@ -43,42 +50,42 @@ class ApplicationRepository
 
     public function getAppliedOptions()
     {
-        $release = $this->application->hook->options['fields'];
-
         $appliedFields = $this->application->fields;
 
         $file = \Files::find($this->application->hook->book->auth['fieldFile_id']);
 
-        $mainListFields = !is_null($file) ? $file->sheets->first()->tables->first()->columns->filter(function ($column) use ($release) {
-            return in_array($column->id, $release);
-        })->each(function ($column) use ($appliedFields) {
+        $mainListFields = !is_null($file) ? $file->sheets->first()->tables->first()->columns->filter(function ($column) {
+            return in_array($column->id, $this->application->hook->main_list_limit['fields']);
+        })->values()->each(function ($column) use ($appliedFields) {
             $column->selected = in_array($column->id, $appliedFields);
         }) : [];
 
-        $mainBookPages = $this->application->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($appliedFields, $release){
+        $mainBookPages = $this->application->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($appliedFields){
             $questions = $page->getQuestions();
 
-            $questions = array_filter($questions, function($question) use ($release){
-                return in_array($question['id'], $release);
+            $questions = array_filter($questions, function($question) {
+                return in_array($question['id'], $this->application->hook->main_book_limit['fields']);
             });
 
             foreach ($questions as &$question) {
                 $question["selected"] = in_array($question['id'], $appliedFields);
             }
 
-            array_push($carry, ['questions' => $questions]);
+            if (! empty($questions)) {
+                array_push($carry, ['fields' => $questions]);
+            }
 
             return $carry;
         }, []);
 
         return [
-            'fields' => [
-                'mainBookPages' => $mainBookPages,
-                'mainList' => $mainListFields,
+            'mainListLimit' => [
+                'fields' => $mainListFields,
+                'amount' => $this->application->hook->main_list_limit['amount'],
             ],
-            'limit' => [
-                'mainBook' => $this->application->hook->options['columnsLimit'],
-                'mainList' => $this->application->hook->options['fieldsLimit'],
+            'mainBookLimit' => [
+                'pages' => $mainBookPages,
+                'amount' => $this->application->hook->main_book_limit['amount'],
             ],
             'status' => $this->application->status,
         ];

@@ -15,12 +15,13 @@ class CreateSurveyExtendApplications extends Migration {
         Schema::create('survey_extend_applications', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('hook_id');
+            $table->integer('book_id');
             $table->integer('member_id');
             $table->boolean('extension');
             $table->tinyint('status');
             $table->int('step')->default(0);
             $table->text('fields');
-            $table->integer('ext_book_id')->nullable();
+            $table->text('individual_status');
             $table->timestamps();
             $table->softDeletes();
         });
