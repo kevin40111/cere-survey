@@ -105,6 +105,6 @@ class HookComponent extends CommFile
             ]);
         }
 
-        return ['requested' => Input::get('users')];
+        return ['result' => true];
     }
 }
