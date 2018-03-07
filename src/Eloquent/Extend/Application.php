@@ -37,9 +37,9 @@ class Application extends Eloquent {
         return $this->belongsTo(Member::class);
     }
 
-    public function reasons()
+    public function messages()
     {
-        return $this->hasMany('Cere\Survey\Eloquent\Extend\Reason', 'extend_application_id');
+        return $this->morphMany(SurveyORM\Message::class, 'target');
     }
 
     public function getExtensionAttribute($value)
