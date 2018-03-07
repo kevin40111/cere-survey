@@ -27,6 +27,7 @@
         </div>
         <div  layout="row">
             <b>加掛者申請期限 : {{start_at}} ~ {{close_at}}</b>
+            <span flex></span>
         </div>
         <table class="ui very compact table">
             <thead>
@@ -46,6 +47,7 @@
                     <th width="120">檢視加掛問卷</th>
                     <th width="100">進入加掛題<br>判斷條件</th>
                     <th width="120">審核結果</th>
+                    <th width="120">訊息</th>
                 </tr>
             </thead>
             <tbody>
@@ -92,6 +94,9 @@
                                 <md-option ng-repeat="(key,status) in auditStatus" ng-value="key">{{status.title}}</md-option>
                             </md-select>
                         </div>
+                    </td>
+                    <td>
+                        <md-button md-colors="{'background':'cyan-700'}" ng-click="sendMsg($event, application)">訊息</md-button>
                     </td>
                 </tr>
             <tbody>
@@ -140,6 +145,45 @@
                 $scope.getUsers($scope.currentPage);
             }
         };
+
+        $scope.sendMsg = function(ev, application) {
+            $mdDialog.show({
+                controller: function(scope){
+                    scope.application = application;
+                    scope.messages = [];
+                    scope.close = function() {
+                        $mdDialog.hide();
+                    }
+                    scope.getMessages = function() {
+                        $http({method:'post', url:'getMessages', data:{id:scope.application.id}})
+                        .success(function(data, status, header, config){
+                            scope.messages = data.messages;
+                        })
+                        .error(function(e){
+                            console.log(e);
+                        })
+                    }
+                    scope.getMessages();
+                },
+                template: `<md-dialog arial-label="Message" style="width:600px;">
+                    <md-toolbar>
+                        <div class="md-toolbar-tools">
+                            {{application.member.user.username}}&nbsp;的訊息內容
+                            <span flex></span>
+                            <md-button class="md-icon-button" ng-click="close()"><md-icon>clear</md-icon></md-button>
+                        </div>
+                    </md-toolbar>
+                    <md-dialog-content>
+                        <user-message messages="messages" application="application"></user-message>
+                    </md-dialog-content>
+                </md-dialog>
+                `,
+                parent: angular.element(document.body),
+                targetEvent: ev,
+                clickOutsideToClose: true
+            })
+        }
+
         $scope.getApplications = function() {
             $scope.sheetLoaded = false;
             $http({method: 'POST', url: 'getApplications', data:{}})
@@ -242,6 +286,7 @@
                             console.log(e);
                         });
                     }
+
                 },
                 templateUrl: 'userApplication',
                 parent: angular.element(document.body),
@@ -275,7 +320,6 @@
                                         <div>&emsp;Email: {{member.user.email}} </div>
                                         <div>&emsp;電話: {{member.contact.tel}}</div>
                                     </div>
-
                                 </div>
                                 <div layout="column" layout-align="start center">
                                     <node-browser ng-if="book" re-open="reOpen()" book="book"></node-browser>
@@ -507,6 +551,84 @@ app.directive("loginCondition", function(){
                 </div>
             </div>
         `
+    }
+})
+.directive('userMessage',function(){
+    return {
+        restrict: 'E',
+        scope: {
+            messages:'=',
+            application:'='
+        },
+        template: `
+        <md-content style="height:500px;">
+            <div layout="row">
+                <span flex></span>
+                <md-button class="md-primary" ng-click="addMsg()" ><md-icon>add_circle</md-icon>新增訊息</button>
+            </div>
+            <md-card ng-repeat="message in messages">
+                <md-card-content>
+                    <div class="ui form">
+                        <div class="field">
+                            <label>主旨</label>
+                            <input type="text" placeholder="主旨" ng-model="message.title">
+                        </div>
+                        <div class="field">
+                            <label>內容</label>
+                            <textarea type="text" placeholder="內容" ng-model="message.content" rows="3"></textarea>
+                        </div>
+                        <div class="field">
+                            <span>更新時間:{{message.updated_at}}</span>
+                        </div>
+                    </div>
+                </md-card-content>
+                <md-card-actions>
+                    <div layout="row">
+                        <span flex></span>
+                        <md-button class="md-primary md-raised" ng-click="saveMessage(message)" ng-if="!message.id">儲存</md-button>
+                        <md-button class="md-primary md-raised" ng-click="updateMessage(message)" ng-if="message.id">更新</md-button>
+                        <md-button class="md-primary md-raised" ng-click="deleteMessage(message, $index)" ng-if="message.id">刪除</md-button>
+                    </div>
+                </md-card-actions>
+            </md-card>
+            <div class="ui info message" style="margin:15px;" ng-if="messages.length==0">尚未新增訊息</div>
+        <md-content>
+        `,
+        controller: function($scope, $http){
+            $scope.saveMessage = function(message) {
+                $http({method:'post', url:'saveMessage', data:{id: $scope.application.id, title: message.title, content: message.content}})
+                .success(function(data, status, header, config){
+                    angular.extend(message, data.message);
+                })
+                .error(function(e){
+                    console.log(e);
+                })
+            }
+
+            $scope.addMsg = function(){
+                $scope.messages.push({title:'', content:''});
+            }
+
+            $scope.updateMessage = function(message) {
+                $http({method:'post', url:'updateMessage', data:{message_id: message.id, title: message.title, content: message.content}})
+                .success(function(data, status, header, config){
+                    angular.extend(message, data.message);
+                })
+                .error(function(e){
+                    console.log(e);
+                })
+            }
+
+            $scope.deleteMessage = function(message, index) {
+                $http({method:'post', url:'deleteMessage', data:{message_id: message.id}})
+                .success(function(data, status, header, config){
+                    $scope.messages.splice(index, 1);
+                })
+                .error(function(e){
+                    console.log(e);
+                })
+            }
+        }
     }
 })
 </script>
