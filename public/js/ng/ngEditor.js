@@ -90,7 +90,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                                 </div>
                             </md-card-content>
                         </md-card>
-                        <survey-node ng-class="{fade:node.deleting}" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
+                        <survey-node ng-class="{fade:node.deleting}" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last" paths="paths"></survey-node>
                         <md-card ng-if="paths.length == 1">
                             <md-card-header md-colors="{background: 'blue'}">
                                 <div flex layout="row" layout-align="start center">
@@ -195,7 +195,8 @@ angular.module('ngEditor.directives', ['ngQuill'])
             node: '=',
             index: '=',
             first: '=',
-            last: '='
+            last: '=',
+            paths: '='
         },
         template:  `
             <md-card>
@@ -211,7 +212,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                         <ng-quill-editor placeholder="{{type.editor.title}}" ng-if="node.type!='page'" ng-model="node.title" on-content-changed="contentChanged(editor, node)"></ng-quill-editor>
                         <textarea ng-model="node.title" ng-if="node.type=='page'" md-maxlength="2000" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
                     </md-input-container>
-                    <div ng-if="type.editor.questions.amount" questions="node.questions" node="node"></div>
+                    <div ng-if="type.editor.questions.amount" questions="node.questions" node="node", paths="paths"></div>
                     <md-divider ng-if="type.editor.questions.amount && type.editor.answers"></md-divider>
                     <div ng-if="type.editor.answers" answers="node.answers" node="node"></div>
                     <div ng-if="type.editor.uploadFile" gear-bar node="node"></div>
@@ -493,14 +494,28 @@ angular.module('ngEditor.directives', ['ngQuill'])
         transclude: false,
         scope: {
             questions: '=',
-            node: '='
+            node: '=',
+            paths: '='
         },
         template:  `
             <md-list>
+                <md-subheader class="md-no-sticky" ng-if="node.type=='checkbox'">
+                    <div md-colors="{color: 'grey-700'}" layout="row" layout-align="end center">
+                        此題最多勾選
+                        <md-select ng-model="limit[0].value" aria-label="number" layout="row" style="text-align:center; margin:0px;" ng-change="saveLimitRule()">
+                            <md-option ng-value="0">0</md-option>
+                            <md-option ng-repeat="(key, question) in node.questions" ng-value="$index+1">{{$index+1}}</md-option>
+                        </md-select>
+                        個選項
+                    </div>
+                </md-subheader>
                 <md-list-item ng-repeat="question in node.questions">
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
-                        <input type="text" placeholder="輸入{{types[node.type].editor.questions.text}}" ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)" />
+                        <input type="text" placeholder="輸入{{types[node.type].editor.questions.text}}" ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)"/>
                     </p>
+                    <md-switch class="md-primary" md-no-ink aria-label="all false" ng-model="question.noneAbove" ng-if="node.type=='checkbox'" ng-class="{noneAbove: question.noneAbove}" ng-change="saveNoneAboveRule(question)">
+                        以上皆非
+                    </md-switch>
                     <md-button class="md-secondary" ng-if="types[node.type].editor.questions.childrens" aria-label="設定子題" ng-click="getNodes(question)">設定子題</md-button>
                     <md-button class="md-secondary md-icon-button" ng-click="moveUp(question)" aria-label="上移" ng-disabled="$first">
                         <md-tooltip md-direction="left">上移</md-tooltip>
@@ -527,11 +542,51 @@ angular.module('ngEditor.directives', ['ngQuill'])
             scope.toggleSidenavRight = surveyBookCtrl.toggleSidenavRight;
         },
         controller: function($scope, $http, $filter) {
-
             $scope.types = editorFactory.types;
             $scope.saveTitleNgOptions = {updateOn: 'default blur', debounce:{default: 2000, blur: 0}};
             $scope.searchLoaded = '';
             $scope.searchText = {};
+            $scope.limit = [];
+
+            $scope.getRule = function(){
+                if($scope.node.limit_rule != null){
+                    $scope.limit = $scope.node.limit_rule.expressions;
+                }
+
+                angular.forEach($scope.node.questions, function(value){
+                    if(value.none_above_rule != null){
+                        value.noneAbove = true;
+                    }
+                })
+            }
+            $scope.getRule();
+
+            $scope.saveLimitRule = function(){
+                $http({method: 'POST', url: 'saveRule', data:{paths: $scope.paths, expressions: $scope.limit, skipTarget: $scope.node, type: 'limit'}})
+                .success(function(data) {
+
+                }).error(function(e) {
+                console.log(e)
+                });
+            }
+
+            $scope.saveNoneAboveRule = function(question){
+                if(question.noneAbove == true){
+                    $http({method: 'POST', url: 'saveRule', data:{paths: $scope.paths, expressions: question.id, skipTarget: question, type:'noneAbove'}})
+                    .success(function(data) {
+                        question.none_above_rule = data.rule;
+                    }).error(function(e) {
+                        console.log(e)
+                    });
+                } else if(question.noneAbove == false){
+                    $http({method: 'POST', url: 'deleteRule', data:{rule_id: question.none_above_rule.id, skipTarget: question}})
+                    .success(function(data) {
+                        question.none_above_rule = null;
+                    }).error(function(e) {
+                        console.log(e)
+                    });
+                }
+            }
 
             $scope.createQuestion = function(previous) {
                 editorFactory.ajax('createQuestion', {node: $scope.node, previous: previous}, $scope.node).then(function(response) {
