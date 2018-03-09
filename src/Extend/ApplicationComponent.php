@@ -100,4 +100,9 @@ class ApplicationComponent extends CommFile
     {
         ApplicationRepository::instance($this->book->application)->backToApply();
     }
+
+    public function getMessages()
+    {
+        return ['messages' => $this->book->application->messages()->orderBy('updated_at', 'desc')->get()];
+    }
 }
