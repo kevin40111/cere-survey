@@ -9,6 +9,8 @@
             </md-card-header>
             <div md-colors="{background: status.background}" style="padding: 50px">
                 <h4>{{status.message}}</h4>
+                <span flex></span>
+                <div layout="row" layout-align="end center" ><md-button class="md-rised" md-colors="{'background':'teal-400', color:'grey-A100'}" ng-click="openMessage($event)">相關訊息</md-button></div>
             </div>
             <md-card-actions layout="row" ng-if="status.back">
                 <span flex></span>
@@ -53,7 +55,7 @@
                 class: 'ui green label',
                 title: '審核通過',
                 message: '恭喜你!審核已通過，問卷即將進入調查，請靜待通知',
-                background: 'light-green',
+                background: 'light-green-200',
                 back: false
             },
             {
@@ -109,5 +111,60 @@
         }
 
         $scope.getAppliedOptions();
+
+        $scope.openMessage = function(ev) {
+            $mdDialog.show({
+                controller: function(scope) {
+                    scope.messages = [];
+                    scope.getMessages = function() {
+                        scope.sheetLoad = false;
+                        $http({method:'post', url:'getMessages', data:{}})
+                        .success(function(data, status, header, config){
+                            angular.extend(scope.messages, data.messages);
+                            scope.sheetLoad = true;
+                        })
+                        .error(function(e){
+                            console.log(e);
+                        })
+                    }
+                    scope.getMessages();
+
+                    scope.close = function(){
+                        $mdDialog.hide();
+                    }
+                },
+                template: `
+                    <md-dialog aria-label="message" style="width:800px; height:500px;">
+                        <md-toolbar>
+                            <div class="md-toolbar-tools">
+                                相關訊息
+                                <span flex></span>
+                                <md-button class="md-icon-button" ng-click="close()"><md-icon>clear</md-icon></md-button>
+                            </div>
+                        </md-toolbar>
+                        <md-dialog-content>
+                            <md-progress-linear md-mode="indeterminate" ng-disabled="sheetLoad"></md-progress-linear>
+                            <div class="md-dialog-content">
+                                <md-card ng-repeat="message in messages">
+                                    <md-card-title>
+                                        <md-card-title-text>
+                                            <span class="md-title">{{message.title}}</span>
+                                        </md-card-title-text>
+                                    </md-card-title>
+                                    <md-card-content>
+                                        <p>{{message.content}}</p>
+                                        <p style="text-align: right;">Time:{{message.updated_at}}</p>
+                                    </md-card-content>
+                                </md-card>
+                                <div class="ui info message" style="margin:15px;" ng-if="messages.length==0">尚未有任何訊息</div>
+                            </div>
+                        </md-dialog-content>
+                    </md-dialog>
+                `,
+                parent: angular.element(document.body),
+                targetEvent: ev,
+                clickOutsideToClose:true,
+            })
+        }
     });
 </script>
