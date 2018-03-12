@@ -510,7 +510,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                         <md-tooltip md-direction="left">下移</md-tooltip>
                         <md-icon md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
-                    <md-button  md-colors="{backgroundColor: question.rule ? 'blue-300' : 'grey-A100'}" class="md-secondary md-icon-button" ng-click="toggleSidenavRight(question)" aria-label="設定限制" ng-if="(question.node.type == 'scale') || (question.node.type == 'checkbox')">
+                    <md-button  md-colors="{backgroundColor: question.rule ? 'blue-300' : 'grey-A100'}" class="md-secondary md-icon-button" ng-click="toggleSidenavRight(question)" aria-label="設定限制" ng-if="(node.type == 'scale') || (node.type == 'checkbox')">
                         <md-tooltip>設定限制</md-tooltip>
                         <md-icon md-colors="{color: question.rule ? 'grey-A100' : 'grey-600'}">visibility_off</md-icon>
                     </md-button>

@@ -28,7 +28,7 @@ class Editor
             $root->load('childrenNodes');
         }
 
-        $nodes = $root->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.rule', 'questions.node', 'questions.noneAboveRule', 'rule', 'limitRule', 'answers.rule', 'images'])->each(function ($node) {
+        $nodes = $root->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.rule', 'questions.noneAboveRule', 'rule', 'limitRule', 'answers.rule', 'images'])->each(function ($node) {
             $node->sortByPrevious(['questions', 'answers']);
         });
 
