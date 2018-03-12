@@ -51,7 +51,7 @@ class Checkbox extends Filler
 
     public function childrens($question)
     {
-        return $this->isChecked($question) ? $question->childrenNodes->load(['questions.rule', 'answers.rule', 'rule']) : [];
+        return $this->isChecked($question) ? $question->childrenNodes->load(['questions.rule', 'questions.noneAboveRule', 'answers.rule', 'rule', 'limitRule']) : [];
     }
 
     private function resetChecked($excepts)

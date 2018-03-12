@@ -126,7 +126,12 @@ class Node extends Eloquent {
 
     public function rule()
     {
-        return $this->morphOne(Rule::class, 'effect');
+        return $this->morphOne(Rule::class, 'effect')->where('type', 'jump');
+    }
+
+    public function limitRule()
+    {
+        return $this->morphOne(Rule::class, 'effect')->where('type', 'limit');
     }
 
     public function images()
