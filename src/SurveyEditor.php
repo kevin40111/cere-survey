@@ -235,8 +235,10 @@ trait SurveyEditor
     {
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
+        $rule_id = Input::get('rule_id');
 
-        Survey\RuleRepository::target($root)->deleteRule();
+
+        Survey\RuleRepository::target($root)->deleteRule($rule_id);
 
         return 'delete rules successed';
     }
