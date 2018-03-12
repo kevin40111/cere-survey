@@ -39,6 +39,11 @@ class Editor
     {
         $questions = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->load('rule')->reduce(function ($carry, $page) {
             $questions = $page->getQuestions();
+
+            foreach ($questions as &$question) {
+                $question['node']['title'] = strip_tags($question['node']['title']);
+            }
+
             if (count($questions) > 0) {
                 $questions[0]['page'] = $page;
             }
