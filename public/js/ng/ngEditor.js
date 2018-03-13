@@ -90,7 +90,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                                 </div>
                             </md-card-content>
                         </md-card>
-                        <survey-node ng-class="{fade:node.deleting}" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last" paths="paths"></survey-node>
+                        <survey-node ng-class="{fade:node.deleting}" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
                         <md-card ng-if="paths.length == 1">
                             <md-card-header md-colors="{background: 'blue'}">
                                 <div flex layout="row" layout-align="start center">
@@ -195,8 +195,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
             node: '=',
             index: '=',
             first: '=',
-            last: '=',
-            paths: '='
+            last: '='
         },
         template:  `
             <md-card>
@@ -212,7 +211,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                         <ng-quill-editor placeholder="{{type.editor.title}}" ng-if="node.type!='page'" ng-model="node.title" on-content-changed="contentChanged(editor, node)"></ng-quill-editor>
                         <textarea ng-model="node.title" ng-if="node.type=='page'" md-maxlength="2000" rows="1" ng-model-options="{updateOn: 'blur'}" md-select-on-focus ng-change="saveNodeTitle(node)"></textarea>
                     </md-input-container>
-                    <div ng-if="type.editor.questions.amount" questions="node.questions" node="node", paths="paths"></div>
+                    <div ng-if="type.editor.questions.amount" questions="node.questions" node="node"></div>
                     <md-divider ng-if="type.editor.questions.amount && type.editor.answers"></md-divider>
                     <div ng-if="type.editor.answers" answers="node.answers" node="node"></div>
                     <div ng-if="type.editor.uploadFile" gear-bar node="node"></div>
@@ -494,8 +493,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
         transclude: false,
         scope: {
             questions: '=',
-            node: '=',
-            paths: '='
+            node: '='
         },
         template:  `
             <md-list>
@@ -562,7 +560,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
             $scope.getRule();
 
             $scope.saveLimitRule = function(){
-                $http({method: 'POST', url: 'saveRule', data:{paths: $scope.paths, expressions: $scope.limit, skipTarget: $scope.node, type: 'limit'}})
+                $http({method: 'POST', url: 'saveRule', data:{expressions: $scope.limit, skipTarget: $scope.node, type: 'limit'}})
                 .success(function(data) {
 
                 }).error(function(e) {
@@ -572,7 +570,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
 
             $scope.saveNoneAboveRule = function(question){
                 if(question.noneAbove == true){
-                    $http({method: 'POST', url: 'saveRule', data:{paths: $scope.paths, expressions: question.id, skipTarget: question, type:'noneAbove'}})
+                    $http({method: 'POST', url: 'saveRule', data:{expressions: question.id, skipTarget: question, type:'noneAbove'}})
                     .success(function(data) {
                         question.none_above_rule = data.rule;
                     }).error(function(e) {
