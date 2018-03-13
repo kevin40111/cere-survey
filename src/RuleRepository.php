@@ -37,7 +37,7 @@ class RuleRepository
         if ($rule == null) {
             $rule = $this->target->rule()->save(new SurveyORM\Rule(['expressions' => $expressions, 'type' => $type, 'page_id' => $page_id]));
         } else {
-            $rule->update(['expressions' => $expressions]);
+            $rule->update(['expressions' => $expressions, 'page_id' => $page_id]);
         }
 
         $type == 'jump' && $this->saveRulesFactor($expressions, $rule);
