@@ -500,9 +500,9 @@ angular.module('ngEditor.directives', ['ngQuill'])
                 <md-subheader class="md-no-sticky" ng-if="node.type=='checkbox'">
                     <div md-colors="{color: 'grey-700'}" layout="row" layout-align="end center">
                         此題最多勾選
-                        <md-select ng-model="limit[0].value" aria-label="number" layout="row" style="text-align:center; margin:0px;" ng-change="saveLimitRule()">
-                            <md-option ng-value="0">0</md-option>
-                            <md-option ng-repeat="(key, question) in node.questions" ng-value="$index+1">{{$index+1}}</md-option>
+                        <md-select ng-model="node.limit_rule.expressions[0].value" aria-label="number" layout="row" style="text-align:center; margin:0px;" ng-change="saveRule(node, 'limit')">
+                            <md-option ng-repeat="question in node.questions" ng-value="$index" ng-if="$index>0">{{$index}}</md-option>
+                            <md-option ng-value="undefined">{{node.questions.length}}</md-option>
                         </md-select>
                         個選項
                     </div>
@@ -511,7 +511,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
                         <input type="text" placeholder="輸入{{types[node.type].editor.questions.text}}" ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)"/>
                     </p>
-                    <md-switch class="md-primary" md-no-ink aria-label="all false" ng-model="question.noneAbove" ng-if="node.type=='checkbox'" ng-class="{noneAbove: question.noneAbove}" ng-change="saveNoneAboveRule(question)">
+                    <md-switch class="md-primary" md-no-ink aria-label="all false" ng-model="question.none_above_rule.expressions[0].value" ng-false-value="undefined" ng-true-value="'noneAbove'" ng-if="node.type=='checkbox'" ng-class="{noneAbove: question.none_above_rule.expressions[0].value}" ng-change="saveRule(question, 'none_above')">
                         以上皆非
                     </md-switch>
                     <md-button class="md-secondary" ng-if="types[node.type].editor.questions.childrens" aria-label="設定子題" ng-click="getNodes(question)">設定子題</md-button>
@@ -544,42 +544,19 @@ angular.module('ngEditor.directives', ['ngQuill'])
             $scope.saveTitleNgOptions = {updateOn: 'default blur', debounce:{default: 2000, blur: 0}};
             $scope.searchLoaded = '';
             $scope.searchText = {};
-            $scope.limit = [];
 
-            $scope.getRule = function(){
-                if($scope.node.limit_rule != null){
-                    $scope.limit = $scope.node.limit_rule.expressions;
-                }
-
-                angular.forEach($scope.node.questions, function(value){
-                    if(value.none_above_rule != null){
-                        value.noneAbove = true;
-                    }
-                })
-            }
-            $scope.getRule();
-
-            $scope.saveLimitRule = function(){
-                $http({method: 'POST', url: 'saveRule', data:{expressions: $scope.limit, skipTarget: $scope.node, type: 'limit'}})
-                .success(function(data) {
-
-                }).error(function(e) {
-                console.log(e)
-                });
-            }
-
-            $scope.saveNoneAboveRule = function(question){
-                if(question.noneAbove == true){
-                    $http({method: 'POST', url: 'saveRule', data:{expressions: question.id, skipTarget: question, type:'noneAbove'}})
+            $scope.saveRule = function(target, type) {
+                if (target[type + '_rule'].expressions[0].value) {
+                    $http({method: 'POST', url: 'saveRule', data:{expressions: target[type + '_rule'].expressions, skipTarget: target, type: type}})
                     .success(function(data) {
-                        question.none_above_rule = data.rule;
+                        target[type + '_rule'] = data.rule;
                     }).error(function(e) {
                         console.log(e)
                     });
-                } else if(question.noneAbove == false){
-                    $http({method: 'POST', url: 'deleteRule', data:{rule_id: question.none_above_rule.id, skipTarget: question}})
+                } else {
+                    $http({method: 'POST', url: 'deleteRule', data:{rule_id: target[type + '_rule'].id, skipTarget: target}})
                     .success(function(data) {
-                        question.none_above_rule = null;
+                        target[type + '_rule'] = undefined;
                     }).error(function(e) {
                         console.log(e)
                     });
