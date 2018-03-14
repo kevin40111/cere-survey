@@ -221,11 +221,11 @@ trait SurveyEditor
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
 
-        foreach (Input::get('paths') as $path) {
-            $page = isset($path['type']) && $path['type'] == 'page' ? $path['id'] : "";
-        }
+        $page = $root->getPaths()->filter(function($item) {
+            return $item->type == 'page';
+        })->first();
 
-        $rule = Survey\RuleRepository::target($root)->saveExpressions(Input::get('expressions'), Input::get('type'), $page);
+        $rule = Survey\RuleRepository::target($root)->saveExpressions(Input::get('expressions'), Input::get('type'), $page->id);
 
 
         return ['rule' => $rule];
@@ -235,8 +235,10 @@ trait SurveyEditor
     {
         $class = Input::get('skipTarget.class');
         $root = $class::find(Input::get('skipTarget.id'));
+        $rule_id = Input::get('rule_id');
 
-        Survey\RuleRepository::target($root)->deleteRule();
+
+        Survey\RuleRepository::target($root)->deleteRule($rule_id);
 
         return 'delete rules successed';
     }

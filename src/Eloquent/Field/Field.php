@@ -134,6 +134,11 @@ class Field extends Eloquent {
 
     public function rule()
     {
-        return $this->morphOne(SurveyORM\Rule::class, 'effect');
+        return $this->morphOne(SurveyORM\Rule::class, 'effect')->where('type', 'jump');
+    }
+
+    public function noneAboveRule()
+    {
+        return $this->morphOne(SurveyORM\Rule::class, 'effect')->where('type', 'noneAbove');
     }
 }

@@ -12,7 +12,7 @@ class Rule extends Eloquent {
 
     public $timestamps = true;
 
-    protected $fillable = array('expressions', 'answer_id', 'warning', 'type');
+    protected $fillable = array('expressions', 'answer_id', 'warning', 'type', 'page_id');
 
     public function effect()
     {

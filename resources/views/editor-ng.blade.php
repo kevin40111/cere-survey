@@ -35,6 +35,9 @@
     .fade.ng-leave.ng-leave-active {
         opacity:0;
     }
+    .noneAbove {
+        color: red;
+    }
 </style>
 
 <script>

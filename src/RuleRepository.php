@@ -33,23 +33,24 @@ class RuleRepository
 
     public function saveExpressions($expressions, $type, $page_id)
     {
-        if ($this->target->rule == null) {
+        $rule = SurveyORM\Rule::where('effect_id', $this->target->id)->where('type', $type)->first();
+        if ($rule == null) {
             $rule = $this->target->rule()->save(new SurveyORM\Rule(['expressions' => $expressions, 'type' => $type, 'page_id' => $page_id]));
         } else {
-            $rule = $this->target->rule;
-            $rule->update(['expressions' => $expressions, 'type' => $type]);
+            $rule->update(['expressions' => $expressions, 'page_id' => $page_id]);
         }
 
-        $this->saveRulesFactor($expressions, $rule);
+        $type == 'jump' && $this->saveRulesFactor($expressions, $rule);
 
         return $rule;
     }
 
-    public function deleteRule()
+    public function deleteRule($rule_id = null)
     {
-        SurveyORM\SurveyRuleFactor::where('rule_id', $this->target->rule->id)->delete();
+        $rule_id = isset($rule_id) ? $rule_id : $this->target->rule->id;
+        SurveyORM\SurveyRuleFactor::where('rule_id', $rule_id)->delete();
 
-        $this->target->rule()->delete();
+        SurveyORM\Rule::find($rule_id)->delete();
     }
 
     protected function saveRulesFactor($expressions, $rule)

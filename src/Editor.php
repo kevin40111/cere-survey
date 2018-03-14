@@ -28,7 +28,7 @@ class Editor
             $root->load('childrenNodes');
         }
 
-        $nodes = $root->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.rule', 'questions.node', 'rule','answers.rule', 'images'])->each(function ($node) {
+        $nodes = $root->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions.rule', 'questions.noneAboveRule', 'rule', 'limitRule', 'answers.rule', 'images'])->each(function ($node) {
             $node->sortByPrevious(['questions', 'answers']);
         });
 
@@ -39,6 +39,11 @@ class Editor
     {
         $questions = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->load('rule')->reduce(function ($carry, $page) {
             $questions = $page->getQuestions();
+
+            foreach ($questions as &$question) {
+                $question['node']['title'] = strip_tags($question['node']['title']);
+            }
+
             if (count($questions) > 0) {
                 $questions[0]['page'] = $page;
             }
