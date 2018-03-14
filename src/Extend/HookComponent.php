@@ -8,6 +8,8 @@ use ShareFile;
 use Plat\Files\CommFile;
 use Cere\Survey\Extend\ApplySettingTrait;
 use Cere\Survey\Extend\CensornTrait;
+use Cere\Survey\Extend\MessageTrait;
+use Cere\Survey\Extend\InviteTrait;
 use Plat\Files\FolderComponent;
 use Cere\Survey\Extend\Apply\ApplicationRepository;
 use Input;
@@ -21,6 +23,8 @@ class HookComponent extends CommFile
     use CensornTrait;
 
     use InviteTrait;
+
+    use MessageTrait;
 
     function __construct(Files $file, User $user)
     {
