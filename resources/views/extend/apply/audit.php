@@ -120,7 +120,7 @@
                         scope.sheetLoad = false;
                         $http({method:'post', url:'getMessages', data:{}})
                         .success(function(data, status, header, config){
-                            angular.extend(scope.messages, data.messages);
+                            scope.messages = data.messages;
                             scope.sheetLoad = true;
                         })
                         .error(function(e){
@@ -145,7 +145,7 @@
                         <md-dialog-content>
                             <md-progress-linear md-mode="indeterminate" ng-disabled="sheetLoad"></md-progress-linear>
                             <div class="md-dialog-content">
-                                <md-card ng-repeat="message in messages">
+                                <md-card ng-repeat="message in messages" ng-if="$first">
                                     <md-card-title>
                                         <md-card-title-text>
                                             <span class="md-title">{{message.title}}</span>
@@ -156,7 +156,7 @@
                                         <p style="text-align: right;">Time:{{message.updated_at}}</p>
                                     </md-card-content>
                                 </md-card>
-                                <div class="ui info message" style="margin:15px;" ng-if="messages.length==0">尚未有任何訊息</div>
+                                <div class="ui info message" style="margin:15px;" ng-if="messages.length==0 && sheetLoad">尚未有任何訊息</div>
                             </div>
                         </md-dialog-content>
                     </md-dialog>

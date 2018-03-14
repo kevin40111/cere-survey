@@ -151,13 +151,16 @@
                 controller: function(scope){
                     scope.application = application;
                     scope.messages = [];
+
                     scope.close = function() {
                         $mdDialog.hide();
                     }
                     scope.getMessages = function() {
+                        scope.load = false;
                         $http({method:'post', url:'getMessages', data:{id:scope.application.id}})
                         .success(function(data, status, header, config){
                             scope.messages = data.messages;
+                            scope.load = true;
                         })
                         .error(function(e){
                             console.log(e);
@@ -174,7 +177,8 @@
                         </div>
                     </md-toolbar>
                     <md-dialog-content>
-                        <user-message messages="messages" application="application"></user-message>
+                        <md-progress-linear md-mode="indeterminate" ng-disabled="load"></md-progress-linear>
+                        <user-message messages="messages" application="application" load="load"></user-message>
                     </md-dialog-content>
                 </md-dialog>
                 `,
@@ -558,15 +562,16 @@ app.directive("loginCondition", function(){
         restrict: 'E',
         scope: {
             messages:'=',
-            application:'='
+            application:'=',
+            load:'='
         },
         template: `
         <md-content style="height:500px;">
             <div layout="row">
                 <span flex></span>
-                <md-button class="md-primary" ng-click="addMsg()" ><md-icon>add_circle</md-icon>新增訊息</button>
+                <md-button class="md-primary" ng-click="addMsg()" ng-disabled="addMsgStatus"><md-icon>add_circle</md-icon>新增訊息</button>
             </div>
-            <md-card ng-repeat="message in messages">
+            <md-card ng-repeat="message in messages | orderBy:'updated_at':true">
                 <md-card-content>
                     <div class="ui form">
                         <div class="field">
@@ -591,7 +596,7 @@ app.directive("loginCondition", function(){
                     </div>
                 </md-card-actions>
             </md-card>
-            <div class="ui info message" style="margin:15px;" ng-if="messages.length==0">尚未新增訊息</div>
+            <div class="ui info message" style="margin:15px;" ng-if="messages.length==0 && load">尚未新增訊息</div>
         <md-content>
         `,
         controller: function($scope, $http){
@@ -599,6 +604,7 @@ app.directive("loginCondition", function(){
                 $http({method:'post', url:'saveMessage', data:{id: $scope.application.id, title: message.title, content: message.content}})
                 .success(function(data, status, header, config){
                     angular.extend(message, data.message);
+                    $scope.addMsgStatus = false;
                 })
                 .error(function(e){
                     console.log(e);
@@ -606,7 +612,8 @@ app.directive("loginCondition", function(){
             }
 
             $scope.addMsg = function(){
-                $scope.messages.push({title:'', content:''});
+                $scope.messages.unshift({title:'', content:''});
+                $scope.addMsgStatus = true;
             }
 
             $scope.updateMessage = function(message) {
