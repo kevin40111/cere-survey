@@ -10,17 +10,19 @@ class Node extends Eloquent {
 
     use \Cere\Survey\Tree;
 
+    use PositionTrait;
+
     protected $connection = 'survey';
 
     protected $table = 'survey_nodes';
 
     public $timestamps = false;
 
-    protected $fillable = ['type', 'title', 'previous_id'];
+    protected $fillable = ['type', 'title', 'position'];
 
     protected $attributes = ['title' => ''];
 
-    protected $appends = ['class', 'relation'];
+    protected $appends = ['class'];
 
     public function book()
     {
@@ -47,24 +49,9 @@ class Node extends Eloquent {
         return $this->morphMany(Answer::class, 'belong');
     }
 
-    public function next()
-    {
-        return $this->hasOne('Cere\Survey\Eloquent\Node', 'previous_id', 'id');
-    }
-
-    public function previous()
-    {
-        return $this->hasOne('Cere\Survey\Eloquent\Node', 'id', 'previous_id');
-    }
-
     public function getClassAttribute()
     {
         return self::class;
-    }
-
-    public function getRelationAttribute()
-    {
-        return 'childrenNodes';
     }
 
     public function childrenRule()
@@ -82,14 +69,6 @@ class Node extends Eloquent {
         return json_encode($json);
     }
 
-    // public function getChildrenNodesAttribute()
-    // {
-    //     $this->load('childrenNodes');
-    //     ddd($this->childrenNodes);
-
-    //     return $this->attributes['childrenNodes'];
-    // }
-
     public function getChildrensAttribute()
     {
         if (!isset($this->attributes['childrens'])) {
@@ -105,13 +84,11 @@ class Node extends Eloquent {
         return $this->types[$value];
     }
 
-    public static function boot()
+    protected static function boot()
     {
         parent::boot();
 
         static::created(function($node) {
-
-
 
         });
 
@@ -142,5 +119,10 @@ class Node extends Eloquent {
     public function pageRules()
     {
         return $this->hasMany('Cere\Survey\Eloquent\Rule', 'page_id');
+    }
+
+    public function siblings()
+    {
+        return $this->parent->childrenNodes();
     }
 }
