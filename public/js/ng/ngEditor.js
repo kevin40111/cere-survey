@@ -141,7 +141,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
 
             this.addNode = function(type, previous) {
                 editorFactory.ajax('createNode', {parent: $scope.root, previous_id: previous.id, attributes: {type: type.name}}, {}).then(function(response) {
-                    $scope.nodes.splice(offset, 0, response.node);
+                    $scope.nodes.splice($scope.nodes.indexOf(previous) + 1, 0, response.node);
                 });
             };
 

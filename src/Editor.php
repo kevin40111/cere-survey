@@ -57,7 +57,7 @@ class Editor
 
         if ($node->type != 'explain' && $node->type != 'page' && $node->type != 'gear' ) {
 
-            $this->createQuestion($node->id, null);
+            $this->createQuestion($node->id, ['position' => 0]);
         }
 
         return $node->load(['questions', 'answers']);

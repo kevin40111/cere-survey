@@ -30,7 +30,7 @@ trait PositionTrait
         return $this->save();
     }
 
-    protected static function bootLineTrait()
+    protected static function bootPositionTrait()
     {
         static::creating(function ($item) {
 

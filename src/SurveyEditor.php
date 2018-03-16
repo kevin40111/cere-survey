@@ -100,7 +100,7 @@ trait SurveyEditor
 
         $parent = $class::find(Input::get('parent.id'));
 
-        $position = SurveyORM\Node::find(Input::get('previous_id'))->position;
+        $position = SurveyORM\Node::find(Input::get('previous_id'))->position + 1;
 
         $node = $this->editor->createNode($parent, array_merge(Input::get('attributes'), ['position' => $position]));
 
