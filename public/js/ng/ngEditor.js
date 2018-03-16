@@ -100,6 +100,18 @@ angular.module('ngEditor.directives', ['ngQuill'])
                                 </div>
                             </md-card-content>
                         </md-card>
+                        <md-card ng-if="nodes.length === 0">
+                            <md-card-actions>
+                                <md-menu>
+                                    <md-button aria-label="新增問題" ng-click="$mdMenu.open($event)">新增問題</md-button>
+                                    <md-menu-content width="3">
+                                        <md-menu-item ng-repeat="type in types">
+                                            <md-button ng-click="addNode(type, 0)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
+                                        </md-menu-item>
+                                    </md-menu-content>
+                                </md-menu>
+                            </md-card-actions>
+                        </md-card>
                         <survey-node ng-class="{deleting: node.deleting}" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
                         <md-card ng-if="paths.length == 1">
                             <md-card-header md-colors="{background: 'blue'}">
@@ -129,6 +141,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
             $scope.skipSetting = false;
             editorFactory.types = $scope.book.types;
             editorFactory.typesInPage = $filter('filter')(Object.values(editorFactory.types), {disabled: '!'})
+            $scope.types = editorFactory.typesInPage;
 
             this.getNodes = function(root) {
                 editorFactory.ajax('getNodes', {root: root}).then(function(response) {
@@ -139,11 +152,12 @@ angular.module('ngEditor.directives', ['ngQuill'])
                 });
             };
 
-            this.addNode = function(type, previous) {
-                editorFactory.ajax('createNode', {parent: $scope.root, previous_id: previous.id, attributes: {type: type.name}}, {}).then(function(response) {
-                    $scope.nodes.splice($scope.nodes.indexOf(previous) + 1, 0, response.node);
+            this.addNode = function(type, position) {
+                editorFactory.ajax('createNode', {parent: $scope.root, attributes: {type: type.name, position: position}}, {}).then(function(response) {
+                    $scope.nodes.splice(position, 0, response.node);
                 });
             };
+            $scope.addNode = this.addNode;
 
             this.removeNode = function(node) {
                 node.deleting = true;
@@ -217,7 +231,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                         <md-button aria-label="新增" ng-click="$mdOpenMenu($event)">新增</md-button>
                         <md-menu-content width="3">
                         <md-menu-item ng-repeat="type in getTypesArray()">
-                            <md-button ng-click="addNode(type, node)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
+                            <md-button ng-click="addNode(type, index+1)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
                         </md-menu-item>
                         </md-menu-content>
                     </md-menu>
@@ -370,7 +384,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                         <md-tooltip md-direction="bottom">跳過此題</md-tooltip>
                         <md-icon md-colors="{color: 'grey-A100'}">visibility_off</md-icon>
                     </md-button>
-                    <md-button class="md-icon-button" aria-label="刪除" ng-disabled="node.saving" ng-click="removeNode(node)">
+                    <md-button class="md-icon-button" aria-label="刪除" ng-disabled="node.saving || (node.type === 'page' && first && last)" ng-click="removeNode(node)">
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
                     </md-button>
                 </div>

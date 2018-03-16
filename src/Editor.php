@@ -21,13 +21,6 @@ class Editor
 
     public function getNodes($root)
     {
-        if ($root->childrenNodes->isEmpty()) {
-            $type = get_class($root) == 'Cere\Survey\Eloquent\Book' ? 'page' : 'explain';
-            $node = $root->childrenNodes()->save(new SurveyORM\Node(['type' => $type, 'position' => 0]));
-
-            $root->load('childrenNodes');
-        }
-
         $nodes = $root->childrenNodes->load(['questions.rule', 'questions.noneAboveRule', 'rule', 'limitRule', 'answers.rule', 'images']);
 
         return $nodes;
