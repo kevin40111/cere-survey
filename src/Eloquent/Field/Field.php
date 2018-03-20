@@ -9,17 +9,19 @@ class Field extends Eloquent {
 
     use \Cere\Survey\Tree;
 
+    use SurveyORM\PositionTrait;
+
     protected $table = 'survey_fields';
 
     protected $connection = 'survey';
 
     public $timestamps = true;
 
-    protected $fillable = array('name', 'title', 'rules', 'unique', 'encrypt', 'isnull', 'readonly', 'previous_id');
+    protected $fillable = array('name', 'title', 'rules', 'unique', 'encrypt', 'isnull', 'readonly', 'position');
 
     protected $attributes = ['title' => '', 'name' => '', 'unique' => false, 'encrypt' => false, 'isnull' => false, 'readonly' => false];
 
-    protected $appends = ['class', 'relation'];
+    protected $appends = ['class'];
 
     function __construct(array $attributes = array())
     {
@@ -40,7 +42,8 @@ class Field extends Eloquent {
         return self::class;
     }
 
-    public function inTable() {
+    public function inTable()
+    {
         return $this->belongsTo(Table::class, 'table_id');
     }
 
@@ -107,24 +110,9 @@ class Field extends Eloquent {
         return $this->hasOne(SurveyORM\Node::class, 'id', 'node_id');
     }
 
-    public function next()
-    {
-        return $this->hasOne(self::class, 'previous_id', 'id');
-    }
-
-    public function previous()
-    {
-        return $this->hasOne(self::class, 'id', 'previous_id');
-    }
-
     public function childrenNodes()
     {
         return $this->morphMany(SurveyORM\Node::class, 'parent');
-    }
-
-    public function getRelationAttribute()
-    {
-        return 'questions';
     }
 
     public function getRequiredAttribute($value)
@@ -140,5 +128,10 @@ class Field extends Eloquent {
     public function noneAboveRule()
     {
         return $this->morphOne(SurveyORM\Rule::class, 'effect')->where('type', 'noneAbove');
+    }
+
+    public function siblings()
+    {
+        return $this->node->questions();
     }
 }

@@ -3,10 +3,13 @@
 namespace Cere\Survey\Eloquent;
 
 use Eloquent;
+use DB;
 
 class Answer extends Eloquent {
 
     use \Cere\Survey\Tree;
+
+    use PositionTrait;
 
     protected $connection = 'survey';
 
@@ -14,25 +17,15 @@ class Answer extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = array('title', 'value', 'previous_id', 'category_id');
+    protected $fillable = array('title', 'value', 'category_id', 'position');
 
     protected $attributes = ['value' => '', 'title' => ''];
 
-    protected $appends = ['class', 'relation'];
+    protected $appends = ['class'];
 
     public function node()
     {
         return $this->morphTo('belong');
-    }
-
-    public function next()
-    {
-        return $this->hasOne('Cere\Survey\Eloquent\Answer', 'previous_id', 'id');
-    }
-
-    public function previous()
-    {
-        return $this->hasOne('Cere\Survey\Eloquent\Answer', 'id', 'previous_id');
     }
 
     public function childrenNodes()
@@ -50,19 +43,9 @@ class Answer extends Eloquent {
         return $this->morphOne(Rule::class, 'effect');
     }
 
-    public function choose()
-    {
-        return $this->hasOne('Set\Choose', 'answer_id', 'id');
-    }
-
     public function getClassAttribute()
     {
         return self::class;
-    }
-
-    public function getRelationAttribute()
-    {
-        return 'answers';
     }
 
     public function getChildrenExpressionAttribute()
@@ -85,4 +68,33 @@ class Answer extends Eloquent {
         return json_encode($json);
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function($answer) {
+
+            $answer->siblings()->update(['value' => DB::raw('position')]);
+
+        });
+
+        static::updated(function($answer) {
+
+            if ($answer->isDirty('position')) {
+                $answer->siblings()->update(['value' => DB::raw('position')]);
+            }
+
+        });
+
+        static::deleted(function($answer) {
+
+            $answer->siblings()->update(['value' => DB::raw('position')]);
+
+        });
+    }
+
+    public function siblings()
+    {
+        return $this->node->answers();
+    }
 }

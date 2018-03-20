@@ -2,7 +2,7 @@
 
 angular.module('ngEditor', ['ngEditor.directives', 'ngEditor.factories']);
 
-angular.module('ngEditor.factories', []).factory('editorFactory', function($http, $q) {
+angular.module('ngEditor.factories', []).factory('editorFactory', function($http, $q, $timeout) {
 
     var types = {};
     var typesInPage = [];
@@ -10,25 +10,43 @@ angular.module('ngEditor.factories', []).factory('editorFactory', function($http
     return {
         types: types,
         typesInPage: typesInPage,
-        ajax: function(url, data, node = {}) {
-            var deferred = $q.defer();
-
-            node.saving = true;
-            $http({method: 'POST', url: url, data: data, timeout: deferred.promise})
-            .success(function(data) {
-                deferred.resolve(data);
-            }).error(function(e) {
-                deferred.reject();
-            });
-
-            deferred.promise.finally(function() {
-                node.saving = false;
-            });
-
-            return deferred.promise;
-        }
+        ajax: ajax,
+        move: move
     };
 
+    function ajax(url, data, node = {}) {
+        var deferred = $q.defer();
+
+        node.saving = true;
+        $http({method: 'POST', url: url, data: data, timeout: deferred.promise})
+        .success(function(data) {
+            deferred.resolve(data);
+        }).error(function(e) {
+            deferred.reject();
+        });
+
+        deferred.promise.finally(function() {
+            node.saving = false;
+        });
+
+        return deferred.promise;
+    }
+
+    function move(items, item, offset) {
+        item.move = {up: offset < 0, down: offset > 0, leave: true, active: false};
+        ajax('setPosition', {item: item, offset: offset}, item).then(function() {
+            var index = items.indexOf(item);
+            item.move.active = true;
+            $timeout(function () {
+                items.splice(index, 1);
+                items.splice(index + offset, 0, item);
+                angular.extend(item.move, {leave: false, enter: true, active: false});
+                $timeout(function () {
+                    item.move.active = true;
+                }, 0);
+            }, 200);
+        });
+    }
 });
 
 angular.module('ngEditor.directives', ['ngQuill'])
@@ -90,7 +108,19 @@ angular.module('ngEditor.directives', ['ngQuill'])
                                 </div>
                             </md-card-content>
                         </md-card>
-                        <survey-node ng-class="{fade:node.deleting}" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
+                        <md-card ng-if="nodes.length === 0">
+                            <md-card-actions>
+                                <md-menu>
+                                    <md-button aria-label="新增問題" ng-click="$mdMenu.open($event)">新增問題</md-button>
+                                    <md-menu-content width="3">
+                                        <md-menu-item ng-repeat="type in types">
+                                            <md-button ng-click="addNode(type, 0)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
+                                        </md-menu-item>
+                                    </md-menu-content>
+                                </md-menu>
+                            </md-card-actions>
+                        </md-card>
+                        <survey-node ng-class="[{deleting: node.deleting}, node.move]" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
                         <md-card ng-if="paths.length == 1">
                             <md-card-header md-colors="{background: 'blue'}">
                                 <div flex layout="row" layout-align="start center">
@@ -119,6 +149,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
             $scope.skipSetting = false;
             editorFactory.types = $scope.book.types;
             editorFactory.typesInPage = $filter('filter')(Object.values(editorFactory.types), {disabled: '!'})
+            $scope.types = editorFactory.typesInPage;
 
             this.getNodes = function(root) {
                 editorFactory.ajax('getNodes', {root: root}).then(function(response) {
@@ -129,15 +160,12 @@ angular.module('ngEditor.directives', ['ngQuill'])
                 });
             };
 
-            this.addNode = function(type, previous, offset) {
-
-                var node = {type: type.name, title: Math.random()};
-
-                editorFactory.ajax('createNode', {node: node, parent: $scope.root, previous: previous}, node).then(function(response) {
-                    angular.extend(node, response.node);
-                    $scope.nodes.splice(offset, 0, node);
+            this.addNode = function(type, position) {
+                editorFactory.ajax('createNode', {parent: $scope.root, attributes: {type: type.name, position: position}}, {}).then(function(response) {
+                    $scope.nodes.splice(position, 0, response.node);
                 });
             };
+            $scope.addNode = this.addNode;
 
             this.removeNode = function(node) {
                 node.deleting = true;
@@ -148,18 +176,8 @@ angular.module('ngEditor.directives', ['ngQuill'])
                 });
             };
 
-            this.moveUp = function(node, offset) {
-                editorFactory.ajax('moveNodeUp', {item: node}, node).then(function(response) {
-                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)-1], response.item);
-                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)], response.previous);
-                });
-            };
-
-            this.moveDown = function(node) {
-                editorFactory.ajax('moveNodeDown', {item: node}, node).then(function(response) {
-                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)+1], response.item);
-                    angular.extend($scope.nodes[$scope.nodes.indexOf(node)], response.next);
-                });
+            this.move = function(node, offset) {
+                editorFactory.move($scope.nodes, node, offset);
             };
 
             $scope.getNodes = this.getNodes;
@@ -221,7 +239,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                         <md-button aria-label="新增" ng-click="$mdOpenMenu($event)">新增</md-button>
                         <md-menu-content width="3">
                         <md-menu-item ng-repeat="type in getTypesArray()">
-                            <md-button ng-click="addNode(type, node, index+1)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
+                            <md-button ng-click="addNode(type, index+1)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
                         </md-menu-item>
                         </md-menu-content>
                     </md-menu>
@@ -235,8 +253,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
             scope.addNode = surveyBookCtrl.addNode;
             scope.removeNode = surveyBookCtrl.removeNode;
             scope.getNodes = surveyBookCtrl.getNodes;
-            scope.moveUp = surveyBookCtrl.moveUp;
-            scope.moveDown = surveyBookCtrl.moveDown;
+            scope.move = surveyBookCtrl.move;
             scope.toggleSidenavRight = surveyBookCtrl.toggleSidenavRight;
         },
         controller: function($scope, $timeout) {
@@ -363,11 +380,11 @@ angular.module('ngEditor.directives', ['ngQuill'])
                             <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="send"></md-icon>
                         </md-button>
                     </div>
-                    <md-button class="md-icon-button" aria-label="上移" ng-disabled="first" ng-click="moveUp(node)">
+                    <md-button class="md-icon-button" aria-label="上移" ng-disabled="first" ng-click="move(node, -1)">
                         <md-tooltip md-direction="bottom">上移</md-tooltip>
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="arrow-drop-up"></md-icon>
                     </md-button>
-                    <md-button class="md-icon-button" aria-label="下移" ng-disabled="last" ng-click="moveDown(node)">
+                    <md-button class="md-icon-button" aria-label="下移" ng-disabled="last" ng-click="move(node, 1)">
                         <md-tooltip md-direction="bottom">下移</md-tooltip>
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
@@ -375,7 +392,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                         <md-tooltip md-direction="bottom">跳過此題</md-tooltip>
                         <md-icon md-colors="{color: 'grey-A100'}">visibility_off</md-icon>
                     </md-button>
-                    <md-button class="md-icon-button" aria-label="刪除" ng-disabled="node.saving" ng-click="removeNode(node)">
+                    <md-button class="md-icon-button" aria-label="刪除" ng-disabled="node.saving || (node.type === 'page' && first && last)" ng-click="removeNode(node)">
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
                     </md-button>
                 </div>
@@ -413,7 +430,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
         },
         template:  `
             <md-list>
-                <md-list-item ng-repeat="answer in answers" style="margin-left:15px;">
+                <md-list-item ng-repeat="answer in answers" ng-class="[{deleting: answer.deleting}, answer.move]" style="margin-left:15px;">
                     <span style="font-style: oblique;margin-right: 10px">{{$index+1}}. </span>
                     <div flex>
                         <div class="ui transparent fluid input" ng-class="{loading: answer.saving}">
@@ -421,11 +438,11 @@ angular.module('ngEditor.directives', ['ngQuill'])
                         </div>
                     </div>
                     <md-button class="md-secondary"  ng-if="types[node.type].editor.answerChilderns"  aria-label="設定子題" ng-click="getNodes(answer)">設定子題</md-button>
-                    <md-button class="md-secondary md-icon-button" ng-click="moveUp(answer)" aria-label="上移" ng-disabled="$first">
+                    <md-button class="md-secondary md-icon-button" ng-click="move(answer, -1)" aria-label="上移" ng-disabled="$first">
                         <md-tooltip md-direction="left">上移</md-tooltip>
                         <md-icon md-svg-icon="arrow-drop-up"></md-icon>
                     </md-button>
-                    <md-button class="md-secondary md-icon-button" ng-click="moveDown(answer)" aria-label="下移" ng-disabled="$last">
+                    <md-button class="md-secondary md-icon-button" ng-click="move(answer, 1)" aria-label="下移" ng-disabled="$last">
                         <md-tooltip md-direction="left">下移</md-tooltip>
                         <md-icon md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
@@ -435,7 +452,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                     </md-button>
                     <md-icon class="md-secondary" aria-label="刪除選項" md-svg-icon="delete" ng-click="removeAnswer(answer)"></md-icon>
                 </md-list-item>
-                <md-list-item ng-if="node.answers.length < types[node.type].editor.answers" ng-click="createAnswer(answers[answers.length-1])">
+                <md-list-item ng-if="node.answers.length < types[node.type].editor.answers" ng-click="createAnswer()">
                     <p md-colors="{color:'grey'}">新增選項</p>
                 </md-list-item>
             </md-list>
@@ -450,8 +467,9 @@ angular.module('ngEditor.directives', ['ngQuill'])
             $scope.types = editorFactory.types;
             $scope.saveTitleNgOptions = {updateOn: 'default blur', debounce:{default: 2000, blur: 0}};
 
-            $scope.createAnswer = function(previous) {
-                editorFactory.ajax('createAnswer', {node: $scope.node, previous: previous}, $scope.node).then(function(response) {
+            $scope.createAnswer = function() {
+                var attributes = {position: $scope.answers.length};
+                editorFactory.ajax('createAnswer', {node: $scope.node, attributes: attributes}, $scope.node).then(function(response) {
                     $scope.node.answers.push(response.answer);
                 });
             };
@@ -463,25 +481,17 @@ angular.module('ngEditor.directives', ['ngQuill'])
             };
 
             $scope.removeAnswer = function(answer) {
+                answer.deleting = true;
                 editorFactory.ajax('removeAnswer', {answer: answer}, answer).then(function(response) {
                      if (response.deleted) {
-                        $scope.node.answers = response.answers;
+                        $scope.node.answers.splice($scope.node.answers.indexOf(answer), 1);
                     }
                 });
             };
 
-            $scope.moveUp = function(answer) {
-                editorFactory.ajax('moveUp', {item: answer}, answer).then(function(response) {
-                    $scope.node.answers = response.items;
-                });
+            $scope.move = function(answer, offset) {
+                editorFactory.move($scope.answers, answer, offset);
             };
-
-            $scope.moveDown = function(answer) {
-                editorFactory.ajax('moveDown', {item: answer}, answer).then(function(response) {
-                    $scope.node.answers = response.items;
-                });
-            };
-
         }
     };
 })
@@ -507,7 +517,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                         個選項
                     </div>
                 </md-subheader>
-                <md-list-item ng-repeat="question in node.questions">
+                <md-list-item ng-repeat="question in node.questions" ng-class="[{deleting: question.deleting}, question.move]">
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
                         <input type="text" placeholder="輸入{{types[node.type].editor.questions.text}}" ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)"/>
                     </p>
@@ -515,11 +525,11 @@ angular.module('ngEditor.directives', ['ngQuill'])
                         以上皆非
                     </md-switch>
                     <md-button class="md-secondary" ng-if="types[node.type].editor.questions.childrens" aria-label="設定子題" ng-click="getNodes(question)">設定子題</md-button>
-                    <md-button class="md-secondary md-icon-button" ng-click="moveUp(question)" aria-label="上移" ng-disabled="$first">
+                    <md-button class="md-secondary md-icon-button" ng-click="move(question, -1)" aria-label="上移" ng-disabled="$first">
                         <md-tooltip md-direction="left">上移</md-tooltip>
                         <md-icon md-svg-icon="arrow-drop-up"></md-icon>
                     </md-button>
-                    <md-button class="md-secondary md-icon-button" ng-click="moveDown(question)" aria-label="下移" ng-disabled="$last">
+                    <md-button class="md-secondary md-icon-button" ng-click="move(question, 1)" aria-label="下移" ng-disabled="$last">
                         <md-tooltip md-direction="left">下移</md-tooltip>
                         <md-icon md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
@@ -529,7 +539,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                     </md-button>
                     <md-icon class="md-secondary" aria-label="刪除子題" md-svg-icon="delete" ng-click="removeQuestion(question)"></md-icon>
                 </md-list-item>
-                <md-list-item ng-if="node.questions.length < types[node.type].editor.questions.amount" ng-click="createQuestion(node.questions[node.questions.length-1])">
+                <md-list-item ng-if="node.questions.length < types[node.type].editor.questions.amount" ng-click="createQuestion()">
                     <p md-colors="{color:'grey'}">新增{{types[node.type].editor.questions.text}}</p>
                 </md-list-item>
             </md-list>
@@ -563,8 +573,9 @@ angular.module('ngEditor.directives', ['ngQuill'])
                 }
             }
 
-            $scope.createQuestion = function(previous) {
-                editorFactory.ajax('createQuestion', {node: $scope.node, previous: previous}, $scope.node).then(function(response) {
+            $scope.createQuestion = function(position) {
+                var attributes = {position: $scope.node.questions.length};
+                editorFactory.ajax('createQuestion', {node: $scope.node, attributes: attributes}, $scope.node).then(function(response) {
                     $scope.questions.push(response.question);
                 });
             };
@@ -576,23 +587,16 @@ angular.module('ngEditor.directives', ['ngQuill'])
             };
 
             $scope.removeQuestion = function(question) {
+                question.deleting = true;
                 editorFactory.ajax('removeQuestion', {question: question}, question).then(function(response) {
                     if (response.deleted) {
-                        $scope.node.questions = response.questions;
+                        $scope.node.questions.splice($scope.node.questions.indexOf(question), 1);
                     }
                 });
             };
 
-            $scope.moveUp = function(question) {
-                editorFactory.ajax('moveUp', {item: question}, question).then(function(response) {
-                    $scope.node.questions = response.items;
-                });
-            };
-
-            $scope.moveDown = function(question) {
-                editorFactory.ajax('moveDown', {item: question}, question).then(function(response) {
-                    $scope.node.questions = response.items;
-                });
+            $scope.move = function(question, offset) {
+                editorFactory.move($scope.questions, question, offset);
             };
 
             $scope.getBooks = function() {

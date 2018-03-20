@@ -16,9 +16,9 @@ class CreateSurveyNodes extends Migration {
             $table->increments('id');
             $table->string('type', 50);
             $table->string('title', 2000);
-            $table->integer('previous_id')->nullable();
             $table->string('parent_type', 50);
             $table->integer('parent_id');
+            $table->integer('position');
         });
     }
 

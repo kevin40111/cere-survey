@@ -100,21 +100,21 @@ trait SurveyEditor
 
         $parent = $class::find(Input::get('parent.id'));
 
-        $node = $this->editor->createNode($parent, Input::get('node'), Input::get('previous.id'));
+        $node = $this->editor->createNode($parent, Input::get('attributes'));
 
-        return ['node' => $node, 'next' => $node->next];
+        return ['node' => $node];
     }
 
     public function createQuestion()
     {
-        $question = $this->editor->createQuestion(Input::get('node.id'), Input::get('previous.id'));
+        $question = $this->editor->createQuestion(Input::get('node.id'), Input::get('attributes'));
 
         return ['question' => $question];
     }
 
     public function createAnswer()
     {
-        $answer = $this->editor->createAnswer(Input::get('node.id'), Input::get('previous.id'));
+        $answer = $this->editor->createAnswer(Input::get('node.id'), Input::get('attributes'));
 
         return ['answer' => $answer];
     }
@@ -137,8 +137,6 @@ trait SurveyEditor
     {
         $answer = $this->editor->saveTitle(Input::get('answer.class'), Input::get('answer.id'), Input::get('answer.title'));
 
-        $this->editor->updateAnswerValue($answer->node);
-
         return ['answer' => $answer];
     }
 
@@ -151,69 +149,25 @@ trait SurveyEditor
 
     public function removeQuestion()
     {
-        list ($deleted, $questions) = $this->editor->removeQuestion(Input::get('question')['id']);
+        $deleted = $this->editor->removeQuestion(Input::get('question.id'));
 
-        return ['deleted' => $deleted, 'questions' => $questions];
+        return ['deleted' => $deleted];
     }
 
     public function removeAnswer()
     {
-        list ($deleted, $answers, $node) = $this->editor->removeAnswer(Input::get('answer.id'));
+        $deleted = $this->editor->removeAnswer(Input::get('answer.id'));
 
-        $this->editor->updateAnswerValue($node);
-
-        return ['deleted' => $deleted, 'answers' => $answers];
+        return ['deleted' => $deleted];
     }
 
-    public function moveUp()
+    public function setPosition()
     {
         $class = '\\' . Input::get('item.class');
 
-        $relation = Input::get('item.relation');
+        $item = $class::find(Input::get('item.id'));
 
-        $item = $class::find(Input::get('item.id'))->moveUp();
-
-        if ($class == '\\Plat\Eloquent\Survey\Answer') {
-            $this->editor->updateAnswerValue($item->node);
-        }
-
-        return ['items' => $item->node->sortByPrevious([$relation])->$relation];
-    }
-
-    public function moveDown()
-    {
-        $class = '\\' . Input::get('item.class');
-
-        $relation = Input::get('item.relation');
-
-        $item = $class::find(Input::get('item.id'))->moveDown();
-        if ($class == '\\Plat\Eloquent\Survey\Answer') {
-            $this->editor->updateAnswerValue($item->node);
-        }
-
-        return ['items' => $item->node->sortByPrevious([$relation])->$relation];
-    }
-
-    public function moveNodeUp()
-    {
-        $class = '\\' . Input::get('item.class');
-
-        $relation = Input::get('item.relation');
-
-        $item = $class::find(Input::get('item.id'))->moveUp();
-
-        return ['item' => $item->load(['questions', 'answers']), 'previous' => $item->previous->load(['questions', 'answers'])];
-    }
-
-    public function moveNodeDown()
-    {
-        $class = '\\' . Input::get('item.class');
-
-        $relation = Input::get('item.relation');
-
-        $item = $class::find(Input::get('item.id'))->moveDown();
-
-        return ['item' => $item->load(['questions', 'answers']), 'next' => $item->next->load(['questions', 'answers'])];
+        return ['moved' => $item->move(Input::get('offset'))];
     }
 
     public function saveRule()

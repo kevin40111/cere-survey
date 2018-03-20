@@ -28,12 +28,52 @@
 <link rel="stylesheet" href="/packages/cere/survey/js/quill.bubble.min.css">
 
 <style>
-    .fade.ng-leave {
-        transition:1s linear all;
-        opacity:1;
+    .deleting.ng-leave {
+        transition: 0.5s linear all;
+        opacity: 1;
     }
-    .fade.ng-leave.ng-leave-active {
-        opacity:0;
+    .deleting.ng-leave.ng-leave-active {
+        opacity: 0;
+    }
+    .up.leave {
+        top: 0px;
+        opacity: 0.5;
+    }
+    .up.leave.active {
+        transition: 0.2s linear all;
+        position: relative;
+        top: -20px;
+        opacity: 0;
+    }
+    .up.enter {
+        position: relative;
+        top: 20px;
+        opacity: 0.5;
+    }
+    .up.enter.active {
+        transition: 0.2s linear all;
+        top: 0px;
+        opacity: 1;
+    }
+    .down.leave {
+        top: 0;
+        opacity: 0.5;
+    }
+    .down.leave.active {
+        transition: 0.2s linear all;
+        position: relative;
+        top: 20px;
+        opacity: 0;
+    }
+    .down.enter {
+        position: relative;
+        top: -20px;
+        opacity: 0.5;
+    }
+    .down.enter.active {
+        transition: 0.2s linear all;
+        top: 0px;
+        opacity: 1;
     }
     .noneAbove {
         color: red;

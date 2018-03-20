@@ -110,4 +110,15 @@ class Book extends Eloquent {
     {
         return $this->hasOne(Extend\Hook::class);
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function($book) {
+
+            $book->childrenNodes()->save(new Node(['type' => 'page', 'position' => 0]));
+
+        });
+    }
 }

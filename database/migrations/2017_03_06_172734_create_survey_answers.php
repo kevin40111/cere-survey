@@ -14,11 +14,12 @@ class CreateSurveyAnswers extends Migration {
     {
         Schema::create('survey_answers', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('node_id');
+            $table->string('belong_type', 50);
+            $table->integer('belong_id');
             $table->string('title', 500);
             $table->string('value', 50);
-            $table->integer('previous_id')->nullable();
-            $table->integer('belong');
+            $table->integer('category_id');
+            $table->integer('position');
         });
     }
 

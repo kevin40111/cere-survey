@@ -60,7 +60,7 @@ class ApplicationRepository
             $column->selected = in_array($column->id, $appliedFields);
         }) : [];
 
-        $mainBookPages = $this->application->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) use ($appliedFields){
+        $mainBookPages = $this->application->hook->book->childrenNodes->reduce(function ($carry, $page) use ($appliedFields){
             $questions = $page->getQuestions();
 
             $questions = array_filter($questions, function($question) {
@@ -93,7 +93,7 @@ class ApplicationRepository
 
     public function getBookFinishQuestions()
     {
-        $BookPages = $this->application->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
+        $BookPages = $this->application->book->childrenNodes->reduce(function ($carry, $page) {
             $questions = $page->getQuestions();
 
             return $carry + [$page->id => $questions];
@@ -142,7 +142,7 @@ class ApplicationRepository
 
     private function checkBookHasQuestion()
     {
-        $questions = $this->application->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
+        $questions = $this->application->book->childrenNodes->reduce(function ($carry, $page) {
             $questions = $page->getQuestions();
             return array_merge($carry, $questions);
         }, []);

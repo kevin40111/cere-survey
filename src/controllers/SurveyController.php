@@ -27,7 +27,7 @@ class SurveyController extends \BaseController {
     public function page($book_id)
     {
         if (! $this->writer->exist()) {
-            $firstPage = SurveyORM\Book::find($book_id)->sortByPrevious(['childrenNodes'])->childrenNodes->first();
+            $firstPage = SurveyORM\Book::find($book_id)->childrenNodes->first();
             $this->writer->increment(['page_id' => $firstPage->id]);
         }
 
@@ -190,7 +190,7 @@ class SurveyController extends \BaseController {
      */
     public function getNodes()
     {
-        $nodes = SurveyORM\Node::find(Input::get('page.id'))->sortByPrevious(['childrenNodes'])->childrenNodes->load(['questions', 'answers']);
+        $nodes = SurveyORM\Node::find(Input::get('page.id'))->childrenNodes->load(['questions', 'answers']);
 
         return ['nodes' => $nodes];
     }

@@ -16,7 +16,7 @@ class CreateSurveyFields extends Migration {
             $table->increments('id');
             $table->integer('node_id');
             $table->string('title', 500);
-            $table->integer('previous_id')->nullable();
+            $table->integer('position');
         });
     }
 

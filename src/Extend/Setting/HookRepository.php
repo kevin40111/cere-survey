@@ -35,7 +35,7 @@ class HookRepository
             $column->selected = in_array($column->id, $this->hook->main_list_limit['fields']);
         }) : [];
 
-        $mainBookPages = $this->hook->book->sortByPrevious(['childrenNodes'])->childrenNodes->reduce(function ($carry, $page) {
+        $mainBookPages = $this->hook->book->childrenNodes->reduce(function ($carry, $page) {
             $questions = $page->getQuestions();
 
             foreach ($questions as &$question) {
