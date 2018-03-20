@@ -2,7 +2,7 @@
 
 angular.module('ngEditor', ['ngEditor.directives', 'ngEditor.factories']);
 
-angular.module('ngEditor.factories', []).factory('editorFactory', function($http, $q) {
+angular.module('ngEditor.factories', []).factory('editorFactory', function($http, $q, $timeout) {
 
     var types = {};
     var typesInPage = [];
@@ -33,10 +33,18 @@ angular.module('ngEditor.factories', []).factory('editorFactory', function($http
     }
 
     function move(items, item, offset) {
+        item.move = {up: offset < 0, down: offset > 0, leave: true, active: false};
         ajax('setPosition', {item: item, offset: offset}, item).then(function() {
             var index = items.indexOf(item);
-            items.splice(index, 1);
-            items.splice(index + offset, 0, item);
+            item.move.active = true;
+            $timeout(function () {
+                items.splice(index, 1);
+                items.splice(index + offset, 0, item);
+                angular.extend(item.move, {leave: false, enter: true, active: false});
+                $timeout(function () {
+                    item.move.active = true;
+                }, 0);
+            }, 200);
         });
     }
 });
@@ -112,7 +120,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                                 </md-menu>
                             </md-card-actions>
                         </md-card>
-                        <survey-node ng-class="{deleting: node.deleting}" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
+                        <survey-node ng-class="[{deleting: node.deleting}, node.move]" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
                         <md-card ng-if="paths.length == 1">
                             <md-card-header md-colors="{background: 'blue'}">
                                 <div flex layout="row" layout-align="start center">
@@ -422,7 +430,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
         },
         template:  `
             <md-list>
-                <md-list-item ng-repeat="answer in answers" ng-class="{deleting: answer.deleting}" style="margin-left:15px;">
+                <md-list-item ng-repeat="answer in answers" ng-class="[{deleting: answer.deleting}, answer.move]" style="margin-left:15px;">
                     <span style="font-style: oblique;margin-right: 10px">{{$index+1}}. </span>
                     <div flex>
                         <div class="ui transparent fluid input" ng-class="{loading: answer.saving}">
@@ -509,7 +517,7 @@ angular.module('ngEditor.directives', ['ngQuill'])
                         個選項
                     </div>
                 </md-subheader>
-                <md-list-item ng-repeat="question in node.questions" ng-class="{deleting: question.deleting}">
+                <md-list-item ng-repeat="question in node.questions" ng-class="[{deleting: question.deleting}, question.move]">
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
                         <input type="text" placeholder="輸入{{types[node.type].editor.questions.text}}" ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)"/>
                     </p>

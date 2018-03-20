@@ -35,6 +35,46 @@
     .deleting.ng-leave.ng-leave-active {
         opacity: 0;
     }
+    .up.leave {
+        top: 0px;
+        opacity: 0.5;
+    }
+    .up.leave.active {
+        transition: 0.2s linear all;
+        position: relative;
+        top: -20px;
+        opacity: 0;
+    }
+    .up.enter {
+        position: relative;
+        top: 20px;
+        opacity: 0.5;
+    }
+    .up.enter.active {
+        transition: 0.2s linear all;
+        top: 0px;
+        opacity: 1;
+    }
+    .down.leave {
+        top: 0;
+        opacity: 0.5;
+    }
+    .down.leave.active {
+        transition: 0.2s linear all;
+        position: relative;
+        top: 20px;
+        opacity: 0;
+    }
+    .down.enter {
+        position: relative;
+        top: -20px;
+        opacity: 0.5;
+    }
+    .down.enter.active {
+        transition: 0.2s linear all;
+        top: 0px;
+        opacity: 1;
+    }
     .noneAbove {
         color: red;
     }
