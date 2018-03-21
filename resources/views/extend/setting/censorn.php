@@ -90,8 +90,8 @@
                     <td><md-button ng-click="LoginConditions(application)" aria-label="進入加掛題判斷條件"><md-icon md-svg-icon="gallery"></md-icon></md-button></td>
                     <td>
                         <div layout="row" flex="noshrink">
-                            <md-select ng-model="application.status" md-colors="{color: auditStatus[application.status].color}" ng-blur="application.focus=false" ng-change="setApplicationStatus(application)" ng-disabled="application.individual_status.book==1 && application.individual_status.apply==1 ? false: true" class="md-no-underline" aria-label="審核結果">
-                                <md-option ng-repeat="(key,status) in auditStatus" ng-value="key">{{status.title}}</md-option>
+                            <md-select ng-model="application.status" md-colors="{color: auditStatus[application.status].color}" ng-blur="application.focus=false" ng-change="setApplicationStatus(application)" class="md-no-underline" aria-label="審核結果">
+                                <md-option ng-repeat="(key,status) in auditStatus|auditFilter:application track by key" ng-value="key">{{status.title}}</md-option>
                             </md-select>
                         </div>
                     </td>
@@ -119,10 +119,10 @@
         ];
 
         $scope.auditStatus = [
-            {'title': '未審核', 'color':'blue-grey-200'},
-            {'title': '通過', 'color':'cyan-900'},
-            {'title': '不通過', 'color':'red-200'},
-            {'title': '取消', 'color':'grey-700'}
+            {'title': '未審核', 'color':'blue-grey-200', 'show':true},
+            {'title': '通過', 'color':'cyan-900', 'show':false},
+            {'title': '不通過', 'color':'red-200', 'show':true},
+            {'title': '取消', 'color':'grey-700', 'show':true}
         ];
 
         $scope.$watch('lastPage', function(lastPage) {
@@ -229,6 +229,7 @@
                 }
             })
         }
+
         $scope.statusFilter = function(filter_audit){
             return function(application){
                 if(filter_audit == 'all'){
@@ -281,6 +282,14 @@
 
                     scope.updateIndividualStatus = function(){
                         scope.data = {id: application.id, data: application.individual_status}
+                        application.status = 0;
+                        $http({method: 'POST', url: 'setApplicationStatus', data:{id: application.id, status: application.status}})
+                        .success(function(data, status, headers, config) {
+
+                        })
+                        .error(function(e){
+                            console.log(e);
+                        });
 
                         $http({method: 'POST', url: 'updateIndividualStatus', data: scope.data})
                         .success(function(data, status, headers, config) {
@@ -352,7 +361,14 @@
 
                 scope.updateIndividualStatus = function(){
                     scope.data = {id: application.id, data: application.individual_status}
+                    application.status = 0;
+                    $http({method: 'POST', url: 'setApplicationStatus', data:{id: application.id, status: application.status}})
+                    .success(function(data, status, headers, config) {
 
+                    })
+                    .error(function(e){
+                        console.log(e);
+                    })
                     $http({method: 'POST', url: 'updateIndividualStatus', data: scope.data})
                     .success(function(data, status, headers, config) {
 
@@ -636,6 +652,21 @@ app.directive("loginCondition", function(){
                 })
             }
         }
+    }
+})
+.filter('auditFilter', function(){
+    return function(input, application){
+        var output = [];
+        if(application.individual_status.apply == 1 && application.individual_status.book == 1){
+            angular.extend(output, input);
+        } else {
+            angular.forEach(input, function(value){
+                if(value.show == true){
+                    output.push(value);
+                }
+            })
+        }
+        return output;
     }
 })
 </script>
