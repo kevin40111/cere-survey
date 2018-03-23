@@ -74,13 +74,6 @@ trait SurveyEditor
         return ['questions' => $questions];
     }
 
-    public function getAnswers()
-    {
-        $answers = Field::find(Input::get('question_id'))->node->answers;
-
-        return ['answers' => $answers];
-    }
-
     public function getNodes()
     {
         $class = Input::get('root.class');
