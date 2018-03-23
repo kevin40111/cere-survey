@@ -56,11 +56,9 @@ abstract class Filler
         });
     }
 
-    protected function setRules($by)
+    protected function setRules($question)
     {
-        $rules = SurveyORM\SurveyRuleFactor::where('rule_relation_factor', $by->id)->get()->groupBy('rule_id')->keys();
-
-        SurveyORM\Rule::find($rules)->map(function ($rule) {
+        $question->affectRules->map(function ($rule) {
             $isSkip = Rule::answers($this->answers)->compare($rule);
             switch ($rule->effect_type) {
                 case SurveyORM\Node::class:

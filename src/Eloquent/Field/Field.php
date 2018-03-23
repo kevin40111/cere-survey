@@ -130,6 +130,11 @@ class Field extends Eloquent {
         return $this->morphOne(SurveyORM\Rule::class, 'effect')->where('type', 'noneAbove');
     }
 
+    public function affectRules()
+    {
+        return $this->belongsToMany(Rule::class, 'survey_rule_factor');
+    }
+
     public function siblings()
     {
         return $this->node->questions();
