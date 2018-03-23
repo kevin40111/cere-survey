@@ -3,6 +3,8 @@
 namespace Cere\Survey;
 
 use Cere\Survey\Eloquent\Field\Field as Question;
+use Illuminate\Database\Eloquent\Collection;
+use Cere\Survey\Eloquent\Node;;
 
 trait Tree
 {
@@ -17,20 +19,21 @@ trait Tree
 
     public function getQuestions()
     {
-        $nodes = $this->childrenNodes->reduce(function($carry, $node) {
+        $questions = $this->childrenNodes->reduce(function ($carry, $node) {
+            return $carry->merge($node->getQuestions());
+        }, new Collection);
 
-            $questions = $node->questions->reduce(function($carry, $question) {
-                return array_merge($carry, $question->getQuestions());
-            }, $node->questions->load(['node.answers.rule', 'rule', 'node.rule'])->toArray());
-
-            $questionsWithInAnswer = $node->answers->reduce(function($carry, $answer) {
-                return array_merge($carry, $answer->getQuestions());
+        if (is_a($this, Node::class)) {
+            $questions = $this->questions->reduce(function ($carry, $question) {
+                return $carry->add($question)->merge($question->getQuestions());
             }, $questions);
 
-            return array_merge($carry, $questionsWithInAnswer);
-        }, []);
+            $questions = $this->answers->reduce(function ($carry, $answer) {
+                return $carry->merge($answer->getQuestions());
+            }, $questions);
+        }
 
-        return $nodes;
+        return $questions->load(['node.answers.rule', 'rule', 'node.rule']);
     }
 
     public function deleteNode()

@@ -63,7 +63,7 @@ angular.module('ngBrowser', [])
             };
 
             scope.browserQuestion = function() {
-                $http({method: 'POST', url: 'getQuestion', data:{book_id: scope.book}})
+                $http({method: 'POST', url: 'getBrowserQuestions', data:{book_id: scope.book}})
                 .success(function(data, status, headers, config) {
                     scope.questionAnalysis(data.questions);
                 }).error(function(e){
@@ -174,7 +174,7 @@ angular.module('ngBrowser', [])
                 break;
                 case "explain":
                    question.question_title["title"] = question.node.title;
-                break; 
+                break;
                 case "number":
                    question.question_title["title"] = question.title;
                 break;

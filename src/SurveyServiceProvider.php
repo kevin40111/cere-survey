@@ -59,9 +59,7 @@ class SurveyServiceProvider extends ServiceProvider {
                 $repository = new SessionWriter($book_id);
                 if (!$repository->exist('answers')) {
 
-                    $questions = SurveyORM\Book::find($book_id)->childrenNodes->reduce(function ($carry, $page) {
-                        return array_merge($carry, array_fetch($page->getQuestions(), 'id'));
-                    }, []);
+                    $questions = SurveyORM\Book::find($book_id)->getQuestions()->fetch('id')->all();
 
                     $repository->increment(array_fill_keys($questions, NULL));
                 }

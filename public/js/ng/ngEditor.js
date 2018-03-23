@@ -964,7 +964,9 @@ angular.module('ngEditor.directives', ['ngQuill'])
                     <md-input-container>
                         <label>當題目</label>
                         <md-select ng-model="condition.question" ng-change="resetAnswers()">
-                            <md-option ng-repeat="question in questions" ng-value="question.id" >{{question.node.title}}-{{question.title}}</md-option>
+                            <md-optgroup label="第{{$index+1}}頁" ng-repeat="page in pages">
+                                <md-option ng-repeat="question in page.questions" ng-value="question.id" >{{question.node.title}}-{{question.title}}</md-option>
+                            </md-optgroup>
                         </md-select>
                     </md-input-container>
                 </div>
@@ -1025,9 +1027,9 @@ angular.module('ngEditor.directives', ['ngQuill'])
                 {key: ' || ', title: '或者'}
             ];
 
-            $http({method: 'POST', url: 'getQuestion', data:{book_id: $scope.book.id}})
+            $http({method: 'POST', url: 'getPages', data:{book_id: $scope.book.id}})
             .success(function(data, status, headers, config) {
-                $scope.questions = data.questions;
+                $scope.pages = data.pages;
             })
             .error(function(e) {
                 console.log(e);

@@ -158,13 +158,11 @@ class SurveyController extends \BaseController {
 
     private function checkPage($page, $answers)
     {
-        $questions = $page->getQuestions();
+        $missings = $page->getQuestions()->filter(function ($question) use ($answers) {
+            return ! isset($answers[$question->id]);
+        })->values();
 
-        $missings = array_filter($questions, function ($question) use ($answers) {
-            return ! isset($answers[$question['id']]);
-        });
-
-        return array_values($missings);
+        return $missings;
     }
 
     private function checkAndJump($page, $answers)
@@ -173,7 +171,7 @@ class SurveyController extends \BaseController {
 
         $skips = 0;
         foreach ($questions as $question) {
-            if (isset($answers[$question['id']]) && $answers[$question['id']] == -8) {
+            if (isset($answers[$question->id]) && $answers[$question->id] == -8) {
                 $skips++;
             }
         }

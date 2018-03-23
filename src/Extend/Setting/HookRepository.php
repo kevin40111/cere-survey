@@ -36,11 +36,10 @@ class HookRepository
         }) : [];
 
         $mainBookPages = $this->hook->book->childrenNodes->reduce(function ($carry, $page) {
-            $questions = $page->getQuestions();
 
-            foreach ($questions as &$question) {
-                $question["selected"] = in_array($question['id'], $this->hook->main_book_limit['fields']);
-            }
+            $questions = $page->getQuestions()->each(function ($question) {
+                $question->selected = in_array($question->id, $this->hook->main_book_limit['fields']);
+            });
 
             array_push($carry, ['fields' => $questions]);
 

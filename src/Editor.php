@@ -26,22 +26,16 @@ class Editor
         return $nodes;
     }
 
-    public function getQuestion($book_id)
+    public function getPages($book_id)
     {
-        $questions = SurveyORM\Book::find($book_id)->childrenNodes->load('rule')->reduce(function ($carry, $page) {
-            $questions = $page->getQuestions();
+        $pages = SurveyORM\Book::find($book_id)->childrenNodes->load('rule')->map(function ($page) {
+            $questions = $page->getQuestions()->each(function ($question) {
+                $question->node->title = strip_tags($question->node->title);
+            });
+            return ['rule' => $page->rule, 'questions' => $questions];
+        });
 
-            foreach ($questions as &$question) {
-                $question['node']['title'] = strip_tags($question['node']['title']);
-            }
-
-            if (count($questions) > 0) {
-                $questions[0]['page'] = $page;
-            }
-            return array_merge($carry, $questions);
-        }, []);
-
-        return $questions;
+        return $pages;
     }
 
     public function createNode($root, array $attributes)
@@ -87,30 +81,11 @@ class Editor
     {
         $node = SurveyORM\Node::find($node_id);
 
-        $questions = $this->getQuestions($node_id);
-
-        foreach ($questions as $question) {
-            $this->filed->remove_column($question['id']);
-        }
+        $node->getQuestions()->each(function ($question) {
+            $this->filed->remove_column($question->id);
+        });
 
         return $node->deleteNode();
-    }
-
-    private function getQuestions($node_id)
-    {
-        $node = SurveyORM\Node::find($node_id);
-
-        switch ($node->type) {
-            case 'page':
-                return $node->getQuestions();
-            break;
-
-            default:
-                return $node->questions->reduce(function ($carry, $question) {
-                    return array_merge($carry, $question->getQuestions(), [$question->toArray()]);
-                }, []);
-            break;
-        }
     }
 
     public function removeQuestion($question_id)

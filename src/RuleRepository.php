@@ -85,7 +85,7 @@ class RuleRepository
                     $explanation .= $operator;
                 }
 
-                $question = SurveyORM\Question::find($condition['question']);
+                $question = Field::find($condition['question']);
                 $boolean = $booleans[$condition['logic']];
 
                 $answer = $condition['compareType'] == 'value' ? $condition['value'] : $question->node->answers()->where('value', $condition['value'])->first()->title;

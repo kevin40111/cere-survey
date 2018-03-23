@@ -61,15 +61,12 @@ class ApplicationRepository
         }) : [];
 
         $mainBookPages = $this->application->hook->book->childrenNodes->reduce(function ($carry, $page) use ($appliedFields){
-            $questions = $page->getQuestions();
 
-            $questions = array_filter($questions, function($question) {
-                return in_array($question['id'], $this->application->hook->main_book_limit['fields']);
+            $questions = $page->getQuestions()->filter(function ($question) {
+                return in_array($question->id, $this->application->hook->main_book_limit['fields']);
+            })->each(function ($question) use ($appliedFields) {
+                $question->selected = in_array($question->id, $appliedFields);
             });
-
-            foreach ($questions as &$question) {
-                $question["selected"] = in_array($question['id'], $appliedFields);
-            }
 
             if (! empty($questions)) {
                 array_push($carry, ['fields' => $questions]);
@@ -93,11 +90,9 @@ class ApplicationRepository
 
     public function getBookFinishQuestions()
     {
-        $BookPages = $this->application->book->childrenNodes->reduce(function ($carry, $page) {
-            $questions = $page->getQuestions();
-
-            return $carry + [$page->id => $questions];
-        }, []);
+        $BookPages = $this->application->book->childrenNodes->map(function ($page) {
+            return $page->getQuestions();
+        });
 
         return $BookPages;
     }
@@ -142,10 +137,7 @@ class ApplicationRepository
 
     private function checkBookHasQuestion()
     {
-        $questions = $this->application->book->childrenNodes->reduce(function ($carry, $page) {
-            $questions = $page->getQuestions();
-            return array_merge($carry, $questions);
-        }, []);
+        $questions = $this->application->book->getQuestions();
 
         return sizeof($questions) > 0 ? [] : [['description' => '您沒有新增題目']];
     }

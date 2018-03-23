@@ -57,9 +57,19 @@ trait SurveyEditor
         return ['book' => $this->book];
     }
 
-    public function getQuestion()
+    public function getPages()
     {
-        $questions = $this->editor->getQuestion(Input::get('book_id'));
+        $pages = $this->editor->getPages(Input::get('book_id'));
+
+        return ['pages' => $pages];
+    }
+
+    public function getBrowserQuestions()
+    {
+        $questions = $this->editor->getPages(Input::get('book_id'))->reduce(function ($carry, $page) {
+            $page['questions'][0]->page = ['rule' => $page['rule']];
+            return array_merge($carry, $page['questions']->all());
+        }, []);
 
         return ['questions' => $questions];
     }
