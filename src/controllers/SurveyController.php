@@ -114,7 +114,7 @@ class SurveyController extends \BaseController {
             return ['missings' => $missings];
         }
 
-        $nextPage = $page->next ? $this->checkAndJump($page->next, $answers) : NULL;
+        $nextPage = $page->next() ? $this->checkAndJump($page->next(), $answers) : NULL;
 
         $this->writer->setPage(isset($nextPage->id) ? $nextPage->id : NULL);
 
@@ -179,7 +179,7 @@ class SurveyController extends \BaseController {
         }
 
         return $skips == sizeof($questions) && sizeof($questions) != 0
-            ? $page->next ? $this->checkAndJump($page->next, $answers) : NULL
+            ? $page->next() ? $this->checkAndJump($page->next(), $answers) : NULL
             : $page;
     }
 

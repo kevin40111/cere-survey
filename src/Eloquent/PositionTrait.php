@@ -30,6 +30,11 @@ trait PositionTrait
         return $this->save();
     }
 
+    public function next()
+    {
+        return $this->siblings()->where('position', $this->position + 1)->first();
+    }
+
     protected static function bootPositionTrait()
     {
         static::creating(function ($item) {
