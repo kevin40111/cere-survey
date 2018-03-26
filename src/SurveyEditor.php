@@ -68,7 +68,7 @@ trait SurveyEditor
     {
         $questions = $this->editor->getPages(Input::get('book_id'))->reduce(function ($carry, $page) {
             $page['questions'][0]->page = ['rule' => $page['rule']];
-            return array_merge($carry, $page['questions']->all());
+            return array_merge($carry, $page['questions']->load(['node.answers.rule', 'rule', 'node.rule'])->all());
         }, []);
 
         return ['questions' => $questions];

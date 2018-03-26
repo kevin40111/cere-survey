@@ -33,7 +33,7 @@ trait Tree
             }, $questions);
         }
 
-        return $questions->load(['node.answers.rule', 'rule', 'node.rule']);
+        return $questions;
     }
 
     public function deleteNode()

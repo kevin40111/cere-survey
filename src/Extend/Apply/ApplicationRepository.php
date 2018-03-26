@@ -91,7 +91,7 @@ class ApplicationRepository
     public function getBookFinishQuestions()
     {
         $BookPages = $this->application->book->childrenNodes->map(function ($page) {
-            return $page->getQuestions();
+            return $page->getQuestions()->load(['node.answers.rule', 'rule', 'node.rule']);
         });
 
         return $BookPages;
