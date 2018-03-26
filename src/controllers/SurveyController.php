@@ -228,21 +228,21 @@ class SurveyController extends \BaseController {
         $skips->nodes = [];
         $skips->questions = [];
 
-        $rules->map(function ($rule) use ($skips, $fillerAnswers){
+        $rules->load('effect')->map(function ($rule) use ($skips, $fillerAnswers){
             $pass = Rule::answers($fillerAnswers)->compare($rule);
 
             if(!$pass) return 0;
 
             if ($rule->effect_type === SurveyORM\Node::class) {
-                array_push($skips->nodes, SurveyORM\Node::find($rule->effect_id)->id);
+                array_push($skips->nodes, $rule->effect->id);
             }
 
             if ($rule->effect_type === Field::class) {
-                array_push($skips->questions, Field::find($rule->effect_id)->id);
+                array_push($skips->questions, $rule->effect->id);
             }
 
             if ($rule->effect_type === SurveyORM\Answer::class) {
-                array_push($skips->answers, SurveyORM\Answer::find($rule->effect_id)->id);
+                array_push($skips->answers, $rule->effect->id);
             }
         });
 
