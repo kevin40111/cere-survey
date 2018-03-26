@@ -9,7 +9,6 @@ use View;
 use Auth;
 use Cere\Survey;
 use Cere\Survey\Eloquent as SurveyORM;
-use Cere\Survey\Eloquent\Field\Field;
 use Cere\Survey\Field\FieldComponent;
 use Cere\Survey\Field\FieldRepository;
 use Files;

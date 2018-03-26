@@ -3,7 +3,6 @@
 namespace Cere\Survey\Writer;
 
 use Cere\Survey\Eloquent as SurveyORM;
-use Cere\Survey\Eloquent\Field\Field;
 
 class Rule
 {
