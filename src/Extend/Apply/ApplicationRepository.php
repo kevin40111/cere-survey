@@ -163,7 +163,7 @@ class ApplicationRepository
 
     private function setBookFinish()
     {
-        $book = $this->application->hook->book;
+        $book = $this->application->book;
 
         $book->lock = true;
 
