@@ -118,7 +118,7 @@ class Node extends Eloquent {
 
     public function pageRules()
     {
-        return $this->hasMany('Cere\Survey\Eloquent\Rule', 'page_id');
+        return $this->hasMany('Cere\Survey\Eloquent\Rule', 'page_id')->where('type', 'jump');
     }
 
     public function siblings()
