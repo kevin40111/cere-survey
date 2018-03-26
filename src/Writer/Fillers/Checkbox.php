@@ -15,7 +15,7 @@ class Checkbox extends Filler
 
         $this->contents[$question->id] = $value;
 
-        if ($question->rule()->where('type', 'none_above')->exists() && $value === '1') {
+        if ($question->noneAboveRule()->exists() && $value === '1') {
             $this->resetChecked($excepts = [$question->id]);
         }
 
