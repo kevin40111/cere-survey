@@ -531,7 +531,7 @@ app.directive("loginCondition", function(){
                     <md-input-container>
                         <label>選擇名單</label>
                         <md-select ng-model="condition.question">
-                            <md-option ng-repeat="field in fields" ng-value="field.id">{{field.node.title}}--{{field.title}}</md-option>
+                            <md-option ng-repeat="field in fields" ng-value="field.id">{{field.title}}</md-option>
                         </md-select>
                     </md-input-container>
                     <md-input-container>

@@ -6,6 +6,7 @@ use Input;
 use View;
 use Cere\Survey\RuleRepository;
 use Cere\Survey\Eloquent\Rule;
+use Files;
 
 trait CensornTrait
 {
@@ -96,14 +97,11 @@ trait CensornTrait
     {
         $application = $this->hook->applications->find(Input::get('id'));
 
-        $fields =  $application->hook->book->childrenNodes->reduce(function ($carry, $page) {
-            $questions = $page->getQuestions();
-            return $carry = array_merge($carry, $questions);
-        }, []);
+        $fields = Files::find(($this->hook->book->auth['fieldFile_id']))->sheets->first()->tables->first()->columns;
 
         return [
             'fields' => $fields,
-            'rule' => $application->book->rule ? $application->book->rule : new Rule(['expressions' => [['conditions' => [['compareType' => 'question']]]]]),
+            'rule' => $application->hanging_rule ? $application->hanging_rule : new Rule(['expressions' => [['conditions' => [['compareType' => 'question']]]]]),
         ];
     }
 
