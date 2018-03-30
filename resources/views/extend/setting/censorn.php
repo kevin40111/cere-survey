@@ -282,17 +282,10 @@
 
                     scope.updateIndividualStatus = function(){
                         scope.data = {id: application.id, data: application.individual_status}
-                        application.status = 0;
-                        $http({method: 'POST', url: 'setApplicationStatus', data:{id: application.id, status: application.status}})
-                        .success(function(data, status, headers, config) {
-
-                        })
-                        .error(function(e){
-                            console.log(e);
-                        });
 
                         $http({method: 'POST', url: 'updateIndividualStatus', data: scope.data})
                         .success(function(data, status, headers, config) {
+                            scope.application.status = data;
 
                         })
                         .error(function(e){
@@ -362,13 +355,7 @@
                 scope.updateIndividualStatus = function(){
                     scope.data = {id: application.id, data: application.individual_status}
                     application.status = 0;
-                    $http({method: 'POST', url: 'setApplicationStatus', data:{id: application.id, status: application.status}})
-                    .success(function(data, status, headers, config) {
 
-                    })
-                    .error(function(e){
-                        console.log(e);
-                    })
                     $http({method: 'POST', url: 'updateIndividualStatus', data: scope.data})
                     .success(function(data, status, headers, config) {
 
