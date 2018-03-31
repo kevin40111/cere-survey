@@ -285,8 +285,7 @@
 
                         $http({method: 'POST', url: 'updateIndividualStatus', data: scope.data})
                         .success(function(data, status, headers, config) {
-                            scope.application.status = data;
-
+                            application.status = data.status;
                         })
                         .error(function(e){
                             console.log(e);
@@ -358,7 +357,7 @@
 
                     $http({method: 'POST', url: 'updateIndividualStatus', data: scope.data})
                     .success(function(data, status, headers, config) {
-
+                        application.status = data.status;
                     })
                     .error(function(e){
                         console.log(e);
@@ -641,19 +640,11 @@ app.directive("loginCondition", function(){
         }
     }
 })
-.filter('auditFilter', function(){
+.filter('auditFilter', function($filter){
     return function(input, application){
-        var output = [];
-        if(application.individual_status.apply == 1 && application.individual_status.book == 1){
-            angular.extend(output, input);
-        } else {
-            angular.forEach(input, function(value){
-                if(value.show == true){
-                    output.push(value);
-                }
-            })
-        }
-        return output;
+        return $filter('filter')(input, function(status){
+            return application.individual_status.apply == 1 && application.individual_status.book == 1 ? true : status.show;
+        })
     }
 })
 </script>
