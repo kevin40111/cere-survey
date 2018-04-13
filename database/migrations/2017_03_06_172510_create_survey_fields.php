@@ -14,9 +14,15 @@ class CreateSurveyFields extends Migration {
     {
         Schema::create('survey_fields', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('node_id');
+            $table->integer('table_id');
+            $table->string('name', 50);
             $table->string('title', 500);
-            $table->integer('position');
+            $table->string('rules', 50);
+            $table->boolean('unique');
+            $table->boolean('encrypt');
+            $table->boolean('isnull');
+            $table->boolean('readonly');
+            $table->timestamps();
         });
     }
 

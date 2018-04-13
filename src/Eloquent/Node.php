@@ -4,7 +4,6 @@ namespace Cere\Survey\Eloquent;
 
 use Eloquent;
 use Plat\Eloquent\Upload;
-use Cere\Survey\Eloquent\Field\Field;
 
 class Node extends Eloquent {
 
@@ -41,7 +40,7 @@ class Node extends Eloquent {
 
     public function questions()
     {
-        return $this->hasMany(Field::class, 'node_id', 'id');
+        return $this->hasMany(Question::class);
     }
 
     public function answers()

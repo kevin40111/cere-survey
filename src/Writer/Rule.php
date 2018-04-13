@@ -2,7 +2,7 @@
 
 namespace Cere\Survey\Writer;
 
-use Cere\Survey\Eloquent as SurveyORM;
+use Cere\Survey\Eloquent\Question;
 
 class Rule
 {
@@ -54,7 +54,8 @@ class Rule
                     if (isset($condition['compareOperator'])) {
                         $result = $result.$condition['compareOperator'];
                     }
-                    $question = is_null($this->answers[$condition['question']]) ? 'null' : $this->answers[$condition['question']];
+                    $field = $rule->factors->find($condition['question'])->field;
+                    $question = is_null($this->answers[$field->id]) ? 'null' : $this->answers[$field->id];
                     $result = $result.$question.$condition['logic'].$condition['value'];
                 }
                 $result = $result.')';

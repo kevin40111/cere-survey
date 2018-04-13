@@ -22,7 +22,7 @@ abstract class Filler
 
     function __construct($node, $answers)
     {
-        $this->node = $node;
+        $this->node = $node->load('questions.field');
         $this->answers = $answers;
 
         $this->fillOriginal();
@@ -58,7 +58,7 @@ abstract class Filler
 
     protected function setRules($question)
     {
-        $question->affectRules->map(function ($rule) {
+        $question->affectRules->load(['effect', 'factors.field'])->each(function ($rule) {
             $isSkip = Rule::answers($this->answers)->compare($rule);
             switch ($rule->effect_type) {
                 case SurveyORM\Node::class:
@@ -68,7 +68,7 @@ abstract class Filler
                     });
                     break;
 
-                case SurveyORM\Field\Field::class:
+                case SurveyORM\Question::class:
                     if ($rule->effect->node->id === $this->node->id) {
                         $this->affected($rule->effect, $isSkip);
                     } else {
@@ -128,14 +128,14 @@ abstract class Filler
     protected function syncAnswers()
 	{
         $this->node->questions->each(function ($question) {
-            $this->answers[$question->id] = $this->contents[$question->id];
+            $this->answers[$question->field->id] = $this->contents[$question->id];
         });
     }
 
     protected function fillOriginal()
 	{
         $this->node->questions->each(function ($question) {
-            $this->original[$question->id] = isset($this->answers[$question->id]) ? $this->answers[$question->id] : null;
+            $this->original[$question->id] = isset($this->answers[$question->field->id]) ? $this->answers[$question->field->id] : null;
         });
     }
 

@@ -90,13 +90,15 @@ class SurveyController extends \BaseController {
 
     public function getPage($book_id)
     {
-        $answers = $this->writer->all();
+        $fields = $this->writer->all();
 
-        $page = SurveyORM\Node::find($answers['page_id']);
+        $page = SurveyORM\Node::find($fields['page_id']);
 
-        $skips = ! $page ? [] : $this->getSkips($page->pageRules);
+        $answers = $this->getAnswers($page, $fields);
 
-        return ['page' => $page, 'answers' => $answers, 'skips' => $skips, 'logs' => DB::connection()->getQueryLog()];
+        $skips = $this->getSkips($fields);
+
+        return ['page' => $page, 'answers' => $answers, 'skips' => $skips, 'logs' => DB::connection('survey')->getQueryLog()];
     }
 
     /**
@@ -159,7 +161,7 @@ class SurveyController extends \BaseController {
     private function checkPage($page, $answers)
     {
         $missings = $page->getQuestions()->filter(function ($question) use ($answers) {
-            return ! isset($answers[$question->id]);
+            return ! isset($answers[$question->field->id]);
         })->values();
 
         return $missings;
@@ -171,7 +173,7 @@ class SurveyController extends \BaseController {
 
         $skips = 0;
         foreach ($questions as $question) {
-            if (isset($answers[$question->id]) && $answers[$question->id] == -8) {
+            if (isset($answers[$question->field->id]) && $answers[$question->field->id] == -8) {
                 $skips++;
             }
         }
@@ -200,56 +202,41 @@ class SurveyController extends \BaseController {
      */
     public function saveAnswer($book_id)
     {
-        $question = SurveyORM\Field\Field::find(Input::get('question.id'));
+        $question = SurveyORM\Question::find(Input::get('question.id'));
         $answers = $this->writer->all();
         $filler = Fill::answers($answers)->node($question->node);
         $filler->set($question, Input::get('value'));
+        $dirty = $filler->getDirty();
 
+        $this->writer->update($dirty);
 
-        foreach ($filler->getDirty() as $id => $value) {
-            $this->writer->put($id, $value);
-        }
+        $fields = $this->writer->all();
 
-        $page = SurveyORM\Node::find($answers['page_id']);
+        $skips = $this->getSkips($fields);
 
-        $skips = ! $page ? [] : $this->getSkips($page->pageRules);
-
-        return ['answers' => $this->writer->all(), 'message' => $filler->messages, 'logs' => DB::getQueryLog(), 'skips' => $skips];
+        return ['dirty' => $dirty, 'message' => $filler->messages, 'logs' => DB::connection('survey')->getQueryLog(), 'skips' => $skips];
     }
 
-    private function getSkips($rules)
+    private function getSkips($fields)
     {
-        $fillerAnswers = $this->writer->all();
+        $page = SurveyORM\Node::findOrFail($fields['page_id']);
 
-        $skips = (object)[];
-        $skips->answers = [];
-        $skips->nodes = [];
-        $skips->questions = [];
+        $skips = $page->pageRules->load(['effect', 'factors.field'])->filter(function ($rule) use ($fields) {
+            return ! Rule::answers($fields)->compare($rule);
+        })->reduce(function ($skips, $rule) {
+            $group = strtolower(class_basename($rule->effect->class)) . 's';
 
-        $rules->load('effect')->map(function ($rule) use ($skips, $fillerAnswers){
-            $pass = Rule::answers($fillerAnswers)->compare($rule);
+            array_push($skips[$group], $rule->effect->id);
 
-            if(!$pass) return 0;
-
-            if ($rule->effect_type === SurveyORM\Node::class) {
-                array_push($skips->nodes, $rule->effect->id);
-            }
-
-            if ($rule->effect_type === Field::class) {
-                array_push($skips->questions, $rule->effect->id);
-            }
-
-            if ($rule->effect_type === SurveyORM\Answer::class) {
-                array_push($skips->answers, $rule->effect->id);
-            }
-        });
+            return $skips;
+        }, ['nodes' => [], 'questions' => [], 'answers' => []]);
 
         return $skips;
     }
 
     public function getChildrens()
     {
-        $question = SurveyORM\Field\Field::find(Input::get('question.id'));
+        $question = SurveyORM\Question::find(Input::get('question.id'));
 
         $answers = $this->writer->all();
 
@@ -308,5 +295,15 @@ class SurveyController extends \BaseController {
         }
 
         return ['options' => $options];
+    }
+
+    private function getAnswers($page, $fields)
+    {
+        $answers = $page->getQuestions()->load('field')->reduce(function($answers, $question) use ($fields) {
+            $answers[$question->id] = $fields[$question->field->id];
+            return $answers;
+        }, []);
+
+        return $answers;
     }
 }

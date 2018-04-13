@@ -4,7 +4,7 @@ namespace Cere\Survey;
 
 use Plat\Files\Uploader;
 use Cere\Survey\Eloquent as SurveyORM;
-use Cere\Survey\Eloquent\Field\Field as Question;
+use Cere\Survey\Eloquent\Question;
 
 class Editor
 {
@@ -52,9 +52,15 @@ class Editor
 
     public function createQuestion($node_id, $attributes)
     {
-        $question = SurveyORM\Node::find($node_id)->questions()->save(new Question(array_merge($attributes, ['rules' => 'gender'])));
+        $column = $this->filed->update_column(null, ['rules' => 'gender']);
 
-        $column = $this->filed->update_column($question->id, []);
+        $question = new Question($attributes);
+
+        $question->node()->associate(SurveyORM\Node::find($node_id));
+
+        $question->field()->associate($column);
+
+        $question->save();
 
         return $question;
     }
@@ -82,7 +88,7 @@ class Editor
         $node = SurveyORM\Node::find($node_id);
 
         $node->getQuestions()->each(function ($question) {
-            $this->filed->remove_column($question->id);
+            $this->filed->remove_column($question->field->id);
         });
 
         return $node->deleteNode();
@@ -98,7 +104,7 @@ class Editor
             $subNode->deleteNode();
         });
 
-        return $this->filed->remove_column($question_id);
+        return $this->filed->remove_column($question->field->id);
     }
 
     public function removeAnswer($answer_id)

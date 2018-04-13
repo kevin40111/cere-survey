@@ -3,7 +3,6 @@
 namespace Cere\Survey\Eloquent;
 
 use Eloquent;
-use Cere\Survey\Eloquent\Field\Field;
 
 class Rule extends Eloquent {
 
@@ -71,7 +70,7 @@ class Rule extends Eloquent {
 
     public function factors()
     {
-        return $this->belongsToMany(Field::class, 'survey_rule_factor', 'rule_id', 'question_id');
+        return $this->belongsToMany(Question::class, 'survey_rule_factor');
     }
 
 }

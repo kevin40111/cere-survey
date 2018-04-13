@@ -3,7 +3,6 @@
 namespace Cere\Survey;
 
 use Cere\Survey\Eloquent as SurveyORM;
-use Cere\Survey\Eloquent\Field\Field;
 
 class RuleRepository
 {
@@ -85,7 +84,7 @@ class RuleRepository
                     $explanation .= $operator;
                 }
 
-                $question = Field::find($condition['question']);
+                $question = SurveyORM\Question::find($condition['question']);
                 $boolean = $booleans[$condition['logic']];
 
                 $answer = $condition['compareType'] == 'value' ? $condition['value'] : $question->node->answers()->where('value', $condition['value'])->first()->title;

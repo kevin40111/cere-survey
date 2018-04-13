@@ -4,6 +4,7 @@ namespace Cere\Survey\Writer;
 
 use Cere\Survey\Field\FieldRepository;
 use Cere\Survey\Eloquent\Book;
+use Cere\Survey\Eloquent\Question;
 
 class FieldWriter implements WriterInterface
 {
@@ -69,6 +70,15 @@ class FieldWriter implements WriterInterface
         $values = $this->fieldRepository->setAttributesFieldName([$key => $value]);
 
         $this->fieldRepository->put(['encrypt_id' => $this->user->id], $values);
+    }
+
+    public function update($dirty)
+    {
+        $fields = Question::find(array_keys($dirty))->load('field')->reduce(function($fields, $question) use ($dirty) {
+            return array_add($fields, $question->field->id, $dirty[$question->id]);
+        }, []);
+
+        $this->fieldRepository->put(['encrypt_id' => $this->user->id], $this->fieldRepository->setAttributesFieldName($fields));
     }
 
     public function setPage($value)

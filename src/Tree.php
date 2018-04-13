@@ -2,17 +2,18 @@
 
 namespace Cere\Survey;
 
-use Cere\Survey\Eloquent\Field\Field as Question;
 use Illuminate\Database\Eloquent\Collection;
-use Cere\Survey\Eloquent\Node;;
+use Cere\Survey\Eloquent\Node;
+use Cere\Survey\Eloquent\Question;
+use Cere\Survey\Eloquent\Answer;
 
 trait Tree
 {
     public function getPaths()
     {
-        $parent = is_a($this, 'Cere\Survey\Eloquent\Answer') || is_a($this, Question::class) ? $this->node->parent : $this->parent;
+        $parent = is_a($this, Answer::class) || is_a($this, Question::class) ? $this->node->parent : $this->parent;
 
-        $paths = $parent ? $parent->getPaths()->add($this) : \Illuminate\Database\Eloquent\Collection::make([$this]);
+        $paths = $parent ? $parent->getPaths()->add($this) : Collection::make([$this]);
 
         return $paths;
     }

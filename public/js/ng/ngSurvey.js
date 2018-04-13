@@ -191,7 +191,7 @@ angular.module('ngSurvey.directives', [])
                         );
                     }
 
-                    angular.extend(surveyFactory.answers, response.answers);
+                    angular.extend(surveyFactory.answers, response.dirty);
                     angular.extend(surveyFactory.skips, response.skips);
                     getChildrens();
                 });
