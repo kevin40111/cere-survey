@@ -20,6 +20,8 @@ abstract class Filler
 
     protected $fill;
 
+    public $skips = [];
+
     function __construct($node, $answers)
     {
         $this->node = $node->load('questions.field');
@@ -59,23 +61,23 @@ abstract class Filler
     protected function setRules($question)
     {
         $question->affectRules->load(['effect', 'factors.field'])->each(function ($rule) {
-            $isSkip = Rule::answers($this->answers)->compare($rule);
-            switch ($rule->effect_type) {
-                case SurveyORM\Node::class:
-                    $this->fill->node($rule->effect)->reset($isSkip);
-                    $rule->effect->childrenNodes->each(function ($node) use ($isSkip) {
-                        $this->fill->node($node)->reset($isSkip);
+            array_set($this->skips, $rule->id, Rule::answers($this->answers)->compare($rule));
+            switch (true) {
+                case $rule->effect instanceof SurveyORM\Node:
+                    $this->fill->node($rule->effect)->reset($this->skips[$rule->id]);
+                    $rule->effect->childrenNodes->each(function ($node) {
+                        $this->fill->node($node)->reset($this->skips[$rule->id]);
                     });
                     break;
 
-                case SurveyORM\Question::class:
+                case $rule->effect instanceof SurveyORM\Question:
                     if ($rule->effect->node->id === $this->node->id) {
-                        $this->affected($rule->effect, $isSkip);
+                        $this->affected($rule->effect, $this->skips[$rule->id]);
                     } else {
-                        $this->fill->node($rule->effect->node)->affected($rule->effect, $isSkip);
+                        $this->fill->node($rule->effect->node)->affected($rule->effect, $this->skips[$rule->id]);
                     }
 
-                case SurveyORM\Answer::class:
+                case $rule->effect instanceof SurveyORM\Answer:
                     # todo...
                     break;
             }
@@ -123,6 +125,13 @@ abstract class Filler
         }
 
         return $dirty;
+    }
+
+    public function getSkips()
+    {
+        $this->skips += $this->fill->getSkips();
+
+        return $this->skips;
     }
 
     protected function syncAnswers()

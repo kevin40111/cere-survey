@@ -94,11 +94,7 @@ class SurveyController extends \BaseController {
 
         $page = SurveyORM\Node::find($fields['page_id']);
 
-        $answers = $this->getAnswers($page, $fields);
-
-        $skips = $this->getSkips($fields);
-
-        return ['page' => $page, 'answers' => $answers, 'skips' => $skips, 'logs' => DB::connection('survey')->getQueryLog()];
+        return ['page' => $page];
     }
 
     /**
@@ -122,7 +118,7 @@ class SurveyController extends \BaseController {
 
         $url = is_null($nextPage) ? $this->getNextUrl($book_id) : NULL;
 
-        return ['page' => $nextPage, 'answers' => $answers, 'url' => $url];
+        return ['page' => $nextPage, 'url' => $url];
     }
 
     private function getNextUrl($book_id)
@@ -190,9 +186,17 @@ class SurveyController extends \BaseController {
      */
     public function getNodes()
     {
-        $nodes = SurveyORM\Node::find(Input::get('page.id'))->childrenNodes->load(['questions', 'answers']);
+        $page = SurveyORM\Node::find(Input::get('page.id'));;
 
-        return ['nodes' => $nodes];
+        $nodes = $page->childrenNodes->load(['rule', 'questions.rule', 'answers.rule']);
+
+        $fields = $this->writer->all();
+
+        $skips = $this->getSkips($nodes, $fields, ['questions' => [], 'answers' => []]);
+
+        $answers = $this->getAnswers($page, $fields);
+
+        return ['nodes' => $nodes, 'answers' => $answers, 'skips' => $skips, 'logs' => DB::connection('survey')->getQueryLog()];
     }
 
     /**
@@ -212,26 +216,22 @@ class SurveyController extends \BaseController {
 
         $fields = $this->writer->all();
 
-        $skips = $this->getSkips($fields);
+        $skips = $filler->getSkips();
 
         return ['dirty' => $dirty, 'message' => $filler->messages, 'logs' => DB::connection('survey')->getQueryLog(), 'skips' => $skips];
     }
 
-    private function getSkips($fields)
+    private function getSkips($items, $fields, $relations)
     {
-        $page = SurveyORM\Node::findOrFail($fields['page_id']);
-
-        $skips = $page->pageRules->load(['effect', 'factors.field'])->filter(function ($rule) use ($fields) {
-            return ! Rule::answers($fields)->compare($rule);
-        })->reduce(function ($skips, $rule) {
-            $group = strtolower(class_basename($rule->effect->class)) . 's';
-
-            array_push($skips[$group], $rule->effect->id);
-
+        return $items->reduce(function ($skips, $item) use ($fields, $relations) {
+            if ($item->rule) {
+                $skips = array_add($skips, $item->rule->id, Rule::answers($fields)->compare($item->rule));
+            }
+            foreach ($relations as $relation => $nests) {
+                $skips += $this->getSkips($item->$relation, $fields, $nests);
+            }
             return $skips;
-        }, ['nodes' => [], 'questions' => [], 'answers' => []]);
-
-        return $skips;
+        }, []);
     }
 
     public function getChildrens()
