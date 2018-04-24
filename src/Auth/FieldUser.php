@@ -32,6 +32,7 @@ class FieldUser
         if ($exist) {
             $this->session = SurveySession::create($this->book->id, json_encode($attributes));
             $this->id = $this->session->encrypt();
+            $fieldRepository->put($attributes, ['encrypt_id' => $this->id]);
         }
     }
 
@@ -54,7 +55,7 @@ class FieldUser
             $fieldRepository->put($checkValuesByName, $saveValuesByName);
         }
 
-        return [$exists, $checkValuesByID->toArray()];
+        return [$exists, $checkValuesByName];
     }
 
     private function validNew($fieldRepository, $input)
@@ -69,7 +70,7 @@ class FieldUser
             $fieldRepository->insert($saveValuesByName);
         }
 
-        return [true, $saveValuesByID->toArray()];
+        return [true, $saveValuesByName];
     }
 
     public function logout()
