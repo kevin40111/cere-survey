@@ -56,12 +56,11 @@ trait CensornTrait
             $column->selected = in_array($column->id, $application->fields);
         }) : [];
 
-        $mainBookPages =$this->hook->book->childrenNodes->reduce(function ($carry, $page) use ($application){
-            $questions = $page->getQuestions();
+        $mainBookPages = $this->hook->book->childrenNodes->reduce(function ($carry, $page) use ($application) {
 
-            foreach ($questions as &$question) {
-                $question['selected'] = in_array($question['id'], $application->fields);
-            }
+            $questions = $page->getQuestions()->each(function ($question) use ($application) {
+                $question->selected = in_array($question->id, $application->fields);
+            });
 
             array_push($carry, ['fields' => $questions]);
 

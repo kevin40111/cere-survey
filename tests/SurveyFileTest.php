@@ -160,17 +160,6 @@ class SurveyFileTest extends TestCase {
         $this->assertCount($amount_questions, $questions);
     }
 
-    public function testGetAnswers()
-    {
-        Input::replace([
-            'question_id' => $this->question->id,
-        ]);
-
-        $answers = $this->surveyFile->getAnswers()['answers'];
-
-        $this->assertCount($answers->count(), SurveyORM\Answer::all());
-    }
-
     public function testGetNodes()
     {
         Input::replace([

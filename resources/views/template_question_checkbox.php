@@ -1,5 +1,5 @@
 <div ng-repeat="question in node.questions">
-    <md-checkbox ng-model="answers[question.id]" ng-disabled="node.saving || skips.questions.indexOf(question.id) != -1" survey-input ng-true-value="'1'" ng-false-value="'0'" ng-change="saveAnswer(answers[question.id])" class="md-primary">
+    <md-checkbox ng-model="answers[question.id]" ng-disabled="node.saving || isSkip(question)" survey-input ng-true-value="'1'" ng-false-value="'0'" ng-change="saveAnswer(answers[question.id])" class="md-primary">
         {{ question.title }}
     </md-checkbox>
     <div style="padding-left: 5px">

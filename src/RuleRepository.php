@@ -3,7 +3,6 @@
 namespace Cere\Survey;
 
 use Cere\Survey\Eloquent as SurveyORM;
-use Cere\Survey\Eloquent\Field\Field;
 
 class RuleRepository
 {
@@ -47,23 +46,22 @@ class RuleRepository
 
     public function deleteRule($rule_id = null)
     {
-        $rule_id = isset($rule_id) ? $rule_id : $this->target->rule->id;
-        SurveyORM\SurveyRuleFactor::where('rule_id', $rule_id)->delete();
+        $rule = isset($rule_id) ? SurveyORM\Rule::find($rule_id) : $this->target->rule;
 
-        SurveyORM\Rule::find($rule_id)->delete();
+        $rule->factors()->detach();
+
+        $rule->delete();
     }
 
     protected function saveRulesFactor($expressions, $rule)
     {
-        SurveyORM\SurveyRuleFactor::where('rule_id', $rule->id)->delete();
+        $questions = array_reduce($expressions, function ($carry, $expression) {
+            return array_merge($carry, array_map(function ($condition) {
+                return $condition['question'];
+            }, $expression['conditions']));
+        }, []);
 
-        foreach ($expressions as $expression) {
-            foreach ($expression['conditions'] as $condition) {
-                if (isset($condition['question']) && !SurveyORM\SurveyRuleFactor::where('rule_relation_factor', $condition['question'])->where('rule_id', $rule->id)->exists()) {
-                    SurveyORM\SurveyRuleFactor::create(['rule_relation_factor' => $condition['question'], 'rule_id' => $rule->id]);
-                }
-            }
-        }
+        $rule->factors()->sync($questions);
     }
 
     public function explanation()

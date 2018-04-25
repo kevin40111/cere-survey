@@ -4,7 +4,6 @@ namespace Cere\Survey\Eloquent;
 
 use Eloquent;
 use Cere\Survey\Eloquent\Field\Sheet;
-use Cere\Survey\Eloquent\Field\Field;
 use Carbon\Carbon;
 use Cere\Survey\Eloquent\Extend;
 

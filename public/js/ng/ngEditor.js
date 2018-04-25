@@ -963,8 +963,10 @@ angular.module('ngEditor.directives', ['ngQuill'])
                 <div>
                     <md-input-container>
                         <label>當題目</label>
-                        <md-select ng-model="condition.question" ng-change="resetAnswers()">
-                            <md-option ng-repeat="question in questions" ng-value="question.id" >{{question.node.title}}-{{question.title}}</md-option>
+                        <md-select ng-model="question" ng-model-options="{trackBy: '$value.id'}" ng-change="setQuestion(question)">
+                            <md-optgroup label="第{{$index+1}}頁" ng-repeat="page in pages">
+                                <md-option ng-repeat="question in page.questions" ng-value="question">{{question.node.title}}-{{question.title}}</md-option>
+                            </md-optgroup>
                         </md-select>
                     </md-input-container>
                 </div>
@@ -993,8 +995,8 @@ angular.module('ngEditor.directives', ['ngQuill'])
                 <div ng-if="condition.compareType=='answer'">
                     <md-input-container>
                         <label>選項</label>
-                        <md-select ng-model="condition.value" md-on-open="getAnswers()" ng-init="resetAnswers()">
-                            <md-option ng-repeat="answer in answers" ng-value="answer.value">{{answer.title}}</md-option>
+                        <md-select ng-model="condition.value">
+                            <md-option ng-repeat="answer in question.node.answers" ng-value="answer.value">{{answer.title}}</md-option>
                         </md-select>
                     </md-input-container>
                 </div>
@@ -1025,26 +1027,19 @@ angular.module('ngEditor.directives', ['ngQuill'])
                 {key: ' || ', title: '或者'}
             ];
 
-            $http({method: 'POST', url: 'getQuestion', data:{book_id: $scope.book.id}})
+            $http({method: 'POST', url: 'getPages', data:{book_id: $scope.book.id}})
             .success(function(data, status, headers, config) {
-                $scope.questions = data.questions;
+                $scope.pages = data.pages;
+                $scope.question = {id: $scope.condition.question};
+
             })
             .error(function(e) {
                 console.log(e);
             });
 
-            $scope.resetAnswers = function() {
-                $scope.answers = [];
-                $scope.promiseAnswers = $http({method: 'POST', url: 'getAnswers', data:{question_id: $scope.condition.question}})
-                .then(function(response) {
-                    $scope.answers = response.data.answers;
-                });
+            $scope.setQuestion = function(question, event) {
+                $scope.condition.question = question.id;
             };
-
-            $scope.getAnswers = function() {
-                return $scope.promiseAnswers;
-            };
-
          }
     };
 });

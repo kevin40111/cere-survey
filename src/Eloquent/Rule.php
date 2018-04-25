@@ -70,7 +70,7 @@ class Rule extends Eloquent {
 
     public function factors()
     {
-        return $this->hasMany('Cere\Survey\Eloquent\SurveyRuleFactor', 'rule_id');
+        return $this->belongsToMany(Question::class, 'survey_rule_factor');
     }
 
 }

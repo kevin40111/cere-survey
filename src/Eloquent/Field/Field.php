@@ -9,15 +9,13 @@ class Field extends Eloquent {
 
     use \Cere\Survey\Tree;
 
-    use SurveyORM\PositionTrait;
-
     protected $table = 'survey_fields';
 
     protected $connection = 'survey';
 
     public $timestamps = true;
 
-    protected $fillable = array('name', 'title', 'rules', 'unique', 'encrypt', 'isnull', 'readonly', 'position');
+    protected $fillable = array('name', 'title', 'rules', 'unique', 'encrypt', 'isnull', 'readonly');
 
     protected $attributes = ['title' => '', 'name' => '', 'unique' => false, 'encrypt' => false, 'isnull' => false, 'readonly' => false];
 
@@ -100,38 +98,5 @@ class Field extends Eloquent {
     public function setReadonlyAttribute($value)
     {
         $this->attributes['readonly'] = isset($value) ? $value : false;
-    }
-
-    /*
-     * From Question
-     */
-    public function node()
-    {
-        return $this->hasOne(SurveyORM\Node::class, 'id', 'node_id');
-    }
-
-    public function childrenNodes()
-    {
-        return $this->morphMany(SurveyORM\Node::class, 'parent');
-    }
-
-    public function getRequiredAttribute($value)
-    {
-        return (bool)$value;
-    }
-
-    public function rule()
-    {
-        return $this->morphOne(SurveyORM\Rule::class, 'effect')->where('type', 'jump');
-    }
-
-    public function noneAboveRule()
-    {
-        return $this->morphOne(SurveyORM\Rule::class, 'effect')->where('type', 'noneAbove');
-    }
-
-    public function siblings()
-    {
-        return $this->node->questions();
     }
 }

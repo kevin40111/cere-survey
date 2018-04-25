@@ -56,7 +56,7 @@ class Fill
         $skips = [];
 
         foreach ($this->fillers as $filler) {
-            $skips = $skips + $filler->getSkips();
+            $skips += $filler->getSkips();
         }
 
         return $skips;

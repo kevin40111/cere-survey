@@ -20,9 +20,11 @@ abstract class Filler
 
     protected $fill;
 
+    public $skips = [];
+
     function __construct($node, $answers)
     {
-        $this->node = $node;
+        $this->node = $node->load('questions.field');
         $this->answers = $answers;
 
         $this->fillOriginal();
@@ -56,28 +58,26 @@ abstract class Filler
         });
     }
 
-    protected function setRules($by)
+    protected function setRules($question)
     {
-        $rules = SurveyORM\SurveyRuleFactor::where('rule_relation_factor', $by->id)->get()->groupBy('rule_id')->keys();
-
-        SurveyORM\Rule::find($rules)->map(function ($rule) {
-            $isSkip = Rule::answers($this->answers)->compare($rule);
-            switch ($rule->effect_type) {
-                case SurveyORM\Node::class:
-                    $this->fill->node($rule->effect)->reset($isSkip);
-                    $rule->effect->childrenNodes->each(function ($node) use ($isSkip) {
-                        $this->fill->node($node)->reset($isSkip);
+        $question->affectRules->load(['effect', 'factors.field'])->each(function ($rule) {
+            array_set($this->skips, $rule->id, Rule::answers($this->answers)->compare($rule));
+            switch (true) {
+                case $rule->effect instanceof SurveyORM\Node:
+                    $this->fill->node($rule->effect)->reset($this->skips[$rule->id]);
+                    $rule->effect->childrenNodes->each(function ($node) {
+                        $this->fill->node($node)->reset($this->skips[$rule->id]);
                     });
                     break;
 
-                case SurveyORM\Field\Field::class:
+                case $rule->effect instanceof SurveyORM\Question:
                     if ($rule->effect->node->id === $this->node->id) {
-                        $this->affected($rule->effect, $isSkip);
+                        $this->affected($rule->effect, $this->skips[$rule->id]);
                     } else {
-                        $this->fill->node($rule->effect->node)->affected($rule->effect, $isSkip);
+                        $this->fill->node($rule->effect->node)->affected($rule->effect, $this->skips[$rule->id]);
                     }
 
-                case SurveyORM\Answer::class:
+                case $rule->effect instanceof SurveyORM\Answer:
                     # todo...
                     break;
             }
@@ -127,17 +127,24 @@ abstract class Filler
         return $dirty;
     }
 
+    public function getSkips()
+    {
+        $this->skips += $this->fill->getSkips();
+
+        return $this->skips;
+    }
+
     protected function syncAnswers()
 	{
         $this->node->questions->each(function ($question) {
-            $this->answers[$question->id] = $this->contents[$question->id];
+            $this->answers[$question->field->id] = $this->contents[$question->id];
         });
     }
 
     protected function fillOriginal()
 	{
         $this->node->questions->each(function ($question) {
-            $this->original[$question->id] = isset($this->answers[$question->id]) ? $this->answers[$question->id] : null;
+            $this->original[$question->id] = isset($this->answers[$question->field->id]) ? $this->answers[$question->field->id] : null;
         });
     }
 
@@ -149,19 +156,5 @@ abstract class Filler
     private function isSkip($value)
     {
         return $value === '-8';
-    }
-
-    public function getSkips()
-    {
-        $skips = [];
-
-        foreach ($this->contents as $id => $value) {
-            $skip = Rule::answers($this->answers)->effect($id);
-            $skips = $skips + $skip;
-        }
-
-        $skips = $skips + $this->fill->getSkips();
-
-        return $skips;
     }
 }

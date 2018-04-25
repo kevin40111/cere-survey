@@ -9,7 +9,6 @@ use View;
 use Auth;
 use Cere\Survey;
 use Cere\Survey\Eloquent as SurveyORM;
-use Cere\Survey\Eloquent\Field\Field;
 use Cere\Survey\Field\FieldComponent;
 use Cere\Survey\Field\FieldRepository;
 use Files;
@@ -57,18 +56,21 @@ trait SurveyEditor
         return ['book' => $this->book];
     }
 
-    public function getQuestion()
+    public function getPages()
     {
-        $questions = $this->editor->getQuestion(Input::get('book_id'));
+        $pages = $this->editor->getPages(Input::get('book_id'));
 
-        return ['questions' => $questions];
+        return ['pages' => $pages];
     }
 
-    public function getAnswers()
+    public function getBrowserQuestions()
     {
-        $answers = Field::find(Input::get('question_id'))->node->answers;
+        $questions = $this->editor->getPages(Input::get('book_id'))->reduce(function ($carry, $page) {
+            $page['questions'][0]->page = ['rule' => $page['rule']];
+            return array_merge($carry, $page['questions']->load(['node.answers.rule', 'rule', 'node.rule'])->all());
+        }, []);
 
-        return ['answers' => $answers];
+        return ['questions' => $questions];
     }
 
     public function getNodes()

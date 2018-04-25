@@ -14,9 +14,8 @@ class CreateSurveyRuleFactor extends Migration {
 	{
 		Schema::create('survey_rule_factor', function(Blueprint $table)
 		{
-			$table->increments('id');
-			$table->string('rule_relation_factor');
-			$table->string('rule_id');
+			$table->integer('question_id');
+			$table->integer('rule_id');
 		});
 	}
 

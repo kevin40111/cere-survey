@@ -5,9 +5,6 @@ angular.module('ngSurvey', ['ngSurvey.directives', 'ngSurvey.factories']);
 angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http, $q) {
     var answers = {};
     var skips = {};
-    skips.nodes = []
-    skips.questions = []
-    skips.answers = [];
 
     return {
         answers: answers,
@@ -29,6 +26,9 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
             });
 
             return deferred.promise;
+        },
+        isSkip: function(target) {
+            return target.rule && skips[target.rule.id];
         }
     };
 });
@@ -79,8 +79,6 @@ angular.module('ngSurvey.directives', [])
             };
             surveyFactory.get('getPage', {book: $scope.book}, $scope.book).then(function(response) {
                 $scope.page = response.page;
-                angular.extend(surveyFactory.answers, response.answers);
-                angular.extend(surveyFactory.skips, response.skips);
             });
 
             $scope.nextPage = function() {
@@ -89,7 +87,6 @@ angular.module('ngSurvey.directives', [])
                         alert('有尚未填答題目');
                     } else {
                         $scope.page = response.page;
-                        surveyFactory.answers = response.answers;
                         $scope.book.saving = false;
                         $scope.ext_book_url = response.url;
                     }
@@ -109,18 +106,20 @@ angular.module('ngSurvey.directives', [])
         },
         template:  `
             <div>
-                <survey-node ng-repeat="node in nodes" node="node" ng-if="skips.nodes.indexOf(node.id) == -1">
+                <survey-node ng-repeat="node in nodes" node="node" ng-if="!isSkip(node)">
                     <img ng-repeat="image in node.images" ng-src="/upload/get/{{image.serial}}" alt="Description" style="width:940px" />
                 </survey-node>
             </div>
         `,
         controller: function($scope, $http) {
 
-            $scope.skips = surveyFactory.skips;
+            $scope.isSkip = surveyFactory.isSkip;
 
             $scope.$watch('page', function() {
                 surveyFactory.get('getNodes', {page: $scope.page}, $scope.page).then(function(response) {
                     $scope.nodes = response.nodes;
+                    angular.extend(surveyFactory.answers, response.answers);
+                    angular.extend(surveyFactory.skips, response.skips);
                 });
             });
         }
@@ -191,7 +190,7 @@ angular.module('ngSurvey.directives', [])
                         );
                     }
 
-                    angular.extend(surveyFactory.answers, response.answers);
+                    angular.extend(surveyFactory.answers, response.dirty);
                     angular.extend(surveyFactory.skips, response.skips);
                     getChildrens();
                 });
@@ -225,7 +224,7 @@ angular.module('ngSurvey.directives', [])
             var compiledContents = {};
 
             return function(scope, iElement, iAttr, ctrl) {
-                scope.skips = surveyFactory.skips;
+                scope.isSkip = surveyFactory.isSkip;
                 scope.addChildren = ctrl.addChildren;
                 //var contents = iElement.contents().remove();
                 var type = scope.node.type;

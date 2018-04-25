@@ -3,7 +3,6 @@
 namespace Cere\Survey;
 
 use Cere\Survey\Eloquent as SurveyORM;
-use Cere\Survey\Eloquent\Field\Field;
 use Auth;
 
 class MessageRepository

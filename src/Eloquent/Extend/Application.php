@@ -4,7 +4,6 @@ namespace Cere\Survey\Eloquent\Extend;
 
 use Eloquent;
 use Auth;
-use Cere\Survey\Eloquent\Field\Field;
 use Cere\Survey\Eloquent as SurveyORM;
 use Plat\Member;
 

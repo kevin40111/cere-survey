@@ -3,49 +3,44 @@
 namespace Cere\Survey\Eloquent;
 
 use Eloquent;
+use Cere\Survey\Eloquent\Field\Field;
 
-class Question extends Eloquent {
-
+class Question extends Eloquent
+{
     use \Cere\Survey\Tree;
+
+    use PositionTrait;
+
+    protected $connection = 'survey';
 
     protected $table = 'survey_questions';
 
     public $timestamps = false;
 
-    protected $fillable = ['title', 'previous_id'];
+    protected $fillable = ['title', 'position'];
 
     protected $attributes = ['title' => ''];
 
-    protected $appends = ['class', 'relation'];
+    protected $appends = ['class'];
 
     public function node()
     {
-        return $this->hasOne('Cere\Survey\Eloquent\Node', 'id', 'node_id');
-    }
-
-    public function next()
-    {
-        return $this->hasOne('Cere\Survey\Eloquent\Question', 'previous_id', 'id');
-    }
-
-    public function previous()
-    {
-        return $this->hasOne('Cere\Survey\Eloquent\Question', 'id', 'previous_id');
+        return $this->belongsTo(Node::class);
     }
 
     public function childrenNodes()
     {
-        return $this->morphMany('Cere\Survey\Eloquent\Node', 'parent');
+        return $this->morphMany(Node::class, 'parent');
+    }
+
+    public function field()
+    {
+        return $this->belongsTo(Field::class);
     }
 
     public function getClassAttribute()
     {
         return self::class;
-    }
-
-    public function getRelationAttribute()
-    {
-        return 'questions';
     }
 
     public function getRequiredAttribute($value)
@@ -55,7 +50,21 @@ class Question extends Eloquent {
 
     public function rule()
     {
-        return $this->morphOne('Cere\Survey\Eloquent\Rule', 'effect');
+        return $this->morphOne(Rule::class, 'effect')->where('type', 'jump');
     }
 
+    public function noneAboveRule()
+    {
+        return $this->morphOne(Rule::class, 'effect')->where('type', 'none_above');
+    }
+
+    public function affectRules()
+    {
+        return $this->belongsToMany(Rule::class, 'survey_rule_factor');
+    }
+
+    public function siblings()
+    {
+        return $this->node->questions();
+    }
 }

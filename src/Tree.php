@@ -2,35 +2,39 @@
 
 namespace Cere\Survey;
 
-use Cere\Survey\Eloquent\Field\Field as Question;
+use Illuminate\Database\Eloquent\Collection;
+use Cere\Survey\Eloquent\Node;
+use Cere\Survey\Eloquent\Question;
+use Cere\Survey\Eloquent\Answer;
 
 trait Tree
 {
     public function getPaths()
     {
-        $parent = is_a($this, 'Cere\Survey\Eloquent\Answer') || is_a($this, Question::class) ? $this->node->parent : $this->parent;
+        $parent = is_a($this, Answer::class) || is_a($this, Question::class) ? $this->node->parent : $this->parent;
 
-        $paths = $parent ? $parent->getPaths()->add($this) : \Illuminate\Database\Eloquent\Collection::make([$this]);
+        $paths = $parent ? $parent->getPaths()->add($this) : Collection::make([$this]);
 
         return $paths;
     }
 
     public function getQuestions()
     {
-        $nodes = $this->childrenNodes->reduce(function($carry, $node) {
+        $questions = $this->childrenNodes->reduce(function ($carry, $node) {
+            return $carry->merge($node->getQuestions());
+        }, new Collection);
 
-            $questions = $node->questions->reduce(function($carry, $question) {
-                return array_merge($carry, $question->getQuestions());
-            }, $node->questions->load(['node.answers.rule', 'rule', 'node.rule'])->toArray());
-
-            $questionsWithInAnswer = $node->answers->reduce(function($carry, $answer) {
-                return array_merge($carry, $answer->getQuestions());
+        if (is_a($this, Node::class)) {
+            $questions = $this->questions->reduce(function ($carry, $question) {
+                return $carry->add($question)->merge($question->getQuestions());
             }, $questions);
 
-            return array_merge($carry, $questionsWithInAnswer);
-        }, []);
+            $questions = $this->answers->reduce(function ($carry, $answer) {
+                return $carry->merge($answer->getQuestions());
+            }, $questions);
+        }
 
-        return $nodes;
+        return $questions;
     }
 
     public function deleteNode()
