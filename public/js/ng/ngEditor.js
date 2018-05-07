@@ -49,7 +49,7 @@ angular.module('ngEditor.factories', []).factory('editorFactory', function($http
     }
 });
 
-angular.module('ngEditor.directives', ['ngQuill'])
+angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
 
 .config(['ngQuillConfigProvider', function (ngQuillConfigProvider) {
     ngQuillConfigProvider.set(null, null, 'custom placeholder')
@@ -140,8 +140,8 @@ angular.module('ngEditor.directives', ['ngQuill'])
                         </md-card>
                     </div>
                 </div>
-                <md-sidenav class="md-sidenav-right" md-component-id="survey-skips" md-is-open="skipSetting" style="min-width:40%">
-                    <survey-skips ng-if="skipSetting" paths="paths" skip-target="skipTarget" book="book"></survey-skips>
+                <md-sidenav class="md-sidenav-right" md-component-id="survey-skips" md-is-open="skipSetting" style="min-width:800px">
+                    <survey-rule ng-if="skipSetting" target="skipTarget"></survey-rule>
                 </md-sidenav>
             </md-content>
         `,
@@ -804,242 +804,63 @@ angular.module('ngEditor.directives', ['ngQuill'])
     };
 })
 
-.directive('surveySkips', function(editorFactory) {
+.directive('surveyRule', function(editorFactory, conditionService) {
     return {
         restrict: 'E',
         replace: true,
         transclude: false,
         scope: {
-            skipTarget: '=',
-            book: '=',
-            paths: '='
+            target: '='
         },
         template: `
-            <div layout="column">
-                <md-toolbar md-scroll-shrink>
+            <div flex="100" layout="column">
+                <md-toolbar>
                     <div class="md-toolbar-tools">
-                        <h4>跳過此題</h4>
-                        <div flex></div>
                         <md-button aria-label="關閉" ng-click="toggleSidenavRight()">關閉</md-button>
-                        <md-button aria-label="儲存設定" md-colors="{background: 'blue'}" style="float:right" ng-click="saveRule('jump');">
-                            儲存設定
-                        </md-button>
-                        <md-button aria-label="刪除設定" md-colors="{background: 'blue'}" style="float:right" ng-click="deleteRule()">
-                            刪除設定
-                        </md-button>
+                        <md-button aria-label="新增設定" ng-if="! target.rule" md-colors="{background: 'green'}" ng-click="create()">新增設定</md-button>
+                        <md-button aria-label="清除設定" ng-if="target.rule" md-colors="{background: 'red'}" ng-click="reset()">清除設定</md-button>
                     </div>
                 </md-toolbar>
-                <md-content>
-                    <md-card ng-repeat="expression in rule.expressions">
-                        <md-card-header md-colors="{background: 'indigo'}">
-                            <div flex layout="row" layout-align="start center">
-                                <div  style="margin: 0 0 0 16px" ng-if="!expression.compareLogic">
-                                    請問是從哪個題目的選項而跳過此題? 請輸入。
-                                </div>
-                                <div  style="margin: 0 0 0 16px" ng-if="expression.compareLogic">
-                                    {{ (compareOperators | filter: {key: expression.compareLogic}:true)[0].title }}
-                                </div>
-                                <span flex></span>
-                                <div>
-                                    <md-button class="md-icon-button" aria-label="刪除" ng-click="removeExpression($index)">
-                                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
-                                    </md-button>
-                                </div>
-                            </div>
-                        </md-card-header>
-                        <md-card-content ng-repeat="(key,condition) in expression.conditions">
-                            <survey-skip first="$first" book="book" condition="condition" remove-condition="removeCondition(expression, key)" create-condition="createCondition(expression, key)"></survey-skip>
-                        </md-card-content>
-                        <md-card-actions>
-                            <md-fab-toolbar md-direction="right">
-                                <md-fab-trigger class="align-with-text">
-                                    <md-button aria-label="menu" class="md-fab md-primary">
-                                        <md-icon md-svg-icon="list"></md-icon>
-                                    </md-button>
-                                </md-fab-trigger>
-                                <md-toolbar>
-                                    <md-fab-actions class="md-toolbar-tools" >
-                                        <md-button aria-label="邏輯" ng-repeat="compareOperator in compareOperators" ng-click="createExpression($index, compareOperator.key)">
-                                            {{compareOperator.title}}
-                                        </md-button>
-                                    </md-fab-actions>
-                                </md-toolbar>
-                            </md-fab-toolbar>
-                        </md-card-actions>
-                    </md-card>
+                <md-content flex>
+                    <md-subheader class="md-primary md-no-sticky">跳過此題：{{target.title}}</md-subheader>
+                    <div rule-operation operation="target.rule"></div>
                 </md-content>
             </div>
         `,
-        link: function(scope) {
-        },
         controller: function($scope, $http, $mdSidenav) {
-            $scope.ran = Math.random();
-            $scope.getRule = function() {
-                $http({method: 'POST', url: 'getRule', data:{skipTarget: $scope.skipTarget}})
-                .success(function(data) {
-                    $scope.rule = data.rule;
-                }).error(function(e) {
-                    console.log(e)
+            $scope.boxStyle = {margin: '10px', padding: '10px', borderWidth: '5px', borderStyle: 'solid'};
+
+            if ($scope.target.rule) {
+                getRule($scope.target.rule);
+            }
+
+            $scope.create = function() {
+                $http({method: 'POST', url: 'createRule', data:{target: $scope.target, type: 'jump'}})
+                .then(function(response) {
+                    getRule(response.data.rule);
+                });
+            }
+
+            $scope.reset = function() {
+                $http({method: 'POST', url: 'resetRule', data:{rule: $scope.target.rule}})
+                .then(function(response) {
+                    if (response.data.deleted) {
+                        delete $scope.target.rule;
+                        $mdSidenav('survey-rule').close();
+                    }
                 });
             };
-            $scope.getRule();
 
             $scope.toggleSidenavRight = function() {
                 $mdSidenav('survey-skips').close();
             };
 
-            $scope.compareOperators = [
-                {key: ' && ', title: '而且'},
-                {key: ' || ', title: '或者'}
-            ];
-
-            $scope.createCondition = function(expression, index) {
-                expression.conditions.splice(index+1, 0, {});
-            };
-
-            $scope.removeCondition = function(expression, index) {
-                expression.conditions.splice(index, 1);
-                if (index == 0 && expression.conditions[0]) {
-                    delete expression.conditions[0].compareOperator;
-                }
-            };
-
-            $scope.removeExpression = function(index) {
-                $scope.rule.expressions.splice(index, 1);
-                if (index == 0 && $scope.rule.expressions[0]) {
-                    delete $scope.rule.expressions[0].compareLogic;
-                }
-            };
-
-            $scope.createExpression = function(index, logic) {
-                $scope.rule.expressions.splice(index+1, 0, {'compareLogic':logic, 'conditions':[{'compareType':'question'}]});
-            };
-
-            $scope.saveRule = function(type) {
-               $http({method: 'POST', url: 'saveRule', data:{paths: $scope.paths, expressions: $scope.rule.expressions, skipTarget: $scope.skipTarget, type:type}})
-                .success(function(data) {
-                    $scope.skipTarget.rule = data.rule;
-                    $mdSidenav('survey-skips').close();
-                }).error(function(e) {
-                   console.log(e)
+            function getRule(rule) {
+                editorFactory.ajax('getRule', {rule: rule}).then(function(data) {
+                    $scope.target.rule = data.rule;
+                    conditionService.categories = data.pages;
                 });
-            };
-
-            $scope.deleteRule = function() {
-               $http({method: 'POST', url: 'deleteRule', data:{skipTarget: $scope.skipTarget}})
-                .success(function(data) {
-                    $scope.skipTarget.rule = undefined;
-                    $mdSidenav('survey-skips').close();
-                }).error(function(e) {
-                    console.log(e)
-                });
-            };
+            }
         }
-    };
-})
-
-.directive('surveySkip', function(editorFactory) {
-    return {
-        restrict: 'E',
-        replace: true,
-        transclude: false,
-        scope: {
-            first: '=',
-            condition: '=',
-            book: '=',
-            createCondition: '&',
-            removeCondition: '&',
-        },
-        template: `
-            <div layout="row">
-                <div ng-if="!first">
-                    <md-input-container>
-                        <label>+</label>
-                        <md-select ng-model="condition.compareOperator">
-                            <md-option ng-repeat="compareOperator in compareOperators" ng-value="compareOperator.key">{{compareOperator.title}}</md-option>
-                        </md-select>
-                    </md-input-container>
-                </div>
-                <div>
-                    <md-input-container>
-                        <label>當題目</label>
-                        <md-select ng-model="question" ng-model-options="{trackBy: '$value.id'}" ng-change="setQuestion(question)">
-                            <md-optgroup label="第{{$index+1}}頁" ng-repeat="page in pages">
-                                <md-option ng-repeat="question in page.questions" ng-value="question">{{question.node.title}}-{{question.title}}</md-option>
-                            </md-optgroup>
-                        </md-select>
-                    </md-input-container>
-                </div>
-                <div>
-                    <md-input-container>
-                        <label>比較邏輯</label>
-                        <md-select ng-model="condition.logic">
-                            <md-option ng-repeat="compareBoolean in compareBooleans" ng-value="compareBoolean.key">{{compareBoolean.title}}</md-option>
-                        </md-select>
-                    </md-input-container>
-                </div>
-                <div>
-                    <md-input-container>
-                        <label>比較對象</label>
-                        <md-select ng-model="condition.compareType" ng-change="changeCompareType()">
-                            <md-option ng-repeat="compareType in compareTypes" ng-value="compareType.key">{{compareType.title}}</md-option>
-                        </md-select>
-                    </md-input-container>
-                </div>
-                <div ng-if="condition.compareType=='value'">
-                    <md-input-container>
-                        <label>數值</label>
-                        <input ng-model="condition.value" />
-                    </md-input-container>
-                </div>
-                <div ng-if="condition.compareType=='answer'">
-                    <md-input-container>
-                        <label>選項</label>
-                        <md-select ng-model="condition.value">
-                            <md-option ng-repeat="answer in question.node.answers" ng-value="answer.value">{{answer.title}}</md-option>
-                        </md-select>
-                    </md-input-container>
-                </div>
-                <md-button aria-label="刪除" class="md-icon-button" ng-click="removeCondition()">
-                    <md-icon md-svg-icon="delete"></md-icon>
-                </md-button>
-                <md-button aria-label="新增" class="md-icon-button" ng-click="createCondition()">
-                    <md-icon md-svg-icon="add-circle-outline"></md-icon>
-                </md-button>
-            </div>
-        `,
-        link: function(scope) {
-        },
-        controller: function($scope, $http, $filter) {
-
-            $scope.compareTypes = [
-                {key: 'value', title: '數值'},
-                {key: 'answer', title: '選項'}
-            ];
-            $scope.compareBooleans = [
-                {key: ' > ', title: '大於'},
-                {key: ' < ', title: '小於'},
-                {key: ' == ', title: '等於'},
-                {key: ' != ', title: '不等於'}
-            ];
-            $scope.compareOperators = [
-                {key: ' && ', title: '而且'},
-                {key: ' || ', title: '或者'}
-            ];
-
-            $http({method: 'POST', url: 'getPages', data:{book_id: $scope.book.id}})
-            .success(function(data, status, headers, config) {
-                $scope.pages = data.pages;
-                $scope.question = {id: $scope.condition.question};
-
-            })
-            .error(function(e) {
-                console.log(e);
-            });
-
-            $scope.setQuestion = function(question, event) {
-                $scope.condition.question = question.id;
-            };
-         }
     };
 });

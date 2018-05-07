@@ -28,11 +28,11 @@ class Editor
 
     public function getPages($book_id)
     {
-        $pages = SurveyORM\Book::find($book_id)->childrenNodes->load('rule')->map(function ($page) {
-            $questions = $page->getQuestions()->each(function ($question) {
+        $pages = SurveyORM\Book::find($book_id)->childrenNodes->load('rule')->map(function ($page, $index) {
+            $questions = $page->getQuestions()->load('node.answers')->each(function ($question) {
                 $question->node->title = strip_tags($question->node->title);
             });
-            return ['rule' => $page->rule, 'questions' => $questions];
+            return ['title' => $index+1, 'rule' => $page->rule, 'questions' => $questions];
         });
 
         return $pages;

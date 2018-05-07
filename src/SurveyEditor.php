@@ -56,13 +56,6 @@ trait SurveyEditor
         return ['book' => $this->book];
     }
 
-    public function getPages()
-    {
-        $pages = $this->editor->getPages(Input::get('book_id'));
-
-        return ['pages' => $pages];
-    }
-
     public function getBrowserQuestions()
     {
         $questions = $this->editor->getPages(Input::get('book_id'))->reduce(function ($carry, $page) {
@@ -172,41 +165,125 @@ trait SurveyEditor
         return ['moved' => $item->move(Input::get('offset'))];
     }
 
-    public function saveRule()
-    {
-        $class = Input::get('skipTarget.class');
-        $root = $class::find(Input::get('skipTarget.id'));
-
-        $page = $root->getPaths()->filter(function($item) {
-            return $item->type == 'page';
-        })->first();
-
-        $rule = Survey\RuleRepository::target($root)->saveExpressions(Input::get('expressions'), Input::get('type'), $page->id);
-
-
-        return ['rule' => $rule];
-    }
-
-    public function deleteRule()
-    {
-        $class = Input::get('skipTarget.class');
-        $root = $class::find(Input::get('skipTarget.id'));
-        $rule_id = Input::get('rule_id');
-
-
-        Survey\RuleRepository::target($root)->deleteRule($rule_id);
-
-        return 'delete rules successed';
-    }
-
     public function getRule()
     {
-        $class = Input::get('skipTarget.class');
-        $root = $class::find(Input::get('skipTarget.id'));
+        $rule = SurveyORM\Rule::findOrFail(Input::get('rule.id'))->load('operations');
 
-        $rule = Survey\RuleRepository::target($root)->getRule();
+        $pages = $this->editor->getPages($this->book->id);
+
+        return ['rule' => $rule, 'pages' => $pages];
+    }
+
+    public function createRule()
+    {
+        $class = Input::get('target.class');
+        $target = $class::find(Input::get('target.id'));
+
+        $rule = new SurveyORM\Rule(Input::only('type'));
+
+        $rule->effect()->associate($target);
+
+        $rule->save();
+
+        $rule->operations()->create(['operator' => '==']);
 
         return ['rule' => $rule];
+    }
+
+    public function resetRule()
+    {
+        $rule = SurveyORM\Rule::findOrFail(Input::get('rule.id'));
+
+        $deleted = $rule->delete();
+
+        return ['deleted' => $deleted];
+    }
+
+    public function appendOperation()
+    {
+        $operation = SurveyORM\Rule\Operation::findOrFail(Input::get('operation.id'))->operations()->create(['operator' => '==']);
+
+        return ['operation' => $operation];
+    }
+
+    public function updateOperation()
+    {
+        $updated = SurveyORM\Rule\Operation::findOrFail(Input::get('operation.id'))->update(Input::get('operation'));
+
+        return ['updated' => $updated];
+    }
+
+    public function wrapOperation()
+    {
+        $wraper = SurveyORM\Rule\Operation::findOrFail(Input::get('operation.id'));
+
+        $replicate = $wraper->operations()->save($wraper->replicate());
+        $replicate->factor()->save($wraper->factor);
+        $wraper->load('operations');
+
+        $wraper->update(['operator' => Input::get('logistic')]);
+        $wraper->operations()->create(['operator' => '==']);
+
+        return ['wraper' => $wraper];
+    }
+
+    public function removeOperation()
+    {
+        $operation = SurveyORM\Rule\Operation::findOrFail(Input::get('operation.id'));
+
+        $deleted = $operation->delete();
+
+        return ['deleted' => $deleted];
+    }
+
+    public function unwrapOperation()
+    {
+        $operation = SurveyORM\Rule\Operation::findOrFail(Input::get('operation.id'));
+        $operation->delete();
+
+        $replacement = $operation->effect;
+        $residue = $replacement->operations->first();
+        $replacement->update(['operator' => $residue->operator]);
+
+        if (in_array($residue->operator, ['and', 'or'])) {
+            $replacement->operations()->saveMany($residue->operations->all());
+        } else {
+            $replacement->factor()->save($residue->factor);
+        }
+
+        $residue->delete();
+        $replacement->load('operations');
+
+        return ['replacement' => $replacement];
+    }
+
+    public function createFactor()
+    {
+        $operation = SurveyORM\Rule\Operation::findOrFail(Input::get('operation.id'));
+
+        $factor = new SurveyORM\Rule\Factor;
+        $factor->target()->associate(SurveyORM\Question::find(Input::get('target.id')));
+        $factor = $operation->factor()->save($factor);
+
+        return ['factor' => $factor];
+    }
+
+    public function updateFactorTarget()
+    {
+        $factor = SurveyORM\Rule\Factor::findOrFail(Input::get('factor.id'));
+        $factor->target()->associate(SurveyORM\Question::find(Input::get('target.id')));
+        $updated = $factor->save();
+
+        return ['updated' => $updated];
+    }
+
+    public function updateFactor()
+    {
+        $factor = SurveyORM\Rule\Factor::findOrFail(Input::get('factor.id'));
+
+        $updated = $factor->update(Input::get('factor'));
+
+        return ['updated' => $updated];
     }
 
     public function lockBook()

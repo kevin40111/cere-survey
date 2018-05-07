@@ -12,65 +12,28 @@ class Rule extends Eloquent {
 
     public $timestamps = true;
 
-    protected $fillable = array('expressions', 'answer_id', 'warning', 'type', 'page_id');
+    protected $fillable = ['type', 'page_id'];
 
     public function effect()
     {
         return $this->morphTo();
     }
 
-    public function questions()
+    public function operations()
     {
-        return $this->morphedByMany('Cere\Survey\Eloquent\Question', 'survey_rule_effect');
+        return $this->morphMany(Rule\Operation::class, 'survey_operation', 'effect_type', 'effect_id');
     }
 
-    public function skipAnswers()
+    protected static function boot()
     {
-        return $this->morphedByMany('Cere\Survey\Eloquent\Answer', 'survey_rule_effect');
+        parent::boot();
+
+        static::deleted(function ($rule) {
+
+            $rule->operations->each(function ($operation) {
+                $operation->delete();
+            });
+
+        });
     }
-
-    public function jumpBook()
-    {
-        return $this->morphedByMany('Cere\Survey\Eloquent\Book', 'survey_rule_effect');
-    }
-
-    public function openWave()
-    {
-        return $this->morphedByMany('Cere\Survey\Eloquent\Wave', 'survey_rule_effect');
-    }
-
-    public function answers()
-    {
-        return $this->belongsToMany('Cere\Survey\Eloquent\Answer', 'interview_answers_in_rule', 'rule_id', 'answer_id' );
-    }
-
-    // public function getIsAttribute()
-    // {
-    //     $condition = (object)json_decode($this->expression);
-    //     $condition->parameters = \Illuminate\Database\Eloquent\Collection::make($condition->parameters);
-    //     $this->attributes['is'] = $condition;
-    //     return $this->attributes['is'];
-    // }
-
-    // public function setExpressionAttribute($expression)
-    // {
-    //     ddd($expression);
-    //     $this->attributes['expression'] = json_encode($expression);
-    // }
-
-    public function setExpressionsAttribute($expressions)
-    {
-        $this->attributes['expressions'] = json_encode($expressions);
-    }
-
-    public function getExpressionsAttribute($expressions)
-    {
-        return json_decode($expressions, true);
-    }
-
-    public function factors()
-    {
-        return $this->belongsToMany(Question::class, 'survey_rule_factor');
-    }
-
 }

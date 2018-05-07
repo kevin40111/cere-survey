@@ -14,9 +14,7 @@ class CreateSurveyRules extends Migration {
     {
         Schema::create('survey_rules', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('expressions');
-            $table->string('effect_type', 50);
-            $table->integer('effect_id');
+            $table->string('type', 50);
             $table->integer('page_id');
             $table->timestamps();
         });
