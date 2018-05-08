@@ -58,9 +58,9 @@ class Question extends Eloquent
         return $this->morphOne(Rule::class, 'effect')->where('type', 'none_above');
     }
 
-    public function affectRules()
+    public function effects()
     {
-        return $this->belongsToMany(Rule::class, 'survey_rule_factor');
+        return $this->morphToMany(Rule\Operation::class, 'target', 'survey_rule_factors');
     }
 
     public function siblings()

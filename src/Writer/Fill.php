@@ -18,6 +18,13 @@ class Fill
         return new static($answers);
     }
 
+    public function sync($answers)
+    {
+        $this->answers = $answers;
+
+        return $this;
+    }
+
     public function node($node)
     {
         $types = ['Text', 'Checkbox', 'Radio', 'Gear'];

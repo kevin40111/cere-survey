@@ -3,6 +3,7 @@
 namespace Cere\Survey\Writer;
 
 use Cere\Survey\Eloquent\Question;
+use JWadhams\JsonLogic;
 
 class Rule
 {
@@ -42,31 +43,6 @@ class Rule
 
     public function compare($rule)
     {
-        if ($rule) {
-            $expressions = $rule->expressions;
-            $result = 'return ';
-            foreach ($expressions as $expression) {
-                if (isset($expression['compareLogic'])) {
-                    $result = $result.$expression['compareLogic'];
-                }
-                $result = $result.'(';
-                foreach ($expression['conditions'] as $condition) {
-                    if (isset($condition['compareOperator'])) {
-                        $result = $result.$condition['compareOperator'];
-                    }
-                    $field = $rule->factors->find($condition['question'])->field;
-                    $question = is_null($this->answers[$field->id]) ? 'null' : $this->answers[$field->id];
-                    $result = $result.$question.$condition['logic'].$condition['value'];
-                }
-                $result = $result.')';
-            }
-            $result = $result.';';
-
-            return eval($result);
-
-        } else {
-
-            return false;
-        }
+        return JsonLogic::apply($rule->toJsonLogic(), $this->answers);
     }
 }

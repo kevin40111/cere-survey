@@ -49,6 +49,18 @@ abstract class Filler
      */
     abstract public function childrens($question);
 
+    public function effected()
+    {
+        $this->node->rules->each(function ($rule) {
+            $this->skips[$rule->id] = Rule::answers($this->answers)->compare($rule);
+            switch ($rule->method) {
+                case 'reset':
+                    $this->reset($this->skips[$rule->id]);
+                    break;
+            }
+        });
+    }
+
     protected function setChildrens($question)
     {
         $this->getEffects($question)->each(function ($effect) {
@@ -60,28 +72,24 @@ abstract class Filler
 
     protected function setRules($question)
     {
-        $question->affectRules->load(['effect', 'factors.field'])->each(function ($rule) {
-            array_set($this->skips, $rule->id, Rule::answers($this->answers)->compare($rule));
-            switch (true) {
-                case $rule->effect instanceof SurveyORM\Node:
-                    $this->fill->node($rule->effect)->reset($this->skips[$rule->id]);
-                    $rule->effect->childrenNodes->each(function ($node) {
-                        $this->fill->node($node)->reset($this->skips[$rule->id]);
-                    });
-                    break;
-
-                case $rule->effect instanceof SurveyORM\Question:
-                    if ($rule->effect->node->id === $this->node->id) {
-                        $this->affected($rule->effect, $this->skips[$rule->id]);
-                    } else {
-                        $this->fill->node($rule->effect->node)->affected($rule->effect, $this->skips[$rule->id]);
-                    }
-
-                case $rule->effect instanceof SurveyORM\Answer:
-                    # todo...
-                    break;
-            }
+        $question->effects->each(function ($operation) {
+            $this->setEffected($operation);
         });
+    }
+
+    private function setEffected($effected)
+    {
+        if ($effected instanceof SurveyORM\Rule) {
+            if (array_key_exists($effected->id, $this->getSkips())) {
+                return;
+            }
+
+            $this->fill->sync($this->answers)->node($effected->node)->effected();
+        } else {
+            if ($effected->effect()->exists()) {
+                $this->setEffected($effected->effect);
+            }
+        }
     }
 
     public function clean($question)
