@@ -100,9 +100,14 @@ class Node extends Eloquent {
         });
     }
 
+    public function rules()
+    {
+        return $this->hasMany(Rule::class);
+    }
+
     public function rule()
     {
-        return $this->morphOne(Rule::class, 'effect')->where('type', 'jump');
+        return $this->morphOne(Rule::class, 'effect');
     }
 
     public function limitRule()

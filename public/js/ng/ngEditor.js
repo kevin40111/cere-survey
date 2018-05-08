@@ -388,7 +388,7 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                         <md-tooltip md-direction="bottom">下移</md-tooltip>
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
-                    <md-button class="md-icon-button" md-colors="{backgroundColor: node.rule ? 'blue-300' : 'primary'}" aria-label="跳過此題" ng-disabled="node.saving" ng-click="toggleSidenavRight(node)">
+                    <md-button class="md-icon-button" md-colors="{backgroundColor: node.rules.length > 0 ? 'blue-300' : 'primary'}" aria-label="跳過此題" ng-disabled="node.saving" ng-click="toggleSidenavRight(node)">
                         <md-tooltip md-direction="bottom">跳過此題</md-tooltip>
                         <md-icon md-colors="{color: 'grey-A100'}">visibility_off</md-icon>
                     </md-button>
@@ -446,7 +446,7 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                         <md-tooltip md-direction="left">下移</md-tooltip>
                         <md-icon md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
-                    <md-button md-colors="{backgroundColor: answer.rule ? 'blue-300' : 'grey-A100'}" class="md-secondary md-icon-button" ng-click="toggleSidenavRight(answer)" aria-label="設定限制">
+                    <md-button ng-if="false" md-colors="{backgroundColor: answer.rule ? 'blue-300' : 'grey-A100'}" class="md-secondary md-icon-button" ng-click="toggleSidenavRight(answer)" aria-label="設定限制">
                         <md-tooltip>設定限制</md-tooltip>
                         <md-icon md-colors="{color: answer.rule ? 'grey-A100' : 'grey-600'}">visibility_off</md-icon>
                     </md-button>
@@ -533,7 +533,7 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                         <md-tooltip md-direction="left">下移</md-tooltip>
                         <md-icon md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
-                    <md-button  md-colors="{backgroundColor: question.rule ? 'blue-300' : 'grey-A100'}" class="md-secondary md-icon-button" ng-click="toggleSidenavRight(question)" aria-label="設定限制" ng-if="(node.type == 'scale') || (node.type == 'checkbox')">
+                    <md-button ng-if="false" md-colors="{backgroundColor: question.rule ? 'blue-300' : 'grey-A100'}" class="md-secondary md-icon-button" ng-click="toggleSidenavRight(question)" aria-label="設定限制" ng-if="(node.type == 'scale') || (node.type == 'checkbox')">
                         <md-tooltip>設定限制</md-tooltip>
                         <md-icon md-colors="{color: question.rule ? 'grey-A100' : 'grey-600'}">visibility_off</md-icon>
                     </md-button>
@@ -817,36 +817,45 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                 <md-toolbar>
                     <div class="md-toolbar-tools">
                         <md-button aria-label="關閉" ng-click="toggleSidenavRight()">關閉</md-button>
-                        <md-button aria-label="新增設定" ng-if="! target.rule" md-colors="{background: 'green'}" ng-click="create()">新增設定</md-button>
-                        <md-button aria-label="清除設定" ng-if="target.rule" md-colors="{background: 'red'}" ng-click="reset()">清除設定</md-button>
+                        <md-button aria-label="新增設定" ng-if="target.rules.length === 0" md-colors="{background: 'green'}" ng-click="create()">新增設定</md-button>
                     </div>
                 </md-toolbar>
                 <md-content flex>
-                    <md-subheader class="md-primary md-no-sticky">跳過此題：{{target.title}}</md-subheader>
-                    <div rule-operation operation="target.rule"></div>
+                    <div layout="column" ng-repeat="rule in target.rules">
+                        <md-toolbar class="md-primary md-hue-1">
+                            <div class="md-toolbar-tools">
+                                <h3 md-truncate flex>跳過 {{target.title}}</h3>
+                                <md-button aria-label="清除設定" ng-click="reset(rule)">清除設定</md-button>
+                            </div>
+                        </md-toolbar>
+                        <rule-operation operation="rule"></rule-operation>
+                    </div>
                 </md-content>
             </div>
         `,
         controller: function($scope, $http, $mdSidenav) {
             $scope.boxStyle = {margin: '10px', padding: '10px', borderWidth: '5px', borderStyle: 'solid'};
 
-            if ($scope.target.rule) {
-                getRule($scope.target.rule);
+            if ($scope.target.rules) {
+                $scope.target.rules.forEach(function(rule) {
+                    getRule(rule);
+                });
             }
 
             $scope.create = function() {
                 $http({method: 'POST', url: 'createRule', data:{target: $scope.target, type: 'jump'}})
                 .then(function(response) {
-                    getRule(response.data.rule);
+                    var rule = response.data.rule;
+                    $scope.target.rules.push(rule)
+                    getRule(rule);
                 });
             }
 
-            $scope.reset = function() {
-                $http({method: 'POST', url: 'resetRule', data:{rule: $scope.target.rule}})
+            $scope.reset = function(rule) {
+                $http({method: 'POST', url: 'resetRule', data:{rule: rule}})
                 .then(function(response) {
                     if (response.data.deleted) {
-                        delete $scope.target.rule;
-                        $mdSidenav('survey-rule').close();
+                        $scope.target.rules.splice($scope.target.rules.indexOf(rule), 1);
                     }
                 });
             };
@@ -857,7 +866,7 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
 
             function getRule(rule) {
                 editorFactory.ajax('getRule', {rule: rule}).then(function(data) {
-                    $scope.target.rule = data.rule;
+                    angular.extend(rule, data.rule);
                     conditionService.categories = data.pages;
                 });
             }

@@ -12,7 +12,12 @@ class Rule extends Eloquent {
 
     public $timestamps = true;
 
-    protected $fillable = ['type', 'page_id'];
+    protected $fillable = ['method', 'page_id'];
+
+    public function node()
+    {
+        return $this->belongsTo(Node::class);
+    }
 
     public function effect()
     {

@@ -21,7 +21,7 @@ class Editor
 
     public function getNodes($root)
     {
-        $nodes = $root->childrenNodes->load(['questions.rule', 'questions.noneAboveRule', 'rule', 'limitRule', 'answers.rule', 'images']);
+        $nodes = $root->childrenNodes->load(['questions', 'questions.noneAboveRule', 'rules', 'limitRule', 'answers', 'images']);
 
         return $nodes;
     }

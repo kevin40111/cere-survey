@@ -179,9 +179,11 @@ trait SurveyEditor
         $class = Input::get('target.class');
         $target = $class::find(Input::get('target.id'));
 
-        $rule = new SurveyORM\Rule(Input::only('type'));
+        $rule = new SurveyORM\Rule(['method' => 'reset']);
 
         $rule->effect()->associate($target);
+
+        $rule->node()->associate($target);
 
         $rule->save();
 
