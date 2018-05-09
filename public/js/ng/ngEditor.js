@@ -388,9 +388,9 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                         <md-tooltip md-direction="bottom">下移</md-tooltip>
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="arrow-drop-down"></md-icon>
                     </md-button>
-                    <md-button class="md-icon-button" md-colors="{backgroundColor: node.rules.length > 0 ? 'blue-300' : 'primary'}" aria-label="跳過此題" ng-disabled="node.saving" ng-click="toggleSidenavRight(node)">
-                        <md-tooltip md-direction="bottom">跳過此題</md-tooltip>
-                        <md-icon md-colors="{color: 'grey-A100'}">visibility_off</md-icon>
+                    <md-button class="md-icon-button" md-colors="{backgroundColor: node.skipers.length > 0 ? 'blue-300' : 'primary'}" aria-label="設定" ng-disabled="node.saving" ng-click="toggleSidenavRight(node)">
+                        <md-tooltip md-direction="bottom">設定</md-tooltip>
+                        <md-icon md-colors="{color: 'grey-A100'}">settings</md-icon>
                     </md-button>
                     <md-button class="md-icon-button" aria-label="刪除" ng-disabled="node.saving || (node.type === 'page' && first && last)" ng-click="removeNode(node)">
                         <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
@@ -507,16 +507,6 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
         },
         template:  `
             <md-list>
-                <md-subheader class="md-no-sticky" ng-if="node.type=='checkbox'">
-                    <div md-colors="{color: 'grey-700'}" layout="row" layout-align="end center">
-                        此題最多勾選
-                        <md-select ng-model="node.limit_rule.expressions[0].value" aria-label="number" layout="row" style="text-align:center; margin:0px;" ng-change="saveRule(node, 'limit')">
-                            <md-option ng-repeat="question in node.questions" ng-value="$index" ng-if="$index>0">{{$index}}</md-option>
-                            <md-option ng-value="undefined">{{node.questions.length}}</md-option>
-                        </md-select>
-                        個選項
-                    </div>
-                </md-subheader>
                 <md-list-item ng-repeat="question in node.questions" ng-class="[{deleting: question.deleting}, question.move]">
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
                         <input type="text" placeholder="輸入{{types[node.type].editor.questions.text}}" ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)"/>
@@ -554,24 +544,6 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
             $scope.saveTitleNgOptions = {updateOn: 'default blur', debounce:{default: 2000, blur: 0}};
             $scope.searchLoaded = '';
             $scope.searchText = {};
-
-            $scope.saveRule = function(target, type) {
-                if (target[type + '_rule'].expressions[0].value) {
-                    $http({method: 'POST', url: 'saveRule', data:{expressions: target[type + '_rule'].expressions, skipTarget: target, type: type}})
-                    .success(function(data) {
-                        target[type + '_rule'] = data.rule;
-                    }).error(function(e) {
-                        console.log(e)
-                    });
-                } else {
-                    $http({method: 'POST', url: 'deleteRule', data:{rule_id: target[type + '_rule'].id, skipTarget: target}})
-                    .success(function(data) {
-                        target[type + '_rule'] = undefined;
-                    }).error(function(e) {
-                        console.log(e)
-                    });
-                }
-            }
 
             $scope.createQuestion = function(position) {
                 var attributes = {position: $scope.node.questions.length};
@@ -817,57 +789,105 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                 <md-toolbar>
                     <div class="md-toolbar-tools">
                         <md-button aria-label="關閉" ng-click="toggleSidenavRight()">關閉</md-button>
-                        <md-button aria-label="新增設定" ng-if="target.rules.length === 0" md-colors="{background: 'green'}" ng-click="create()">新增設定</md-button>
+                        <h3 md-truncate flex>{{target.title}}</h3>
                     </div>
                 </md-toolbar>
                 <md-content flex>
-                    <div layout="column" ng-repeat="rule in target.rules">
+                    <div ng-if="target.type === 'checkbox'">
+                        <div layout="column" ng-repeat="guarder in target.guarders">
+                            <md-toolbar class="md-primary md-hue-1">
+                                <div class="md-toolbar-tools">
+                                    <h3 md-truncate flex>此題最多勾選</h3>
+                                    <md-button aria-label="刪除設定" ng-click="resetGuarder(guarder)">刪除設定</md-button>
+                                </div>
+                            </md-toolbar>
+                            <rule-less-than ng-repeat="operation in guarder.operations" operation="operation" target="target"></rule-less-than>
+                        </div>
+                        <md-button ng-if="isEnable('guarders')" md-colors="{background: 'green'}" ng-click="createGuarder()" aria-label="最多勾選數量">最多勾選數量</md-button>
+                    </div>
+                    <div layout="column" ng-repeat="skiper in target.skipers">
                         <md-toolbar class="md-primary md-hue-1">
                             <div class="md-toolbar-tools">
-                                <h3 md-truncate flex>跳過 {{target.title}}</h3>
-                                <md-button aria-label="清除設定" ng-click="reset(rule)">清除設定</md-button>
+                                <h3 md-truncate flex>跳過此題</h3>
+                                <md-button aria-label="刪除設定" ng-click="resetSkiper(skiper)">刪除設定</md-button>
                             </div>
                         </md-toolbar>
-                        <rule-operation operation="rule"></rule-operation>
+                        <rule-operation operation="skiper"></rule-operation>
                     </div>
+                    <md-button ng-if="isEnable('skipers')" md-colors="{background: 'green'}" ng-click="createSkiper()" aria-label="跳過此題">跳過此題</md-button>
                 </md-content>
             </div>
         `,
         controller: function($scope, $http, $mdSidenav) {
             $scope.boxStyle = {margin: '10px', padding: '10px', borderWidth: '5px', borderStyle: 'solid'};
 
-            if ($scope.target.rules) {
-                $scope.target.rules.forEach(function(rule) {
-                    getRule(rule);
+            $scope.isEnable = function(type) {
+                return $scope.target[type].length === 0;
+            }
+
+            if ($scope.target.skipers) {
+                $scope.target.skipers.forEach(function(skiper) {
+                    loadSkiper(skiper);
                 });
             }
 
-            $scope.create = function() {
-                $http({method: 'POST', url: 'createRule', data:{target: $scope.target, type: 'jump'}})
+            if ($scope.target.guarders) {
+                $scope.target.guarders.forEach(function(guarder) {
+                    loadGuarder(guarder);
+                });
+            }
+
+            $scope.createSkiper = function(creater) {
+                $http({method: 'POST', url: 'createSkiper', data:{target: $scope.target}})
                 .then(function(response) {
-                    var rule = response.data.rule;
-                    $scope.target.rules.push(rule)
-                    getRule(rule);
+                    var skiper = response.data.skiper;
+                    $scope.target.skipers.push(skiper);
+                    loadSkiper(skiper);
                 });
             }
 
-            $scope.reset = function(rule) {
-                $http({method: 'POST', url: 'resetRule', data:{rule: rule}})
+            $scope.resetSkiper = function(skiper) {
+                $http({method: 'POST', url: 'resetSkiper', data:{skiper: skiper}})
                 .then(function(response) {
                     if (response.data.deleted) {
-                        $scope.target.rules.splice($scope.target.rules.indexOf(rule), 1);
+                        $scope.target.skipers.splice($scope.target.skipers.indexOf(skiper), 1);
                     }
                 });
-            };
+            }
+
+            $scope.createGuarder = function() {
+                $http({method: 'POST', url: 'createGuarder', data:{target: $scope.target}})
+                .then(function(response) {
+                    var guarder = response.data.guarder;
+                    $scope.target.guarders.push(guarder);
+                    loadGuarder(guarder);
+                });
+            }
+
+            $scope.resetGuarder = function(guarder) {
+                $http({method: 'POST', url: 'resetGuarder', data:{guarder: guarder}})
+                .then(function(response) {
+                    if (response.data.deleted) {
+                        $scope.target.guarders.splice($scope.target.guarders.indexOf(guarder), 1);
+                    }
+                });
+            }
 
             $scope.toggleSidenavRight = function() {
                 $mdSidenav('survey-skips').close();
             };
 
-            function getRule(rule) {
-                editorFactory.ajax('getRule', {rule: rule}).then(function(data) {
-                    angular.extend(rule, data.rule);
+            function loadSkiper(skiper) {
+                editorFactory.ajax('loadSkiper', {skiper: skiper}).then(function(data) {
+                    angular.extend(skiper, data.skiper);
                     conditionService.categories = data.pages;
+                });
+            }
+
+            function loadGuarder(guarder)
+            {
+                editorFactory.ajax('loadGuarder', {guarder: guarder}).then(function(data) {
+                    angular.extend(guarder, data.guarder);
                 });
             }
         }

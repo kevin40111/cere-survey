@@ -8,11 +8,6 @@ class Checkbox extends Filler
 {
     public function set($question, $value)
     {
-        if ($value === '1' && Rule::answers($this->answers)->checkLimit($question)) {
-            $this->messages = ['已達選擇數量上限'];
-            return $this;
-        }
-
         $this->contents[$question->id] = $value;
 
         if ($question->noneAboveRule()->exists() && $value === '1') {
@@ -26,6 +21,8 @@ class Checkbox extends Filler
         }
 
         $this->syncAnswers();
+
+        $this->guard();
 
         $this->setRules($question);
 
@@ -51,7 +48,7 @@ class Checkbox extends Filler
 
     public function childrens($question)
     {
-        return $this->isChecked($question) ? $question->childrenNodes->load(['questions.rule', 'questions.noneAboveRule', 'answers.rule', 'rule', 'limitRule']) : [];
+        return $this->isChecked($question) ? $question->childrenNodes->load(['questions.skiper', 'questions.noneAboveRule', 'answers.skiper', 'skiper']) : [];
     }
 
     private function resetChecked($excepts)
@@ -86,4 +83,14 @@ class Checkbox extends Filler
         return $value === '-8';
     }
 
+    protected function limit($guarder)
+    {
+        $amount = $this->node->questions->reduce(function ($amount, $question) {
+            return $amount += $this->answers[$question->field->id] === '1' ? 1 : 0;
+        }, 0);
+
+        if (! Rule::instance($guarder)->lessThan($amount)) {
+            $this->messages = ['已達選擇數量上限'];
+        }
+    }
 }

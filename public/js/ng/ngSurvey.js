@@ -28,7 +28,7 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
             return deferred.promise;
         },
         isSkip: function(target) {
-            return target.rule && skips[target.rule.id];
+            return target.skiper && skips[target.skiper.id];
         }
     };
 });
@@ -179,19 +179,19 @@ angular.module('ngSurvey.directives', [])
             $scope.saveAnswer = function(value) {
                 $scope.question.childrens = {};
                 surveyFactory.get('saveAnswer', {question: $scope.question, value: value}, $scope.node).then(function(response) {
-                    if(response.message) {
+                    angular.extend(surveyFactory.answers, response.dirty);
+                    if (response.messages) {
                         var txt = "";
-                        response.message.forEach(function(message) {
+                        response.messages.forEach(function(message) {
                             txt += message+'\n';
                         });
                         $mdToast.show(
                             $mdToast.simple().textContent(txt).hideDelay(3000)
                         );
+                    } else {
+                        angular.extend(surveyFactory.skips, response.skips);
+                        getChildrens();
                     }
-
-                    angular.extend(surveyFactory.answers, response.dirty);
-                    angular.extend(surveyFactory.skips, response.skips);
-                    getChildrens();
                 });
             };
 

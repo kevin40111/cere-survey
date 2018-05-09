@@ -135,7 +135,7 @@ class SurveyController extends \BaseController {
                 $userOrganization = DB::table('rows.dbo.'.$rowsFile->name)->where('C'.$book->loginRow_id, SurveySession::getLoginId())->select('C'.$book->column_id.' AS value')->first();
 
                 $extBook = $extBooks->filter(function ($extBook) use($userOrganization){
-                    $values = array_fetch($extBook->rule->expressions[0]['conditions'], 'value');
+                    $values = array_fetch($extBook->skiper->expressions[0]['conditions'], 'value');
                     return in_array($userOrganization->value, $values);
                 })->first();
 
@@ -188,7 +188,7 @@ class SurveyController extends \BaseController {
     {
         $page = SurveyORM\Node::find(Input::get('page.id'));;
 
-        $nodes = $page->childrenNodes->load(['rule', 'questions.rule', 'answers.rule', 'images']);
+        $nodes = $page->childrenNodes->load(['skiper', 'questions.skiper', 'answers.skiper', 'images']);
 
         $fields = $this->writer->all();
 
@@ -210,22 +210,25 @@ class SurveyController extends \BaseController {
         $answers = $this->writer->all();
         $filler = Fill::answers($answers)->node($question->node);
         $filler->set($question, Input::get('value'));
+
+        if (count($filler->messages) > 0) {
+            return ['dirty' => $filler->getOriginal(), 'messages' => $filler->messages];
+        }
+
         $dirty = $filler->getDirty();
 
         $this->writer->update($dirty);
 
-        $fields = $this->writer->all();
-
         $skips = $filler->getSkips();
 
-        return ['dirty' => $dirty, 'message' => $filler->messages, 'logs' => DB::connection('survey')->getQueryLog(), 'skips' => $skips];
+        return ['dirty' => $dirty, 'logs' => DB::connection('survey')->getQueryLog(), 'skips' => $skips];
     }
 
     private function getSkips($items, $fields, $relations)
     {
         return $items->reduce(function ($skips, $item) use ($fields, $relations) {
-            if ($item->rule) {
-                $skips = array_add($skips, $item->rule->id, Rule::answers($fields)->compare($item->rule));
+            if ($item->skiper) {
+                $skips = array_add($skips, $item->skiper->id, Rule::instance($item->skiper)->compare($fields));
             }
             foreach ($relations as $relation => $nests) {
                 $skips += $this->getSkips($item->$relation, $fields, $nests);
@@ -267,9 +270,9 @@ class SurveyController extends \BaseController {
     public function getExtBook($book_id)
     {
         return SurveyORM\Book::find($book_id)->applications->filter(function ($application) {
-            return SurveyORM\Book::find($application->ext_book_id)->rule()->exists() && $application->extension ;
+            return SurveyORM\Book::find($application->ext_book_id)->skiper()->exists() && $application->extension ;
         })->map(function ($application) {
-            return SurveyORM\Book::find($application->ext_book_id)->load('rule');
+            return SurveyORM\Book::find($application->ext_book_id)->load('skiper');
         });
     }
 
@@ -283,7 +286,7 @@ class SurveyController extends \BaseController {
     {
         $options = [];
         foreach ($this->getExtBook($book_id)  as $extBook) {
-            $values = array_fetch($extBook->rule->expressions[0]['conditions'], 'value');
+            $values = array_fetch($extBook->skiper->expressions[0]['conditions'], 'value');
 
             foreach ($values  as $value) {
                 $option = [];

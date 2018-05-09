@@ -48,14 +48,14 @@ class Question extends Eloquent
         return (bool)$value;
     }
 
-    public function rule()
+    public function skiper()
     {
-        return $this->morphOne(Rule::class, 'effect')->where('type', 'jump');
+        return $this->morphOne(Rule\Skiper::class, 'effect');
     }
 
     public function noneAboveRule()
     {
-        return $this->morphOne(Rule::class, 'effect')->where('type', 'none_above');
+        return $this->morphOne(Rule\Skiper::class, 'effect')->where('type', 'none_above');
     }
 
     public function effects()

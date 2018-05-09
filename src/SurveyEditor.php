@@ -165,38 +165,68 @@ trait SurveyEditor
         return ['moved' => $item->move(Input::get('offset'))];
     }
 
-    public function getRule()
+    public function loadSkiper()
     {
-        $rule = SurveyORM\Rule::findOrFail(Input::get('rule.id'))->load('operations');
+        $skiper = SurveyORM\Rule\Skiper::findOrFail(Input::get('skiper.id'))->load('operations');
 
         $pages = $this->editor->getPages($this->book->id);
 
-        return ['rule' => $rule, 'pages' => $pages];
+        return ['skiper' => $skiper, 'pages' => $pages];
     }
 
-    public function createRule()
+    public function createSkiper()
     {
-        $class = Input::get('target.class');
-        $target = $class::find(Input::get('target.id'));
+        $node = SurveyORM\Node::find(Input::get('target.id'));
 
-        $rule = new SurveyORM\Rule(['method' => 'reset']);
+        $skiper = new SurveyORM\Rule\Skiper;
 
-        $rule->effect()->associate($target);
+        $skiper->effect()->associate($node);
 
-        $rule->node()->associate($target);
+        $skiper->node()->associate($node);
 
-        $rule->save();
+        $skiper->save();
 
-        $rule->operations()->create(['operator' => '==']);
+        $skiper->operations()->create(['operator' => '==']);
 
-        return ['rule' => $rule];
+        return ['skiper' => $skiper];
     }
 
-    public function resetRule()
+    public function resetSkiper()
     {
-        $rule = SurveyORM\Rule::findOrFail(Input::get('rule.id'));
+        $skiper = SurveyORM\Rule\Skiper::findOrFail(Input::get('skiper.id'));
 
-        $deleted = $rule->delete();
+        $deleted = $skiper->delete();
+
+        return ['deleted' => $deleted];
+    }
+
+    public function loadGuarder()
+    {
+        $guarder = SurveyORM\Rule\Guarder::findOrFail(Input::get('guarder.id'))->load('operations');
+
+        return ['guarder' => $guarder];
+    }
+
+    public function createGuarder()
+    {
+        $node = SurveyORM\Node::find(Input::get('target.id'));
+
+        $guarder = new SurveyORM\Rule\Guarder;
+
+        $guarder->node()->associate($node);
+
+        $guarder->save();
+
+        $guarder->operations()->create(['operator' =>  '<=']);
+
+        return ['guarder' => $guarder];
+    }
+
+    public function resetGuarder()
+    {
+        $guarder = SurveyORM\Rule\Guarder::findOrFail(Input::get('guarder.id'));
+
+        $deleted = $guarder->delete();
 
         return ['deleted' => $deleted];
     }
@@ -263,8 +293,10 @@ trait SurveyEditor
     {
         $operation = SurveyORM\Rule\Operation::findOrFail(Input::get('operation.id'));
 
-        $factor = new SurveyORM\Rule\Factor;
-        $factor->target()->associate(SurveyORM\Question::find(Input::get('target.id')));
+        $factor = new SurveyORM\Rule\Factor(Input::get('factor', []));
+
+        $class = Input::get('target.class');
+        $factor->target()->associate($class::find(Input::get('target.id')));
         $factor = $operation->factor()->save($factor);
 
         return ['factor' => $factor];
@@ -273,7 +305,9 @@ trait SurveyEditor
     public function updateFactorTarget()
     {
         $factor = SurveyORM\Rule\Factor::findOrFail(Input::get('factor.id'));
-        $factor->target()->associate(SurveyORM\Question::find(Input::get('target.id')));
+
+        $class = Input::get('target.class');
+        $factor->target()->associate($class::find(Input::get('target.id')));
         $updated = $factor->save();
 
         return ['updated' => $updated];

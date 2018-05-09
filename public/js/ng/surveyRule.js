@@ -67,6 +67,7 @@ angular.module('surveyRule', [])
                     $scope.nestOperation.operations.push(response.data.operation);
                 });
             }
+
             $scope.wrap = function(operation, logistic) {
                 $http({method: 'POST', url: 'wrapOperation', data:{operation: operation, logistic: logistic}})
                 .then(function(response) {
@@ -170,6 +171,53 @@ angular.module('surveyRule', [])
                 $http({method: 'POST', url: 'updateFactorTarget', data:{factor: $scope.operation.factor, target: $scope.target}})
                 .then(function(response) {
                     $scope.operation.factor.target = $scope.target;
+                });
+            }
+        }
+    }
+})
+
+.directive('ruleLessThan', function() {
+    return {
+        restrict: 'E',
+        replace: false,
+        transclude: false,
+        scope: {
+            operation: '=',
+            target: '='
+        },
+        template: `
+            <div layout="row" layout-align="start center" style="margin: 10px; padding: 10px">
+                <md-select ng-model="operation.operator" aria-label="條件" ng-change="updateOperation(operation)">
+                    <md-option value="<=">最多</md-option>
+                </md-select>
+                <md-select ng-model="operation.factor.value" aria-label="數量" ng-change="updateOrCreateFactor()">
+                    <md-option ng-repeat="question in target.questions" ng-value="::$index" ng-if="$index>0">{{$index}}</md-option>
+                </md-select>
+                <span>個選項</span>
+            </div>
+        `,
+        controller: function($scope, $http) {
+            $scope.updateOperation = function(factor) {
+                $http({method: 'POST', url: 'updateOperation', data:{operation: $scope.operation}})
+                .then(function(response) {
+                });
+            }
+
+            $scope.updateOrCreateFactor = function() {
+                ! $scope.operation.factor.id ? create() : update();
+            }
+
+            function create() {
+                $http({method: 'POST', url: 'createFactor', data:{operation: $scope.operation, factor: $scope.operation.factor, target: $scope.target}})
+                .then(function(response) {
+                    $scope.operation.factor = response.data.factor;
+                });
+            }
+
+            function update() {
+                $http({method: 'POST', url: 'updateFactor', data:{factor: $scope.operation.factor}})
+                .then(function(response) {
                 });
             }
         }

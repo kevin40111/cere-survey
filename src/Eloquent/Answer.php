@@ -38,9 +38,9 @@ class Answer extends Eloquent {
         return $this->hasOne('Cere\Survey\Eloquent\Rule', 'expression', 'children_expression');
     }
 
-    public function rule()
+    public function skiper()
     {
-        return $this->morphOne(Rule::class, 'effect');
+        return $this->morphOne(Rule\Skiper::class, 'effect');
     }
 
     public function getClassAttribute()

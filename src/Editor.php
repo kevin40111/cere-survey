@@ -21,18 +21,18 @@ class Editor
 
     public function getNodes($root)
     {
-        $nodes = $root->childrenNodes->load(['questions', 'questions.noneAboveRule', 'rules', 'limitRule', 'answers', 'images']);
+        $nodes = $root->childrenNodes->load(['questions', 'questions.noneAboveRule', 'skipers', 'guarders', 'answers', 'images']);
 
         return $nodes;
     }
 
     public function getPages($book_id)
     {
-        $pages = SurveyORM\Book::find($book_id)->childrenNodes->load('rule')->map(function ($page, $index) {
+        $pages = SurveyORM\Book::find($book_id)->childrenNodes->load('skiper')->map(function ($page, $index) {
             $questions = $page->getQuestions()->load('node.answers')->each(function ($question) {
                 $question->node->title = strip_tags($question->node->title);
             });
-            return ['title' => $index+1, 'rule' => $page->rule, 'questions' => $questions];
+            return ['title' => $index+1, 'skiper' => $page->skiper, 'questions' => $questions];
         });
 
         return $pages;

@@ -100,19 +100,19 @@ class Node extends Eloquent {
         });
     }
 
-    public function rules()
+    public function skipers()
     {
-        return $this->hasMany(Rule::class);
+        return $this->hasMany(Rule\Skiper::class);
     }
 
-    public function rule()
+    public function guarders()
     {
-        return $this->morphOne(Rule::class, 'effect');
+        return $this->hasMany(Rule\Guarder::class);
     }
 
-    public function limitRule()
+    public function skiper()
     {
-        return $this->morphOne(Rule::class, 'effect')->where('type', 'limit');
+        return $this->morphOne(Rule\Skiper::class, 'effect');
     }
 
     public function images()

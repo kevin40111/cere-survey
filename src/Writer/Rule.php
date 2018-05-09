@@ -2,47 +2,30 @@
 
 namespace Cere\Survey\Writer;
 
-use Cere\Survey\Eloquent\Question;
 use JWadhams\JsonLogic;
+use Cere\Survey\Eloquent\Rule\Ruler;
 
 class Rule
 {
-    public $pass;
+    protected $rule;
 
-    public $effects = [];
-
-    function __construct($answers)
+    function __construct(Ruler $ruler)
     {
-        $this->answers = $answers;
+        $this->ruler = $ruler;
     }
 
-    public static function answers($answers)
+    public static function instance($ruler)
     {
-        return new self($answers);
+        return new self($ruler);
     }
 
-    public function checkLimit($question)
+    public function lessThan($amount)
     {
-        $limit = $question->node->rule()->where('type', 'limit')->first();
-
-        if ($limit) {
-            $limit_size = $limit->expressions[0]['value'];
-
-            $questions = $question->node->questions()->get(['id']);
-            foreach ($questions as $question) {
-                $this->answers[$question->id] == 1 && $limit_size--;
-                if($limit_size <= 0) {
-                    return true;
-                }
-            }
-
-        }
-
-        return false;
+        return JsonLogic::apply($this->ruler->toJsonLogic(), [$this->ruler->node->id => $amount]);
     }
 
-    public function compare($rule)
+    public function compare($fields)
     {
-        return JsonLogic::apply($rule->toJsonLogic(), $this->answers);
+        return JsonLogic::apply($this->ruler->toJsonLogic(), $fields);
     }
 }

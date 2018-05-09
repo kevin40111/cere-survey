@@ -51,13 +51,9 @@ abstract class Filler
 
     public function effected()
     {
-        $this->node->rules->each(function ($rule) {
-            $this->skips[$rule->id] = Rule::answers($this->answers)->compare($rule);
-            switch ($rule->method) {
-                case 'reset':
-                    $this->reset($this->skips[$rule->id]);
-                    break;
-            }
+        $this->node->skipers->each(function ($skiper) {
+            $this->skips[$skiper->id] = Rule::instance($skiper)->compare($this->answers);
+            $this->reset($this->skips[$skiper->id]);
         });
     }
 
@@ -79,7 +75,7 @@ abstract class Filler
 
     private function setEffected($effected)
     {
-        if ($effected instanceof SurveyORM\Rule) {
+        if ($effected instanceof SurveyORM\Rule\Skiper) {
             if (array_key_exists($effected->id, $this->getSkips())) {
                 return;
             }
@@ -90,6 +86,13 @@ abstract class Filler
                 $this->setEffected($effected->effect);
             }
         }
+    }
+
+    protected function guard()
+    {
+        $this->node->guarders->each(function ($guarder) {
+            $this->limit($guarder);
+        });
     }
 
     public function clean($question)
@@ -140,6 +143,11 @@ abstract class Filler
         $this->skips += $this->fill->getSkips();
 
         return $this->skips;
+    }
+
+    public function getOriginal()
+    {
+        return $this->original;
     }
 
     protected function syncAnswers()
