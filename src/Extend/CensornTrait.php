@@ -7,6 +7,7 @@ use View;
 use Cere\Survey\RuleRepository;
 use Cere\Survey\Eloquent\Rule;
 use Files;
+use Cere\Survey\Eloquent as SurveyORM;
 
 trait CensornTrait
 {
@@ -113,5 +114,19 @@ trait CensornTrait
         RuleRepository::target($application->book)->saveExpressions(Input::get('rule'), 'direction', $page->id);
 
         return ['rule' => RuleRepository::target($application->book)->getRule()];
+    }
+
+    public function getBrowserQuestions()
+    {
+        $book = SurveyORM\Book::find(Input::get('book_id'));
+
+        $questions = $book->getQuestions()->load(['node.answers.rule', 'rule', 'node.rule']);
+
+        return ['questions' => $questions];
+    }
+
+    public function questionBrowser()
+    {
+        return  View::make('survey::template_question_browser');
     }
 }
