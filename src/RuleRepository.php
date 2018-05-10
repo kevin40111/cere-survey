@@ -6,62 +6,50 @@ use Cere\Survey\Eloquent as SurveyORM;
 
 class RuleRepository
 {
-    function __construct($target)
+    function __construct($operation)
     {
-        $this->target = $target;
+        $this->operation = $operation;
     }
 
-    public static function target($target)
+    public static function target($operation)
     {
-        return new self($target);
+        return new self($operation);
     }
 
-    public static function find($rule_id)
+    public static function find($id)
     {
-        $rule = SurveyORM\Rule::find($rule_id);
-        $class = $rule->effect_type;
-        $target = $class::find($rule->effect_id);
+        $operation = SurveyORM\Rule\Operation::findOrFail($id);
 
-        return new self($target);
+        return new self($operation);
     }
 
-    public function getRule()
+    public function createFactor($factor, $target)
     {
-        return $this->target->rule ? $this->target->rule : new SurveyORM\Rule(['expressions' => [['conditions' => [['compareType' => 'question']]]]]);
+        $factor = new SurveyORM\Rule\Factor($factor);
+
+        $factor->target()->associate($target);
+        $factor = $this->operation->factor()->save($factor);
+
+        return $factor;
     }
 
-    public function saveExpressions($expressions, $type, $page_id)
+    public static function updateFactorTarget($factor_id, $target)
     {
-        $rule = SurveyORM\Rule::where('effect_id', $this->target->id)->where('type', $type)->first();
-        if ($rule == null) {
-            $rule = $this->target->rule()->save(new SurveyORM\Rule(['expressions' => $expressions, 'type' => $type, 'page_id' => $page_id]));
-        } else {
-            $rule->update(['expressions' => $expressions, 'page_id' => $page_id]);
-        }
+        $factor = SurveyORM\Rule\Factor::findOrFail($factor_id);
 
-        $type == 'jump' && $this->saveRulesFactor($expressions, $rule);
+        $factor->target()->associate($target);
+        $updated = $factor->save();
 
-        return $rule;
+        return $updated;
     }
 
-    public function deleteRule($rule_id = null)
+    public static function updateFactor($factor_id, $attributes)
     {
-        $rule = isset($rule_id) ? SurveyORM\Rule::find($rule_id) : $this->target->rule;
+        $factor = SurveyORM\Rule\Factor::findOrFail($factor_id);
 
-        $rule->factors()->detach();
+        $updated = $factor->update($attributes);
 
-        $rule->delete();
-    }
-
-    protected function saveRulesFactor($expressions, $rule)
-    {
-        $questions = array_reduce($expressions, function ($carry, $expression) {
-            return array_merge($carry, array_map(function ($condition) {
-                return $condition['question'];
-            }, $expression['conditions']));
-        }, []);
-
-        $rule->factors()->sync($questions);
+        return $updated;
     }
 
     public function explanation()

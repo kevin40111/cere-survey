@@ -75,13 +75,6 @@ trait CensornTrait
 
     }
 
-    private function deleteRelatedApplications()
-    {
-        $this->hook->applications->each(function($application){
-            $application->delete();
-        });
-    }
-
     public function updateIndividualStatus()
     {
         $application = $this->hook->applications->find(Input::get('id'));
@@ -93,27 +86,63 @@ trait CensornTrait
         return $application;
     }
 
-    public function getApplicationHangingRule()
+    public function loadOperation()
     {
         $application = $this->hook->applications->find(Input::get('id'));
 
         $fields = Files::find(($this->hook->book->auth['fieldFile_id']))->sheets->first()->tables->first()->columns;
 
         return [
+            'application' => $application->load('operations'),
             'fields' => $fields,
-            'rule' => $application->hanging_rule ? $application->hanging_rule : new Rule(['expressions' => [['conditions' => [['compareType' => 'question']]]]]),
         ];
     }
 
-    public function setApplicationHangingRule()
+    public function createOperation()
     {
         $application = $this->hook->applications->find(Input::get('id'));
 
-        $page = $this->hook->book->childrenNodes->last();
+        $operation = $application->operations()->create(['operator' => '==']);
 
-        RuleRepository::target($application->book)->saveExpressions(Input::get('rule'), 'direction', $page->id);
+        return ['application' => $application->load('operations')];
+    }
 
-        return ['rule' => RuleRepository::target($application->book)->getRule()];
+    public function deleteOperation()
+    {
+        $application = $this->hook->applications->find(Input::get('id'));
+
+        $application->operations->each(function ($operation) {
+            $operation->delete();
+        });
+
+        return ['deleted' => ! $application->operations()->exists()];
+    }
+
+    public function createFactor()
+    {
+        $class = Input::get('target.class');
+        $target = $class::find(Input::get('target.id'));
+
+        $factor = RuleRepository::find(Input::get('operation.id'))->createFactor(Input::get('factor', []), $target);
+
+        return ['factor' => $factor];
+    }
+
+    public function updateFactorTarget()
+    {
+        $class = Input::get('target.class');
+        $target = $class::find(Input::get('target.id'));
+
+        $updated = RuleRepository::updateFactorTarget(Input::get('factor.id'), $target);
+
+        return ['updated' => $updated];
+    }
+
+    public function updateFactor()
+    {
+        $updated = RuleRepository::updateFactor(Input::get('factor.id'), Input::get('factor'));
+
+        return ['updated' => $updated];
     }
 
     public function getBrowserQuestions()

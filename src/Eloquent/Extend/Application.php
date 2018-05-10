@@ -6,8 +6,9 @@ use Eloquent;
 use Auth;
 use Cere\Survey\Eloquent as SurveyORM;
 use Plat\Member;
+use Cere\Survey\Eloquent\Rule\Ruler;
 
-class Application extends Eloquent {
+class Application extends Ruler {
 
     use \SoftDeletingTrait;
 

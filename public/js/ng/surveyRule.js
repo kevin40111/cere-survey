@@ -110,7 +110,7 @@ angular.module('surveyRule', [])
             operators: '='
         },
         template: `
-            <span>
+            <span layout="row">
             <md-input-container style="width: 200px">
                 <label>當題目</label>
                 <md-select ng-model="target" ng-model-options="{trackBy: '$value.id'}" ng-change="updateOrCreateFactor()">
@@ -125,11 +125,15 @@ angular.module('surveyRule', [])
                     <md-option ng-repeat="(operator, title) in operators" ng-value="operator">{{title}}</md-option>
                 </md-select>
             </md-input-container>
-            <md-input-container>
+            <md-input-container ng-if="target.node.answers" style="width: 100px">
                 <label>選項</label>
                 <md-select ng-model="operation.factor.value" ng-disabled="! target" ng-change="updateFactor()">
                     <md-option ng-repeat="answer in target.node.answers" ng-value="answer.value">{{answer.title}}</md-option>
                 </md-select>
+            </md-input-container>
+            <md-input-container ng-if="! target.node.answers" style="width: 100px">
+                <label>選項</label>
+                <input ng-model="operation.factor.value" ng-model-options="{updateOn: 'default blur', debounce: {default: 1000, blur: 0}}" ng-change="updateFactor()" />
             </md-input-container>
             </span>
         `,
