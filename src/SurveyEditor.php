@@ -211,13 +211,13 @@ trait SurveyEditor
     {
         $node = SurveyORM\Node::find(Input::get('target.id'));
 
-        $guarder = new SurveyORM\Rule\Guarder;
+        $guarder = new SurveyORM\Rule\Guarder(Input::get('guarder'));
 
         $guarder->node()->associate($node);
 
         $guarder->save();
 
-        $guarder->operations()->create(['operator' =>  '<=']);
+        $guarder->operations()->create(['operator' =>  Input::get('operator')]);
 
         return ['guarder' => $guarder];
     }

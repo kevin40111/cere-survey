@@ -511,9 +511,6 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
                         <input type="text" placeholder="輸入{{types[node.type].editor.questions.text}}" ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)"/>
                     </p>
-                    <md-switch class="md-primary" md-no-ink aria-label="all false" ng-model="question.none_above_rule.expressions[0].value" ng-false-value="undefined" ng-true-value="'noneAbove'" ng-if="node.type=='checkbox'" ng-class="{noneAbove: question.none_above_rule.expressions[0].value}" ng-change="saveRule(question, 'none_above')">
-                        以上皆非
-                    </md-switch>
                     <md-button class="md-secondary" ng-if="types[node.type].editor.questions.childrens" aria-label="設定子題" ng-click="getNodes(question)">設定子題</md-button>
                     <md-button class="md-secondary md-icon-button" ng-click="move(question, -1)" aria-label="上移" ng-disabled="$first">
                         <md-tooltip md-direction="left">上移</md-tooltip>
@@ -797,13 +794,15 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                         <div layout="column" ng-repeat="guarder in target.guarders">
                             <md-toolbar class="md-primary md-hue-1">
                                 <div class="md-toolbar-tools">
-                                    <h3 md-truncate flex>此題最多勾選</h3>
+                                    <h3 md-truncate flex>{{guarderTitles[guarder.method]}}</h3>
                                     <md-button aria-label="刪除設定" ng-click="resetGuarder(guarder)">刪除設定</md-button>
                                 </div>
                             </md-toolbar>
-                            <rule-less-than ng-repeat="operation in guarder.operations" operation="operation" target="target"></rule-less-than>
+                            <rule-less-than ng-if="guarder.method === 'lessThan'" ng-repeat="operation in guarder.operations" operation="operation" target="target"></rule-less-than>
+                            <rule-exclusion ng-if="guarder.method === 'exclusion'" ng-repeat="operation in guarder.operations" operation="operation" target="target"></rule-exclusion>
                         </div>
-                        <md-button ng-if="isEnable('guarders')" md-colors="{background: 'green'}" ng-click="createGuarder()" aria-label="最多勾選數量">最多勾選數量</md-button>
+                        <md-button ng-if="isEnable('lessThan')" md-colors="{background: 'green'}" ng-click="createGuarder('<=', 'lessThan', 2)" aria-label="最多勾選數量">最多勾選數量</md-button>
+                        <md-button ng-if="isEnable('exclusion')" md-colors="{background: 'green'}" ng-click="createGuarder('==', 'exclusion', 1)" aria-label="以上皆非">以上皆非</md-button>
                     </div>
                     <div layout="column" ng-repeat="skiper in target.skipers">
                         <md-toolbar class="md-primary md-hue-1">
@@ -814,15 +813,16 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                         </md-toolbar>
                         <rule-operation operation="skiper"></rule-operation>
                     </div>
-                    <md-button ng-if="isEnable('skipers')" md-colors="{background: 'green'}" ng-click="createSkiper()" aria-label="跳過此題">跳過此題</md-button>
+                    <md-button ng-if="target.skipers.length === 0" md-colors="{background: 'green'}" ng-click="createSkiper()" aria-label="跳過此題">跳過此題</md-button>
                 </md-content>
             </div>
         `,
-        controller: function($scope, $http, $mdSidenav) {
+        controller: function($scope, $http, $filter, $mdSidenav) {
             $scope.boxStyle = {margin: '10px', padding: '10px', borderWidth: '5px', borderStyle: 'solid'};
+            $scope.guarderTitles = {lessThan: '此題最多勾選', exclusion: '以上皆非'};
 
-            $scope.isEnable = function(type) {
-                return $scope.target[type].length === 0;
+            $scope.isEnable = function(method) {
+                return $filter('filter')($scope.target.guarders, {method: method}).length === 0;
             }
 
             if ($scope.target.skipers) {
@@ -855,8 +855,8 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                 });
             }
 
-            $scope.createGuarder = function() {
-                $http({method: 'POST', url: 'createGuarder', data:{target: $scope.target}})
+            $scope.createGuarder = function(operator, method, priority) {
+                $http({method: 'POST', url: 'createGuarder', data:{guarder:{method: method, priority: priority}, operator: operator, target: $scope.target}})
                 .then(function(response) {
                     var guarder = response.data.guarder;
                     $scope.target.guarders.push(guarder);

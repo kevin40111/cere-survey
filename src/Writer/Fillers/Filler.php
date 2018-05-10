@@ -81,17 +81,17 @@ abstract class Filler
             }
 
             $this->fill->sync($this->answers)->node($effected->node)->effected();
-        } else {
+        } else if ($effected instanceof SurveyORM\Rule\Operation) {
             if ($effected->effect()->exists()) {
                 $this->setEffected($effected->effect);
             }
         }
     }
 
-    protected function guard()
+    protected function guard($question)
     {
-        $this->node->guarders->each(function ($guarder) {
-            $this->limit($guarder);
+        $this->node->guarders->sortBy('priority')->each(function ($guarder) use ($question) {
+            call_user_func([$this, $guarder->method], $guarder, $question);
         });
     }
 

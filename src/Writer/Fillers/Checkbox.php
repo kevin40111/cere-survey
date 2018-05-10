@@ -10,10 +10,6 @@ class Checkbox extends Filler
     {
         $this->contents[$question->id] = $value;
 
-        if ($question->noneAboveRule()->exists() && $value === '1') {
-            $this->resetChecked($excepts = [$question->id]);
-        }
-
         if (in_array('1', $this->contents)) {
             $this->resetEmpty();
         } else {
@@ -22,7 +18,7 @@ class Checkbox extends Filler
 
         $this->syncAnswers();
 
-        $this->guard();
+        $this->guard($question);
 
         $this->setRules($question);
 
@@ -48,7 +44,7 @@ class Checkbox extends Filler
 
     public function childrens($question)
     {
-        return $this->isChecked($question) ? $question->childrenNodes->load(['questions.skiper', 'questions.noneAboveRule', 'answers.skiper', 'skiper']) : [];
+        return $this->isChecked($question) ? $question->childrenNodes->load(['questions.skiper', 'answers.skiper', 'skiper']) : [];
     }
 
     private function resetChecked($excepts)
@@ -83,14 +79,26 @@ class Checkbox extends Filler
         return $value === '-8';
     }
 
-    protected function limit($guarder)
+    protected function lessThan($guarder)
     {
         $amount = $this->node->questions->reduce(function ($amount, $question) {
-            return $amount += $this->answers[$question->field->id] === '1' ? 1 : 0;
+            return $amount += $this->contents[$question->id] === '1' ? 1 : 0;
         }, 0);
 
         if (! Rule::instance($guarder)->lessThan($amount)) {
             $this->messages = ['已達選擇數量上限'];
+        }
+    }
+
+    protected function exclusion($guarder, $question)
+    {
+        $this->syncAnswers();
+        if (Rule::instance($guarder)->compare($this->answers)) {
+            if ($guarder->operations->first()->factor->target->id === $question->id) {
+                $this->resetChecked([$question->id]);
+            } else {
+                $this->contents[$guarder->operations->first()->factor->target->id] = '0';
+            }
         }
     }
 }

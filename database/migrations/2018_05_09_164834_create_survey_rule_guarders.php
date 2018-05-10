@@ -15,6 +15,8 @@ class createSurveyRuleGuarders extends Migration {
         Schema::create('survey_rule_guarders', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('node_id');
+            $table->string('method', 50);
+            $table->integer('priority');
         });
 	}
 

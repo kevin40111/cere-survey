@@ -12,7 +12,7 @@ class Guarder extends Ruler
 
     public $timestamps = false;
 
-    protected $fillable = [];
+    protected $fillable = ['method', 'priority'];
 
     public function node()
     {

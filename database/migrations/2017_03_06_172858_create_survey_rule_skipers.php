@@ -14,6 +14,7 @@ class CreateSurveyRuleSkipers extends Migration {
     {
         Schema::create('survey_rule_skipers', function (Blueprint $table) {
             $table->increments('id');
+            $table->integer('node_id');
             $table->string('effect_type', 200);
             $table->integer('effect_id');
             $table->string('type', 50);

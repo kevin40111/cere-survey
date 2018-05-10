@@ -32,7 +32,7 @@ class Radio extends Filler
 
     public function childrens($question)
     {
-        return $this->isChecked($question) ? $this->getAnswer($question)->childrenNodes->load(['questions.noneAboveRule', 'questions.skiper', 'answers.skiper', 'skiper']) : [];
+        return $this->isChecked($question) ? $this->getAnswer($question)->childrenNodes->load(['questions.skiper', 'answers.skiper', 'skiper']) : [];
     }
 
     private function getAnswer($question)

@@ -226,4 +226,50 @@ angular.module('surveyRule', [])
             }
         }
     }
+})
+
+.directive('ruleExclusion', function() {
+    return {
+        restrict: 'E',
+        replace: false,
+        transclude: false,
+        scope: {
+            operation: '=',
+            target: '='
+        },
+        template: `
+            <div layout-align="start center" style="margin: 10px; padding: 10px">
+                <div>選擇選項時，會清除其他勾選的項目</div>
+                <md-checkbox ng-repeat="question in target.questions" ng-checked="question.id === operation.factor.target.id" aria-label="{{question.title}}" ng-click="updateOrCreateFactor(question)">{{question.title}}</md-checkbox>
+            </div>
+        `,
+        controller: function($scope, $http, $filter) {
+            $scope.updateOperation = function(factor) {
+                $http({method: 'POST', url: 'updateOperation', data:{operation: $scope.operation}})
+                .then(function(response) {
+                });
+            }
+
+            $scope.updateOrCreateFactor = function(target) {
+                ! $scope.operation.factor ? create(target) : update(target);
+            }
+
+            function create(target) {
+                $http({method: 'POST', url: 'createFactor', data:{operation: $scope.operation, factor: {value: 1}, target: target}})
+                .then(function(response) {
+                    $scope.operation.factor = response.data.factor;
+                });
+            }
+
+            function update(target) {
+                console.log($scope.operation.factor);
+                $http({method: 'POST', url: 'updateFactorTarget', data:{factor: $scope.operation.factor, target: target}})
+                .then(function(response) {
+                    if (response.data.updated) {
+                        $scope.operation.factor.target = target;
+                    }
+                });
+            }
+        }
+    }
 });

@@ -53,11 +53,6 @@ class Question extends Eloquent
         return $this->morphOne(Rule\Skiper::class, 'effect');
     }
 
-    public function noneAboveRule()
-    {
-        return $this->morphOne(Rule\Skiper::class, 'effect')->where('type', 'none_above');
-    }
-
     public function effects()
     {
         return $this->morphToMany(Rule\Operation::class, 'target', 'survey_rule_factors');
