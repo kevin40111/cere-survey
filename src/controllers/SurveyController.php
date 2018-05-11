@@ -188,7 +188,7 @@ class SurveyController extends \BaseController {
     {
         $page = SurveyORM\Node::find(Input::get('page.id'));;
 
-        $nodes = $page->childrenNodes->load(['rule', 'questions.rule', 'answers.rule']);
+        $nodes = $page->childrenNodes->load(['rule', 'questions.rule', 'answers.rule', 'images']);
 
         $fields = $this->writer->all();
 

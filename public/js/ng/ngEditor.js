@@ -370,9 +370,9 @@ angular.module('ngEditor.directives', ['ngQuill'])
                 <span flex></span>
 
                 <div>
-                    <label ng-show="node.type" for="{{::$id}}">
-                    <md-icon md-svg-icon="grally"></md-icon>
-                        <input id="{{::$id}}"  style="display:none"  type="file" multiple nv-file-select uploader="uploader" />
+                    <label class="md-button md-icon-button" ng-if="node.type != 'page'" for="{{::$id}}">
+                        <md-icon md-colors="{color: 'grey-A100'}">add_photo_alternate</md-icon>
+                        <input id="{{::$id}}" style="display:none" type="file" multiple nv-file-select uploader="uploader" />
                     </label>
                     <div class="ui input" ng-if="node.open.moving">
                         <input type="text" ng-model="settedPage" placeholder="輸入移動到的頁數..." />

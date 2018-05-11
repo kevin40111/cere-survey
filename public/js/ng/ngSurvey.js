@@ -106,9 +106,7 @@ angular.module('ngSurvey.directives', [])
         },
         template:  `
             <div>
-                <survey-node ng-repeat="node in nodes" node="node" ng-if="!isSkip(node)">
-                    <img ng-repeat="image in node.images" ng-src="/upload/get/{{image.serial}}" alt="Description" style="width:940px" />
-                </survey-node>
+                <survey-node ng-repeat="node in nodes" node="node" ng-if="!isSkip(node)"></survey-node>
             </div>
         `,
         controller: function($scope, $http) {
@@ -137,6 +135,7 @@ angular.module('ngSurvey.directives', [])
         //require: '^surveyPage',
         template:  `
             <div>
+                <img ng-repeat="image in node.images" ng-src="/upload/get/{{image.serial}}" alt="Description" style="width:940px" />
                 <md-card>
                     <md-card-title>
                         <md-card-title-text>
