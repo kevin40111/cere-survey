@@ -4,8 +4,8 @@ namespace Cere\Survey\Eloquent;
 
 use Eloquent;
 
-class Message extends Eloquent {
-
+class Message extends Eloquent
+{
     protected $connection = 'survey';
 
     protected $table = 'survey_messages';

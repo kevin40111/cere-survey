@@ -4,8 +4,8 @@ namespace Cere\Survey\Eloquent\Rule;
 
 use Eloquent;
 
-class Operation extends Eloquent {
-
+class Operation extends Eloquent
+{
     protected $connection = 'survey';
 
     protected $table = 'survey_rule_operations';

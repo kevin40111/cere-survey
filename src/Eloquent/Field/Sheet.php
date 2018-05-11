@@ -3,29 +3,33 @@
 namespace Cere\Survey\Eloquent\Field;
 
 use Eloquent;
+use Files;
 
-class Sheet extends Eloquent {
-
+class Sheet extends Eloquent
+{
     protected $table = 'row_sheets';
 
     public $timestamps = true;
 
-    protected $fillable = array('title', 'editable', 'fillable');
+    protected $fillable = ['title', 'editable', 'fillable'];
 
-    public function getEditableAttribute($value) {
+    public function getEditableAttribute($value)
+    {
         return (boolean)$value;
     }
 
-    public function getFillableAttribute($value) {
+    public function getFillableAttribute($value)
+    {
         return (boolean)$value;
     }
 
-    public function tables() {
+    public function tables()
+    {
         return $this->hasMany(Table::class, 'sheet_id', 'id');
     }
 
     public function file()
     {
-        return $this->belongsTo('Files', 'file_id', 'id');
+        return $this->belongsTo(Files::class, 'file_id', 'id');
     }
 }

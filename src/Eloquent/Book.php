@@ -6,10 +6,11 @@ use Eloquent;
 use Cere\Survey\Eloquent\Field\Sheet;
 use Carbon\Carbon;
 use Cere\Survey\Eloquent\Extend;
+use Files;
 
-class Book extends Eloquent {
-
-    use \Cere\Survey\Tree;
+class Book extends Eloquent
+{
+    use TreeTrait;
 
     protected $connection = 'survey';
 
@@ -17,7 +18,7 @@ class Book extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = array('file_id', 'title', 'lock', 'loginRow_id', 'auth', 'footer');
+    protected $fillable = ['file_id', 'title', 'lock', 'auth', 'footer'];
 
     protected $attributes = ['lock' => false];
 
@@ -30,7 +31,7 @@ class Book extends Eloquent {
 
     public function childrenNodes()
     {
-        return $this->morphMany('Cere\Survey\Eloquent\Node', 'parent');
+        return $this->morphMany(Node::class, 'parent');
     }
 
     public function getClassAttribute()
@@ -97,12 +98,7 @@ class Book extends Eloquent {
 
     public function file()
     {
-        return $this->belongsTo('Files', 'file_id', 'id');
-    }
-
-    public function rule()
-    {
-        return $this->morphOne('Cere\Survey\Eloquent\Rule', 'effect');
+        return $this->belongsTo(Files::class, 'file_id', 'id');
     }
 
     public function extendHook()

@@ -7,8 +7,8 @@ use Cere\Survey\Eloquent\Book;
 use Carbon\Carbon;
 use Files;
 
-class Hook extends Eloquent {
-
+class Hook extends Eloquent
+{
     protected $connection = 'survey';
 
     protected $table = 'survey_extend_hooks';

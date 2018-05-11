@@ -3,13 +3,12 @@
 namespace Cere\Survey\Eloquent\Extend;
 
 use Eloquent;
-use Auth;
 use Cere\Survey\Eloquent as SurveyORM;
 use Plat\Member;
 use Cere\Survey\Eloquent\Rule\Ruler;
 
-class Application extends Ruler {
-
+class Application extends Ruler
+{
     use \SoftDeletingTrait;
 
     protected $connection = 'survey';
@@ -18,7 +17,7 @@ class Application extends Ruler {
 
     public $timestamps = true;
 
-    protected $fillable = array('book_id', 'member_id', 'extension', 'status', 'fields', 'updated_at', 'step', 'created_at', 'deleted_at', 'deleted_by', 'individual_status');
+    protected $fillable = ['book_id', 'member_id', 'extension', 'status', 'fields', 'updated_at', 'step', 'created_at', 'deleted_at', 'deleted_by', 'individual_status'];
 
     protected $attributes = ['extension' => false, 'status' => 0];
 

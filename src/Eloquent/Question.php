@@ -7,7 +7,7 @@ use Cere\Survey\Eloquent\Field\Field;
 
 class Question extends Eloquent
 {
-    use \Cere\Survey\Tree;
+    use TreeTrait;
 
     use PositionTrait;
 
@@ -41,11 +41,6 @@ class Question extends Eloquent
     public function getClassAttribute()
     {
         return self::class;
-    }
-
-    public function getRequiredAttribute($value)
-    {
-        return (bool)$value;
     }
 
     public function skiper()

@@ -10,9 +10,9 @@ class Skiper extends Ruler
 
     protected $table = 'survey_rule_skipers';
 
-    public $timestamps = true;
+    public $timestamps = false;
 
-    protected $fillable = ['page_id'];
+    protected $fillable = [];
 
     public function node()
     {

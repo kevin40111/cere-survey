@@ -5,9 +5,9 @@ namespace Cere\Survey\Eloquent;
 use Eloquent;
 use DB;
 
-class Answer extends Eloquent {
-
-    use \Cere\Survey\Tree;
+class Answer extends Eloquent
+{
+    use TreeTrait;
 
     use PositionTrait;
 
@@ -17,7 +17,7 @@ class Answer extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = array('title', 'value', 'category_id', 'position');
+    protected $fillable = ['title', 'value', 'category_id', 'position'];
 
     protected $attributes = ['value' => '', 'title' => ''];
 
@@ -30,12 +30,7 @@ class Answer extends Eloquent {
 
     public function childrenNodes()
     {
-        return $this->morphMany('Cere\Survey\Eloquent\Node', 'parent');
-    }
-
-    public function childrenRule()
-    {
-        return $this->hasOne('Cere\Survey\Eloquent\Rule', 'expression', 'children_expression');
+        return $this->morphMany(Node::class, 'parent');
     }
 
     public function skiper()

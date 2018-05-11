@@ -18,7 +18,6 @@ class CreateSurveyBook extends Migration {
             $table->integer('sheet_id');
             $table->string('title', 50);
             $table->boolean('lock', 200);
-            $table->integer('loginRow_id')->nullable();
             $table->text('auth');
         });
     }

@@ -17,9 +17,6 @@ class CreateSurveyRuleSkipers extends Migration {
             $table->integer('node_id');
             $table->string('effect_type', 200);
             $table->integer('effect_id');
-            $table->string('type', 50);
-            $table->integer('page_id');
-            $table->timestamps();
         });
     }
 
