@@ -7,7 +7,7 @@ use Cere\Survey\Eloquent\Field\Field;
 
 class Question extends Eloquent
 {
-    use \Cere\Survey\Tree;
+    use TreeTrait;
 
     use PositionTrait;
 
@@ -43,24 +43,14 @@ class Question extends Eloquent
         return self::class;
     }
 
-    public function getRequiredAttribute($value)
+    public function skiper()
     {
-        return (bool)$value;
+        return $this->morphOne(Rule\Skiper::class, 'effect');
     }
 
-    public function rule()
+    public function effects()
     {
-        return $this->morphOne(Rule::class, 'effect')->where('type', 'jump');
-    }
-
-    public function noneAboveRule()
-    {
-        return $this->morphOne(Rule::class, 'effect')->where('type', 'none_above');
-    }
-
-    public function affectRules()
-    {
-        return $this->belongsToMany(Rule::class, 'survey_rule_factor');
+        return $this->morphToMany(Rule\Operation::class, 'target', 'survey_rule_factors');
     }
 
     public function siblings()

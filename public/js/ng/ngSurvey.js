@@ -28,7 +28,7 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
             return deferred.promise;
         },
         isSkip: function(target) {
-            return target.rule && skips[target.rule.id];
+            return target.skiper && skips[target.skiper.id];
         }
     };
 });
@@ -51,26 +51,24 @@ angular.module('ngSurvey.directives', [])
         },
         template:  `
             <div>
-                <div>
-                    <survey-page ng-if="page" page="page"></survey-page>
-                    <div layout="row" layout-align="space-around" ng-if="book.saving">
-                        <md-progress-linear md-mode="indeterminate"></md-progress-linear>
-                    </div>
+                <div layout="row" layout-align="space-around" ng-if="book.saving">
+                    <md-progress-linear md-mode="indeterminate"></md-progress-linear>
+                </div>
+                <div ng-if="page">
+                    <survey-page page="page"></survey-page>
                     <md-button class="md-raised md-primary" ng-click="nextPage()" ng-disabled="book.saving" aria-label="繼續">繼續</md-button>
                 </div>
-                <div class="ui segment" style="width:800px;margin:0 auto; text-align:center" ng-if="!book.saving && !page">
-                    <div class="ui basic segment">
-                        <h3>本問卷填答完畢</h3>
-                    </div>
-                    <md-button ng-if="ext_book_url" class="md-raised md-primary" href="{{ext_book_url}}" target="_blank" ng-disabled="book.saving" aria-label="跳至加掛題本" >
+                <md-card ng-if="!page && !book.saving" style="width:800px;margin:0 auto; text-align:center">
+                    <md-card-title>
+                        <md-card-title-text><span class="md-headline">本問卷填答完畢</span></md-card-title-text>
+                    </md-card-title>
+                    <md-button ng-repeat="url in urls" class="md-raised md-primary" href="{{url}}" target="_blank" aria-label="填寫加掛題本" >
                         填寫加掛題本
                     </md-button>
-                </div>
-                <md-card>
                     <md-card-title>
                         <md-card-title-text class="ql-editor" ng-bind-html="trustAsHtml(book.footer)"></md-card-title-text>
                     </md-card-title>
-                </<md-card>
+                </md-card>
             </div>
         `,
         controller: function($scope, $sce) {
@@ -79,6 +77,8 @@ angular.module('ngSurvey.directives', [])
             };
             surveyFactory.get('getPage', {book: $scope.book}, $scope.book).then(function(response) {
                 $scope.page = response.page;
+                $scope.urls = response.urls;
+                $scope.book.saving = false;
             });
 
             $scope.nextPage = function() {
@@ -87,8 +87,8 @@ angular.module('ngSurvey.directives', [])
                         alert('有尚未填答題目');
                     } else {
                         $scope.page = response.page;
+                        $scope.urls = response.urls;
                         $scope.book.saving = false;
-                        $scope.ext_book_url = response.url;
                     }
                 });
             };
@@ -179,19 +179,19 @@ angular.module('ngSurvey.directives', [])
             $scope.saveAnswer = function(value) {
                 $scope.question.childrens = {};
                 surveyFactory.get('saveAnswer', {question: $scope.question, value: value}, $scope.node).then(function(response) {
-                    if(response.message) {
+                    angular.extend(surveyFactory.answers, response.dirty);
+                    if (response.messages) {
                         var txt = "";
-                        response.message.forEach(function(message) {
+                        response.messages.forEach(function(message) {
                             txt += message+'\n';
                         });
                         $mdToast.show(
                             $mdToast.simple().textContent(txt).hideDelay(3000)
                         );
+                    } else {
+                        angular.extend(surveyFactory.skips, response.skips);
+                        getChildrens();
                     }
-
-                    angular.extend(surveyFactory.answers, response.dirty);
-                    angular.extend(surveyFactory.skips, response.skips);
-                    getChildrens();
                 });
             };
 

@@ -28,6 +28,11 @@ class SurveySession
         return Session::has(self::$name.'.'.$this->book_id);
     }
 
+    public function userinfo()
+    {
+        return Session::get(self::$name.'.'.$this->book_id.'.userinfo');
+    }
+
     public function encrypt()
     {
         return Session::get(self::$name.'.'.$this->book_id.'.encrypt');

@@ -49,6 +49,14 @@ abstract class Filler
      */
     abstract public function childrens($question);
 
+    public function effected()
+    {
+        $this->node->skipers->each(function ($skiper) {
+            $this->skips[$skiper->id] = Rule::instance($skiper)->compare($this->answers);
+            $this->reset($this->skips[$skiper->id]);
+        });
+    }
+
     protected function setChildrens($question)
     {
         $this->getEffects($question)->each(function ($effect) {
@@ -60,27 +68,30 @@ abstract class Filler
 
     protected function setRules($question)
     {
-        $question->affectRules->load(['effect', 'factors.field'])->each(function ($rule) {
-            array_set($this->skips, $rule->id, Rule::answers($this->answers)->compare($rule));
-            switch (true) {
-                case $rule->effect instanceof SurveyORM\Node:
-                    $this->fill->node($rule->effect)->reset($this->skips[$rule->id]);
-                    $rule->effect->childrenNodes->each(function ($node) {
-                        $this->fill->node($node)->reset($this->skips[$rule->id]);
-                    });
-                    break;
+        $question->effects->each(function ($operation) {
+            $this->setEffected($operation);
+        });
+    }
 
-                case $rule->effect instanceof SurveyORM\Question:
-                    if ($rule->effect->node->id === $this->node->id) {
-                        $this->affected($rule->effect, $this->skips[$rule->id]);
-                    } else {
-                        $this->fill->node($rule->effect->node)->affected($rule->effect, $this->skips[$rule->id]);
-                    }
-
-                case $rule->effect instanceof SurveyORM\Answer:
-                    # todo...
-                    break;
+    private function setEffected($effected)
+    {
+        if ($effected instanceof SurveyORM\Rule\Skiper) {
+            if (array_key_exists($effected->id, $this->getSkips())) {
+                return;
             }
+
+            $this->fill->sync($this->answers)->node($effected->node)->effected();
+        } else if ($effected instanceof SurveyORM\Rule\Operation) {
+            if ($effected->effect()->exists()) {
+                $this->setEffected($effected->effect);
+            }
+        }
+    }
+
+    protected function guard($question)
+    {
+        $this->node->guarders->sortBy('priority')->each(function ($guarder) use ($question) {
+            call_user_func([$this, $guarder->method], $guarder, $question);
         });
     }
 
@@ -132,6 +143,11 @@ abstract class Filler
         $this->skips += $this->fill->getSkips();
 
         return $this->skips;
+    }
+
+    public function getOriginal()
+    {
+        return $this->original;
     }
 
     protected function syncAnswers()

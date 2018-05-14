@@ -73,6 +73,11 @@ class FieldUser
         return [true, $saveValuesByName];
     }
 
+    public function sign($book)
+    {
+        SurveySession::create($book->id, $this->session->userinfo());
+    }
+
     public function logout()
     {
         $this->session->destroy();
@@ -81,5 +86,13 @@ class FieldUser
     public function logined()
     {
         return $this->session->exists();
+    }
+
+    public function information()
+    {
+        $table = Files::find($this->book->auth['fieldFile_id'])->sheets->first()->tables->first();
+        $fieldRepository = FieldRepository::target($table, $this->book->file->created_by);
+
+        return $fieldRepository->getRow(['encrypt_id' => $this->id]);
     }
 }

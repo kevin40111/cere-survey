@@ -4,21 +4,23 @@ namespace Cere\Survey\Eloquent\Field;
 
 use Eloquent;
 
-class Table extends Eloquent {
-
+class Table extends Eloquent
+{
     protected $table = 'row_tables';
 
     public $timestamps = true;
 
-    protected $fillable = array('database', 'name', 'lock', 'builded_at', 'construct_at');
+    protected $fillable = ['database', 'name', 'lock', 'builded_at', 'construct_at'];
 
     protected $attributes = ['lock' => false];
 
-    public function getLockAttribute($value) {
+    public function getLockAttribute($value)
+    {
         return (boolean)$value;
     }
 
-    public function columns() {
+    public function columns()
+    {
         return $this->hasMany(Field::class, 'table_id', 'id');
     }
 

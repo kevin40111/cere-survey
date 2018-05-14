@@ -32,7 +32,7 @@ class Text extends Filler
 
     public function childrens($question)
     {
-        return $this->isChecked($question) ? $question->childrenNodes->load(['questions.rule', 'answers.rule', 'rule']) : [];
+        return $this->isChecked($question) ? $question->childrenNodes->load(['questions.skiper', 'answers.skiper', 'skiper']) : [];
     }
 
     private function getAnswer($question)

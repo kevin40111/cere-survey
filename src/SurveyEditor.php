@@ -56,13 +56,6 @@ trait SurveyEditor
         return ['book' => $this->book];
     }
 
-    public function getPages()
-    {
-        $pages = $this->editor->getPages(Input::get('book_id'));
-
-        return ['pages' => $pages];
-    }
-
     public function getBrowserQuestions()
     {
         $questions = $this->editor->getPages(Input::get('book_id'))->reduce(function ($carry, $page) {
@@ -172,41 +165,161 @@ trait SurveyEditor
         return ['moved' => $item->move(Input::get('offset'))];
     }
 
-    public function saveRule()
+    public function loadSkiper()
     {
-        $class = Input::get('skipTarget.class');
-        $root = $class::find(Input::get('skipTarget.id'));
+        $skiper = SurveyORM\Rule\Skiper::findOrFail(Input::get('skiper.id'))->load('operations');
 
-        $page = $root->getPaths()->filter(function($item) {
-            return $item->type == 'page';
-        })->first();
+        $pages = $this->editor->getPages($this->book->id);
 
-        $rule = Survey\RuleRepository::target($root)->saveExpressions(Input::get('expressions'), Input::get('type'), $page->id);
-
-
-        return ['rule' => $rule];
+        return ['skiper' => $skiper, 'pages' => $pages];
     }
 
-    public function deleteRule()
+    public function createSkiper()
     {
-        $class = Input::get('skipTarget.class');
-        $root = $class::find(Input::get('skipTarget.id'));
-        $rule_id = Input::get('rule_id');
+        $node = SurveyORM\Node::find(Input::get('target.id'));
 
+        $skiper = new SurveyORM\Rule\Skiper;
 
-        Survey\RuleRepository::target($root)->deleteRule($rule_id);
+        $skiper->effect()->associate($node);
 
-        return 'delete rules successed';
+        $skiper->node()->associate($node);
+
+        $skiper->save();
+
+        $skiper->operations()->create(['operator' => '==']);
+
+        return ['skiper' => $skiper];
     }
 
-    public function getRule()
+    public function resetSkiper()
     {
-        $class = Input::get('skipTarget.class');
-        $root = $class::find(Input::get('skipTarget.id'));
+        $skiper = SurveyORM\Rule\Skiper::findOrFail(Input::get('skiper.id'));
 
-        $rule = Survey\RuleRepository::target($root)->getRule();
+        $deleted = $skiper->delete();
 
-        return ['rule' => $rule];
+        return ['deleted' => $deleted];
+    }
+
+    public function loadGuarder()
+    {
+        $guarder = SurveyORM\Rule\Guarder::findOrFail(Input::get('guarder.id'))->load('operations');
+
+        return ['guarder' => $guarder];
+    }
+
+    public function createGuarder()
+    {
+        $node = SurveyORM\Node::find(Input::get('target.id'));
+
+        $guarder = new SurveyORM\Rule\Guarder(Input::get('guarder'));
+
+        $guarder->node()->associate($node);
+
+        $guarder->save();
+
+        $guarder->operations()->create(['operator' =>  Input::get('operator')]);
+
+        return ['guarder' => $guarder];
+    }
+
+    public function resetGuarder()
+    {
+        $guarder = SurveyORM\Rule\Guarder::findOrFail(Input::get('guarder.id'));
+
+        $deleted = $guarder->delete();
+
+        return ['deleted' => $deleted];
+    }
+
+    public function appendOperation()
+    {
+        $operation = SurveyORM\Rule\Operation::findOrFail(Input::get('operation.id'))->operations()->create(['operator' => '==']);
+
+        return ['operation' => $operation];
+    }
+
+    public function updateOperation()
+    {
+        $updated = SurveyORM\Rule\Operation::findOrFail(Input::get('operation.id'))->update(Input::get('operation'));
+
+        return ['updated' => $updated];
+    }
+
+    public function wrapOperation()
+    {
+        $wraper = SurveyORM\Rule\Operation::findOrFail(Input::get('operation.id'));
+
+        $replicate = $wraper->operations()->save($wraper->replicate());
+        $replicate->factor()->save($wraper->factor);
+        $wraper->load('operations');
+
+        $wraper->update(['operator' => Input::get('logistic')]);
+        $wraper->operations()->create(['operator' => '==']);
+
+        return ['wraper' => $wraper];
+    }
+
+    public function removeOperation()
+    {
+        $operation = SurveyORM\Rule\Operation::findOrFail(Input::get('operation.id'));
+
+        $deleted = $operation->delete();
+
+        return ['deleted' => $deleted];
+    }
+
+    public function unwrapOperation()
+    {
+        $operation = SurveyORM\Rule\Operation::findOrFail(Input::get('operation.id'));
+        $operation->delete();
+
+        $replacement = $operation->effect;
+        $residue = $replacement->operations->first();
+        $replacement->update(['operator' => $residue->operator]);
+
+        if (in_array($residue->operator, ['and', 'or'])) {
+            $replacement->operations()->saveMany($residue->operations->all());
+        } else {
+            $replacement->factor()->save($residue->factor);
+        }
+
+        $residue->delete();
+        $replacement->load('operations');
+
+        return ['replacement' => $replacement];
+    }
+
+    public function createFactor()
+    {
+        $operation = SurveyORM\Rule\Operation::findOrFail(Input::get('operation.id'));
+
+        $factor = new SurveyORM\Rule\Factor(Input::get('factor', []));
+
+        $class = Input::get('target.class');
+        $factor->target()->associate($class::find(Input::get('target.id')));
+        $factor = $operation->factor()->save($factor);
+
+        return ['factor' => $factor];
+    }
+
+    public function updateFactorTarget()
+    {
+        $factor = SurveyORM\Rule\Factor::findOrFail(Input::get('factor.id'));
+
+        $class = Input::get('target.class');
+        $factor->target()->associate($class::find(Input::get('target.id')));
+        $updated = $factor->save();
+
+        return ['updated' => $updated];
+    }
+
+    public function updateFactor()
+    {
+        $factor = SurveyORM\Rule\Factor::findOrFail(Input::get('factor.id'));
+
+        $updated = $factor->update(Input::get('factor'));
+
+        return ['updated' => $updated];
     }
 
     public function lockBook()

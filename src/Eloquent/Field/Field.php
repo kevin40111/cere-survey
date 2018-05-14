@@ -5,35 +5,19 @@ namespace Cere\Survey\Eloquent\Field;
 use Eloquent;
 use Cere\Survey\Eloquent as SurveyORM;
 
-class Field extends Eloquent {
-
-    use \Cere\Survey\Tree;
+class Field extends Eloquent
+{
+    protected $connection = 'survey';
 
     protected $table = 'survey_fields';
 
-    protected $connection = 'survey';
-
     public $timestamps = true;
 
-    protected $fillable = array('name', 'title', 'rules', 'unique', 'encrypt', 'isnull', 'readonly');
+    protected $fillable = ['name', 'title', 'rules', 'unique', 'encrypt', 'isnull', 'readonly'];
 
     protected $attributes = ['title' => '', 'name' => '', 'unique' => false, 'encrypt' => false, 'isnull' => false, 'readonly' => false];
 
     protected $appends = ['class'];
-
-    function __construct(array $attributes = array())
-    {
-        parent::__construct($attributes);
-
-        // $this->deleting(function($model) {
-        //     return $model->inTable->update(['construct_at' => \Carbon\Carbon::now()->toDateTimeString()]);
-        // });
-
-        // $this->saving(function($model) {
-        //     $rules_updated = $model->isDirty('rules') && $model->inTable->update(['construct_at' => \Carbon\Carbon::now()->toDateTimeString()]);
-        //     return $model->isDirty('rules') ? $rules_updated : true;
-        // });
-    }
 
     public function getClassAttribute()
     {

@@ -3,7 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateSurveyRules extends Migration {
+class CreateSurveyRuleSkipers extends Migration {
 
     /**
      * Run the migrations.
@@ -12,13 +12,11 @@ class CreateSurveyRules extends Migration {
      */
     public function up()
     {
-        Schema::create('survey_rules', function (Blueprint $table) {
+        Schema::create('survey_rule_skipers', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('expressions');
-            $table->string('effect_type', 50);
+            $table->integer('node_id');
+            $table->string('effect_type', 200);
             $table->integer('effect_id');
-            $table->integer('page_id');
-            $table->timestamps();
         });
     }
 
@@ -29,7 +27,7 @@ class CreateSurveyRules extends Migration {
      */
     public function down()
     {
-        Schema::drop('survey_rules');
+        Schema::drop('survey_rule_skipers');
     }
 
 }

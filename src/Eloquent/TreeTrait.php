@@ -1,13 +1,13 @@
 <?php
 
-namespace Cere\Survey;
+namespace Cere\Survey\Eloquent;
 
 use Illuminate\Database\Eloquent\Collection;
 use Cere\Survey\Eloquent\Node;
 use Cere\Survey\Eloquent\Question;
 use Cere\Survey\Eloquent\Answer;
 
-trait Tree
+trait TreeTrait
 {
     public function getPaths()
     {

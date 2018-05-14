@@ -5,9 +5,9 @@ namespace Cere\Survey\Eloquent;
 use Eloquent;
 use Plat\Eloquent\Upload;
 
-class Node extends Eloquent {
-
-    use \Cere\Survey\Tree;
+class Node extends Eloquent
+{
+    use TreeTrait;
 
     use PositionTrait;
 
@@ -23,11 +23,6 @@ class Node extends Eloquent {
 
     protected $appends = ['class'];
 
-    public function book()
-    {
-        return $this->hasOne('Cere\Survey\Eloquent\Book', 'id', 'book_id');
-    }
-
     public function parent()
     {
         return $this->morphTo();
@@ -35,7 +30,7 @@ class Node extends Eloquent {
 
     public function childrenNodes()
     {
-        return $this->morphMany('Cere\Survey\Eloquent\Node', 'parent');
+        return $this->morphMany(Node::class, 'parent');
     }
 
     public function questions()
@@ -53,43 +48,14 @@ class Node extends Eloquent {
         return self::class;
     }
 
-    public function childrenRule()
-    {
-        return $this->hasOne('Cere\Survey\Eloquent\Rule', 'expression', 'children_expression');
-    }
-
-    public function getChildrenExpressionAttribute()
-    {
-        $parameter = (object)[
-            'type' => 'question',
-            'question' => $this->id,
-        ];
-        $json = (object)['expression' => 'children', 'parameters' => [$parameter]];
-        return json_encode($json);
-    }
-
-    public function getChildrensAttribute()
-    {
-        if (!isset($this->attributes['childrens'])) {
-            $this->attributes['childrens'] = \Illuminate\Database\Eloquent\Collection::make([]);
-        }
-
-        return $this->attributes['childrens'];
-    }
-
     public function getTypeAttribute($value)
     {
         return $value;
-        return $this->types[$value];
     }
 
     protected static function boot()
     {
         parent::boot();
-
-        static::created(function($node) {
-
-        });
 
         static::deleted(function($node) {
 
@@ -100,24 +66,24 @@ class Node extends Eloquent {
         });
     }
 
-    public function rule()
+    public function skipers()
     {
-        return $this->morphOne(Rule::class, 'effect')->where('type', 'jump');
+        return $this->hasMany(Rule\Skiper::class);
     }
 
-    public function limitRule()
+    public function guarders()
     {
-        return $this->morphOne(Rule::class, 'effect')->where('type', 'limit');
+        return $this->hasMany(Rule\Guarder::class);
+    }
+
+    public function skiper()
+    {
+        return $this->morphOne(Rule\Skiper::class, 'effect');
     }
 
     public function images()
     {
         return $this->belongsToMany(Upload::class, 'image_node');
-    }
-
-    public function pageRules()
-    {
-        return $this->hasMany('Cere\Survey\Eloquent\Rule', 'page_id')->where('type', 'jump');
     }
 
     public function siblings()

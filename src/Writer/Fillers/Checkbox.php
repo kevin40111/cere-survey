@@ -8,16 +8,7 @@ class Checkbox extends Filler
 {
     public function set($question, $value)
     {
-        if ($value === '1' && Rule::answers($this->answers)->checkLimit($question)) {
-            $this->messages = ['已達選擇數量上限'];
-            return $this;
-        }
-
         $this->contents[$question->id] = $value;
-
-        if ($question->noneAboveRule()->exists() && $value === '1') {
-            $this->resetChecked($excepts = [$question->id]);
-        }
 
         if (in_array('1', $this->contents)) {
             $this->resetEmpty();
@@ -26,6 +17,8 @@ class Checkbox extends Filler
         }
 
         $this->syncAnswers();
+
+        $this->guard($question);
 
         $this->setRules($question);
 
@@ -51,7 +44,7 @@ class Checkbox extends Filler
 
     public function childrens($question)
     {
-        return $this->isChecked($question) ? $question->childrenNodes->load(['questions.rule', 'questions.noneAboveRule', 'answers.rule', 'rule', 'limitRule']) : [];
+        return $this->isChecked($question) ? $question->childrenNodes->load(['questions.skiper', 'answers.skiper', 'skiper']) : [];
     }
 
     private function resetChecked($excepts)
@@ -86,4 +79,26 @@ class Checkbox extends Filler
         return $value === '-8';
     }
 
+    protected function lessThan($guarder)
+    {
+        $amount = $this->node->questions->reduce(function ($amount, $question) {
+            return $amount += $this->contents[$question->id] === '1' ? 1 : 0;
+        }, 0);
+
+        if (! Rule::instance($guarder)->lessThan($amount)) {
+            $this->messages = ['已達選擇數量上限'];
+        }
+    }
+
+    protected function exclusion($guarder, $question)
+    {
+        $this->syncAnswers();
+        if (Rule::instance($guarder)->compare($this->answers)) {
+            if ($guarder->operations->first()->factor->target->id === $question->id) {
+                $this->resetChecked([$question->id]);
+            } else {
+                $this->contents[$guarder->operations->first()->factor->target->id] = '0';
+            }
+        }
+    }
 }
