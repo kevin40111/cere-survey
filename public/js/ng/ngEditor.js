@@ -790,7 +790,7 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                     </div>
                 </md-toolbar>
                 <md-content flex>
-                    <div ng-if="target.type === 'checkbox'">
+                    <div ng-if="target.type === 'checkbox' && target.guarders">
                         <div layout="column" ng-repeat="guarder in target.guarders">
                             <md-toolbar class="md-primary md-hue-1">
                                 <div class="md-toolbar-tools">
@@ -825,17 +825,23 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                 return $filter('filter')($scope.target.guarders, {method: method}).length === 0;
             }
 
-            if ($scope.target.skipers) {
-                $scope.target.skipers.forEach(function(skiper) {
-                    loadSkiper(skiper);
-                });
-            }
+            $http({method: 'POST', url: 'loadRulers', data:{node: $scope.target}})
+            .then(function(response) {
+                $scope.target.skipers = response.data.node.skipers;
+                $scope.target.guarders = response.data.node.guarders;
 
-            if ($scope.target.guarders) {
-                $scope.target.guarders.forEach(function(guarder) {
-                    loadGuarder(guarder);
-                });
-            }
+                if ($scope.target.skipers) {
+                    $scope.target.skipers.forEach(function(skiper) {
+                        loadSkiper(skiper);
+                    });
+                }
+
+                if ($scope.target.guarders) {
+                    $scope.target.guarders.forEach(function(guarder) {
+                        loadGuarder(guarder);
+                    });
+                }
+            });
 
             $scope.createSkiper = function(creater) {
                 $http({method: 'POST', url: 'createSkiper', data:{target: $scope.target}})

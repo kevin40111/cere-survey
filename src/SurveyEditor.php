@@ -165,6 +165,13 @@ trait SurveyEditor
         return ['moved' => $item->move(Input::get('offset'))];
     }
 
+    public function loadRulers()
+    {
+        $node = SurveyORM\Node::find(Input::get('node.id'));
+
+        return ['node' => $node->load('skipers', 'guarders')];
+    }
+
     public function loadSkiper()
     {
         $skiper = SurveyORM\Rule\Skiper::findOrFail(Input::get('skiper.id'))->load('operations');
