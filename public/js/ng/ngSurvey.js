@@ -135,7 +135,7 @@ angular.module('ngSurvey.directives', [])
         //require: '^surveyPage',
         template:  `
             <div>
-                <img ng-repeat="image in node.images" ng-src="/upload/get/{{image.serial}}" alt="Description" style="width:940px" />
+                <img ng-repeat="image in node.images" ng-src="upload/{{image.serial}}" alt="Description" style="width:940px" />
                 <md-card>
                     <md-card-title>
                         <md-card-title-text>

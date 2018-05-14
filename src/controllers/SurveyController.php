@@ -5,6 +5,7 @@ use Cere\Survey\Writer\WriterInterface;
 use Cere\Survey\Writer\Fill;
 use Cere\Survey\Writer\Rule;
 use Cere\Survey\Eloquent\Field\Field;
+use Plat\Files\Uploader;
 
 class SurveyController extends \BaseController {
     /**
@@ -274,5 +275,11 @@ class SurveyController extends \BaseController {
         }, []);
 
         return $answers;
+    }
+
+    public function getUpload($book_id, $serial)
+    {
+        $value = Crypt::decrypt($serial);
+        return Uploader::getFile($value);
     }
 }

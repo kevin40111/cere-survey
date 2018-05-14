@@ -11,6 +11,7 @@ Route::group(array('prefix' => 'survey'), function() {
     Route::post('{book_id}/getRule', 'SurveyController@getRule');
     Route::post('{book_id}/login', 'SurveyController@login');
     Route::get('{book_id}/surveyLogin', 'SurveyController@surveyLogin');
+    Route::get('{book_id}/upload/{key}', 'SurveyController@getUpload');
 });
 
 Route::group(array('prefix' => 'surveyDemo'), function() {
@@ -25,4 +26,5 @@ Route::group(array('prefix' => 'surveyDemo'), function() {
     Route::post('{book_id}/getDemoOption', 'SurveyController@getDemoOption');
     Route::get('{book_id}/cleanAnswers', 'SurveyController@cleanAnswers');
     Route::get('{book_id}/demoLogin', 'SurveyController@demoLogin');
+    Route::get('{book_id}/upload/{key}', 'SurveyController@getUpload');
 });
