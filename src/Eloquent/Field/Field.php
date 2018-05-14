@@ -7,9 +7,7 @@ use Cere\Survey\Eloquent as SurveyORM;
 
 class Field extends Eloquent
 {
-    protected $connection = 'survey';
-
-    protected $table = 'survey_fields';
+    protected $table = 'row_columns';
 
     public $timestamps = true;
 
