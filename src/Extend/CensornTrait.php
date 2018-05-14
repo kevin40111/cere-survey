@@ -81,6 +81,10 @@ trait CensornTrait
 
         $application->individual_status = Input::get('data');
 
+        if ($application->individual_status['apply'] == 2 || $application->individual_status['book'] == 2) {
+            $application->status = 2;
+        }
+
         $application->save();
 
         return $application;
