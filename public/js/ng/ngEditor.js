@@ -342,7 +342,7 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                         <md-icon md-svg-icon="clear" style="color:#ffffff"></md-icon>
                     </md-button>
                 </md-card-header>
-                <img ng-src=/upload/get/{{image.serial}} class="md-card-image" alt="image caption"/>
+                <img ng-src="getUpload?serial={{image.serial}}" class="md-card-image" alt="image caption"/>
             </md-card>
         `,
         controller: function($scope) {
