@@ -12,7 +12,8 @@ use Cere\Survey\Eloquent as SurveyORM;
 use Cere\Survey\Field\FieldComponent;
 use Cere\Survey\Field\FieldRepository;
 use Files;
-
+use Crypt;
+use Plat\Files\Uploader;
 
 trait SurveyEditor
 {
@@ -407,5 +408,11 @@ trait SurveyEditor
     {
         $this->file->book->update(['footer' => Input::get('footer')]);
         return ['footer' => $this->file->book->footer];
+    }
+
+    public function getUpload()
+    {
+        $value = Crypt::decrypt(Input::get('serial'));
+        return Uploader::getFile($value);
     }
 }
