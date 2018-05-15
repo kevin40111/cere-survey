@@ -32,7 +32,7 @@ class Checkbox extends Filler
         return $this->node->questions->filter(function ($question) {
             return $this->contents[$question->id] !== $this->original[$question->id];
         })->load(['childrenNodes.questions', 'childrenNodes.answers'])->map(function ($question) {
-            $isSkip = is_null($this->contents[$question->id]) ? false : $this->contents[$question->id] !== '1';
+            $isSkip = is_null($this->contents[$question->id]) ? true : $this->contents[$question->id] !== '1';
             return ['target' => $question, 'isSkip' => $isSkip];
         });
     }
