@@ -54,22 +54,9 @@ class SurveyServiceProvider extends ServiceProvider {
             $prefix = $this->app->make('router')->getCurrentRoute()->getPrefix();
             $book_id = $this->app->make('router')->input('book_id');
 
-            if ($prefix == 'surveyDemo') {
-
-                $repository = new SessionWriter($book_id);
-                if (!$repository->exist('answers')) {
-
-                    $questions = SurveyORM\Book::find($book_id)->getQuestions()->fetch('id')->all();
-
-                    $repository->increment(array_fill_keys($questions, NULL));
-                }
-            }
-
-            if ($prefix == 'survey') {
-                $book = SurveyORM\Book::find($book_id);
-                $user = new FieldUser($book);
-                $repository = new FieldWriter($book_id, $user);
-            }
+            $book = SurveyORM\Book::find($book_id);
+            $user = new FieldUser($book);
+            $repository = new FieldWriter($book_id, $user);
 
             return $repository;
         });

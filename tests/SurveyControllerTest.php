@@ -46,14 +46,6 @@ class SurveyControllerTest extends TestCase
         $this->assertViewHas('context');
     }
 
-    public function testDemoLogin()
-    {
-        $crawler = $this->client->request('GET', 'surveyDemo/' . $this->book->id . '/demo/demoLogin');
-
-        $this->assertTrue($this->client->getResponse()->isOk());
-        $this->assertViewHas('context');
-    }
-
     public function testCheckInRows()
     {
         //$crawler = $this->client->request('POST', 'survey/' . $this->book->id . '/demo/checkInRows', ['id' => 'g']);
