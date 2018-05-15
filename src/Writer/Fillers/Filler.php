@@ -97,7 +97,9 @@ abstract class Filler
 
     public function clean($question)
     {
-        $this->set($question, null);
+        if ($this->contents[$question->id] == '-8') {
+            $this->set($question, null);
+        }
     }
 
     public function skip($question)
