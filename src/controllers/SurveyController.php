@@ -52,16 +52,6 @@ class SurveyController extends \BaseController {
     }
 
     /**
-     * Display a page of the demo login.
-     *
-     * @return Response
-     */
-    public function demoLogin()
-    {
-        return View::make('survey::layout-survey')->nest('context', 'survey::auth.demologin-ng');
-    }
-
-    /**
      * Check if login user in population.
      *
      * @param  int  $book_id
@@ -228,43 +218,6 @@ class SurveyController extends \BaseController {
         $filler = Fill::answers($answers)->node($question->node);
 
         return ['nodes' => $filler->childrens($question)];
-    }
-
-    /**
-     * Clean demo answers .
-     *
-     * @param  int  $book_id
-     * @return Response
-     */
-    public function cleanAnswers($book_id)
-    {
-        $this->writer->decrement();
-
-        return Redirect::to('surveyDemo/'.$book_id.'/demo/page');
-    }
-
-    /**
-     * get demo options .
-     *
-     * @param  int  $book_id
-     * @return Response
-     */
-    public function getDemoOption($book_id)
-    {
-        $options = [];
-        foreach ($this->getExtBook($book_id)  as $extBook) {
-            $values = array_fetch($extBook->skiper->expressions[0]['conditions'], 'value');
-
-            foreach ($values  as $value) {
-                $option = [];
-                $option['ext_book_id'] = $extBook->id;
-                $option['organization_id'] = $value;
-                $option['name'] = \Plat\Project\OrganizationDetail::where('id',$value)->orderBy('year', 'desc')->select('name')->first()->name;
-                array_push($options,$option);
-            }
-        }
-
-        return ['options' => $options];
     }
 
     private function getAnswers($page, $fields)
