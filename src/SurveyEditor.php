@@ -83,7 +83,7 @@ trait SurveyEditor
             $parent['items']->find($root->id)->selected = true;
         }
 
-        return ['nodes' => $nodes, 'paths' => $root->getPaths(), 'parent' => $root->node ? $parent : null];
+        return ['nodes' => $nodes->load('childrenNodes.questions'), 'paths' => $root->getPaths(), 'parent' => $root->node ? $parent : null];
     }
 
     public function createNode()
@@ -94,7 +94,7 @@ trait SurveyEditor
 
         $node = $this->editor->createNode($parent, Input::get('attributes'));
 
-        return ['node' => $node];
+        return ['node' => $node->load('childrenNodes.questions')];
     }
 
     public function createQuestion()
