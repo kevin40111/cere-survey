@@ -65,10 +65,8 @@ angular.module('ngSurvey.directives', [])
                     <md-button ng-repeat="url in urls" class="md-raised md-primary" href="{{url}}" target="_blank" aria-label="填寫加掛題本" >
                         填寫加掛題本
                     </md-button>
-                    <md-card-title>
-                        <md-card-title-text class="ql-editor" ng-bind-html="trustAsHtml(book.footer)"></md-card-title-text>
-                    </md-card-title>
                 </md-card>
+                <div class="ql-editor" ng-bind-html="trustAsHtml(book.footer)"></div>
             </div>
         `,
         controller: function($scope, $sce) {
