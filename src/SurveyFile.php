@@ -42,7 +42,7 @@ class SurveyFile extends CommFile
 
     public function get_views()
     {
-        return ['open', 'demo', 'application','confirm', 'extendHook', 'browser', 'surveyTime', 'loginCondition', 'contract'];
+        return ['open', 'application','confirm', 'extendHook', 'browser', 'surveyTime', 'loginCondition', 'contract'];
     }
 
     public static function tools()

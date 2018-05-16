@@ -19,6 +19,13 @@ class FieldUser
         $this->id = $this->session->encrypt();
     }
 
+    public static function demo($book)
+    {
+        $session = SurveySession::create($book->id, json_encode([]));
+
+        return new static($book);
+    }
+
     public function login($input)
     {
         $this->logout();

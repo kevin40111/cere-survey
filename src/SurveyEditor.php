@@ -14,6 +14,7 @@ use Cere\Survey\Field\FieldRepository;
 use Files;
 use Crypt;
 use Plat\Files\Uploader;
+use Redirect;
 
 trait SurveyEditor
 {
@@ -25,11 +26,6 @@ trait SurveyEditor
     public function open()
     {
         return 'survey::editor-ng';
-    }
-
-    public function demo()
-    {
-        return 'survey::demo-ng';
     }
 
     public function browser()
@@ -414,5 +410,20 @@ trait SurveyEditor
     {
         $value = Crypt::decrypt(Input::get('serial'));
         return Uploader::getFile($value);
+    }
+
+    public function demo()
+    {
+        $user = Survey\Auth\FieldUser::demo($this->book);
+
+        $writer = new Survey\Writer\FieldWriter($this->book->id, $user);
+
+        if (! $writer->exist()) {
+            $writer->increment(['page_id' => Input::get('page')]);
+        } else {
+            $writer->setPage(Input::get('page'));
+        }
+
+        return Redirect::to('survey/' . $this->book->id . '/page');
     }
 }
