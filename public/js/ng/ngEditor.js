@@ -76,7 +76,6 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                         <span flex></span>
                         <div ng-transclude></div>
                         <md-button class="md-icon-button md-primary" ng-if="paths.length > 1" href="demo?page={{paths[1].id}}" target="_blank"><md-tooltip md-direction="bottom">預覽</md-tooltip><md-icon>visibility</md-icon></md-button>
-                        <md-button class="md-icon-button md-primary" href="exportSheet" target="_blank"><md-tooltip md-direction="bottom">下載填答值</md-tooltip><md-icon>file_download</md-icon></md-button>
                     </div>
                 </md-toolbar>
                 <md-divider></md-divider>
