@@ -8,13 +8,11 @@
             <md-button class="md-raised md-primary" ng-click="changeStep('nextStep')" style="font-size: 18px">完成編輯</md-button>
         </div>
     </survey-book>
-    <node-browser ng-if="book.lock" book="book.id"></node-browser>
 </div>
 
 <script src="/js/angular-file-upload.min.js"></script>
 <script src="/packages/cere/survey/js/ng/ngEditor.js"></script>
 <script src="/packages/cere/survey/js/ng/surveyRule.js"></script>
-<script src="/packages/cere/survey/js/ng/ngBrowser.js"></script>
 <script src="/packages/cere/survey/js/quill.min.js"></script>
 <script src="/packages/cere/survey/js/ng-quill.min.js"></script>
 
@@ -34,7 +32,6 @@
 <script>
 app.requires.push('angularFileUpload');
 app.requires.push('ngEditor');
-app.requires.push('ngBrowser');
 
 app.controller('editorController', function($http, $scope, $sce, $interval, $filter, $mdSidenav) {
     $scope.getBook = function() {

@@ -28,19 +28,9 @@ trait SurveyEditor
         return 'survey::editor-ng';
     }
 
-    public function browser()
-    {
-        return 'survey::browser-ng';
-    }
-
     public function surveyTime()
     {
         return 'survey::auth.surveyTime-ng';
-    }
-
-    public function questionBrowser()
-    {
-        return  View::make('survey::template_question_browser');
     }
 
     public function loginCondition()
@@ -51,16 +41,6 @@ trait SurveyEditor
     public function getBook()
     {
         return ['book' => $this->book];
-    }
-
-    public function getBrowserQuestions()
-    {
-        $questions = $this->editor->getPages(Input::get('book_id'))->reduce(function ($carry, $page) {
-            $page['questions'][0]->page = ['rule' => $page['rule']];
-            return array_merge($carry, $page['questions']->load(['node.answers.rule', 'rule', 'node.rule'])->all());
-        }, []);
-
-        return ['questions' => $questions];
     }
 
     public function getNodes()
