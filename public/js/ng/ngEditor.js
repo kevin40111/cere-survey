@@ -81,31 +81,21 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                 <md-divider></md-divider>
                 <div layout="column" layout-align="start center" style="height:100%;overflow-y:scroll">
                     <div style="width:960px">
-                        <md-card ng-if="parent">
-                            <md-card-header md-colors="{background: 'grey'}">
-                                <div flex layout="row" layout-align="start center">
-                                    <div>
-                                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="description"></md-icon>
-                                    </div>
-                                    <div style="margin: 0 0 0 16px">{{parent.title}}</div>
-                                    <span flex></span>
-                                </div>
+                        <md-card ng-if="paths.length > 1">
+                            <md-card-header ng-if="paths[paths.length-1].type !== 'page'">
+                                <md-icon>call_merge</md-icon>
+                                <md-card-header-text style="margin: 0 0 0 16px">{{parent.title}}</md-card-header-text>
                             </md-card-header>
-                            <md-card-content>
-                                <div>
-                                    <md-list>
-                                        <md-list-item ng-repeat="item in parent.items" md-colors="{'background-color': item.selected ? 'grey': 'grey-A100'}"">
-                                            <div flex layout="row" layout-align="start center">
-                                                選項{{$index+1}}:{{item.title}}
-                                                <span flex></span>
-                                                <div>
-                                                <md-button class="md-raised md-warn md-button md-ink-ripple" ng-if="item.selected" ng-click="getNodes(paths[paths.length-2])">返回上一層</md-button>
-                                                </div>
-                                            </div>
-                                        </md-list-item>
-                                    </md-list>
-                                </div>
+                            <md-card-content ng-if="paths[paths.length-1].type !== 'page'">
+                                <md-list>
+                                    <md-list-item ng-repeat="item in parent.items" md-colors="{backgroundColor: item.selected ? 'grey-100': 'grey-A100'}"">
+                                        <p>{{$index+1}}. {{item.title}}</p>
+                                    </md-list-item>
+                                </md-list>
                             </md-card-content>
+                            <md-card-actions>
+                                <md-button class=" md-warn" ng-click="getNodes(paths[paths.length-2])">返回上一層</md-button>
+                            </md-card-actions>
                         </md-card>
                         <md-card ng-if="nodes.length === 0">
                             <md-card-actions>
@@ -113,7 +103,7 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                                     <md-button aria-label="新增問題" ng-click="$mdMenu.open($event)">新增問題</md-button>
                                     <md-menu-content width="3">
                                         <md-menu-item ng-repeat="type in types">
-                                            <md-button ng-click="addNode(type, 0)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
+                                            <md-button ng-click="addNode(type, 0)"><md-icon>{{type.icon}}</md-icon>{{type.title}}</md-button>
                                         </md-menu-item>
                                     </md-menu-content>
                                 </md-menu>
@@ -125,7 +115,7 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                             <md-card-header md-colors="{background: 'blue'}">
                                 <div flex layout="row" layout-align="start center">
                                     <div>
-                                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="info-outline"></md-icon>
+                                        <md-icon md-colors="{color: 'grey-A100'}">info_outline</md-icon>
                                     </div>
                                     <div style="margin: 0 0 0 16px">底頁說明欄</div>
                                     <span flex></span>
@@ -226,7 +216,7 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
         },
         template:  `
             <md-card>
-                <md-card-header md-colors="{background: 'indigo'}">
+                <md-card-header>
                     <question-bar>第 {{index+1}} 頁</question-bar>
                 </md-card-header>
                 <md-card-content>
@@ -269,7 +259,7 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                 <div ng-repeat="image in node.images">
                     <banner-image node="node" image="image" index=$index></banner-image>
                 </div>
-                <md-card-header md-colors="{background: 'indigo'}">
+                <md-card-header>
                     <question-bar>{{type.title}}</question-bar>
                 </md-card-header>
                 <md-card-content>
@@ -288,7 +278,7 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                         <md-button aria-label="新增" ng-click="$mdOpenMenu($event)">新增</md-button>
                         <md-menu-content width="3">
                         <md-menu-item ng-repeat="type in types">
-                            <md-button ng-click="addNode(type, index+1)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
+                            <md-button ng-click="addNode(type, index+1)"><md-icon>{{type.icon}}</md-icon>{{type.title}}</md-button>
                         </md-menu-item>
                         </md-menu-content>
                     </md-menu>
@@ -381,10 +371,10 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
         },
         template:`
             <md-card>
-                <md-card-header md-colors="{background: 'teal'}">
-                <span flex="" class="flex"></span>
-                <md-button class="md-icon-button" aria-label="刪除" ng-click="removeBanner(ndoe)">
-                        <md-icon md-svg-icon="clear" style="color:#ffffff"></md-icon>
+                <md-card-header>
+                    <span flex></span>
+                    <md-button class="md-icon-button" aria-label="刪除" ng-click="removeBanner(ndoe)">
+                        <md-icon>clear</md-icon>
                     </md-button>
                 </md-card-header>
                 <img ng-src="getUpload?serial={{image.serial}}" class="md-card-image" alt="image caption"/>
@@ -408,36 +398,30 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
         template: `
             <div flex layout="row" layout-align="start center">
                 <div>
-                    <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="{{type.icon}}"></md-icon>
+                    <md-icon>{{type.icon}}</md-icon>
                 </div>
                 <div style="margin: 0 0 0 16px"><ng-transclude></ng-transclude></div>
                 <span flex></span>
 
                 <div>
                     <label class="md-button md-icon-button" ng-if="node.type != 'page'" for="{{::$id}}">
-                        <md-icon md-colors="{color: 'grey-A100'}">add_photo_alternate</md-icon>
+                        <md-icon>add_photo_alternate</md-icon>
                         <input id="{{::$id}}" style="display:none" type="file" multiple nv-file-select uploader="uploader" />
                     </label>
-                    <div class="ui input" ng-if="node.open.moving">
-                        <input type="text" ng-model="settedPage" placeholder="輸入移動到的頁數..." />
-                        <md-button class="md-icon-button no-animate" ng-disabled="node.saving" aria-label="移動到某頁" ng-click="setPage(node, settedPage)">
-                            <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="send"></md-icon>
-                        </md-button>
-                    </div>
                     <md-button class="md-icon-button" aria-label="上移" ng-disabled="first" ng-click="move(node, -1)">
                         <md-tooltip md-direction="bottom">上移</md-tooltip>
-                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="arrow-drop-up"></md-icon>
+                        <md-icon>arrow_drop_up</md-icon>
                     </md-button>
                     <md-button class="md-icon-button" aria-label="下移" ng-disabled="last" ng-click="move(node, 1)">
                         <md-tooltip md-direction="bottom">下移</md-tooltip>
-                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="arrow-drop-down"></md-icon>
+                        <md-icon>arrow_drop_down</md-icon>
                     </md-button>
-                    <md-button class="md-icon-button" md-colors="{backgroundColor: node.skipers.length > 0 ? 'blue-300' : 'primary'}" aria-label="設定" ng-disabled="node.saving" ng-click="toggleSidenavRight(node)">
+                    <md-button class="md-icon-button" aria-label="設定" ng-disabled="node.saving" ng-click="toggleSidenavRight(node)">
                         <md-tooltip md-direction="bottom">設定</md-tooltip>
-                        <md-icon md-colors="{color: 'grey-A100'}">settings</md-icon>
+                        <md-icon md-colors="{color: node.skipers.length > 0 ? 'orange-300' : 'grey'}">settings</md-icon>
                     </md-button>
                     <md-button class="md-icon-button" aria-label="刪除" ng-disabled="node.saving || (node.type === 'page' && first && last)" ng-click="removeNode(node)">
-                        <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="delete"></md-icon>
+                        <md-icon>delete</md-icon>
                     </md-button>
                 </div>
             </div>
@@ -484,17 +468,17 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                     <md-button class="md-secondary"  ng-if="types[node.type].editor.answerChilderns"  aria-label="設定子題" ng-click="getNodes(answer)">設定子題</md-button>
                     <md-button class="md-secondary md-icon-button" ng-click="move(answer, -1)" aria-label="上移" ng-disabled="$first">
                         <md-tooltip md-direction="left">上移</md-tooltip>
-                        <md-icon md-svg-icon="arrow-drop-up"></md-icon>
+                        <md-icon>arrow_drop_up</md-icon>
                     </md-button>
                     <md-button class="md-secondary md-icon-button" ng-click="move(answer, 1)" aria-label="下移" ng-disabled="$last">
                         <md-tooltip md-direction="left">下移</md-tooltip>
-                        <md-icon md-svg-icon="arrow-drop-down"></md-icon>
+                        <md-icon>arrow_drop_down</md-icon>
                     </md-button>
                     <md-button ng-if="false" md-colors="{backgroundColor: answer.rule ? 'blue-300' : 'grey-A100'}" class="md-secondary md-icon-button" ng-click="toggleSidenavRight(answer)" aria-label="設定限制">
                         <md-tooltip>設定限制</md-tooltip>
                         <md-icon md-colors="{color: answer.rule ? 'grey-A100' : 'grey-600'}">visibility_off</md-icon>
                     </md-button>
-                    <md-icon class="md-secondary" aria-label="刪除選項" md-svg-icon="delete" ng-click="removeAnswer(answer)"></md-icon>
+                    <md-icon class="md-secondary" aria-label="刪除選項" ng-click="removeAnswer(answer)">clear</md-icon>
                 </md-list-item>
                 <md-list-item ng-if="node.answers.length < types[node.type].editor.answers" ng-click="createAnswer()">
                     <p md-colors="{color:'grey'}">新增選項</p>
@@ -559,17 +543,17 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                     <md-button class="md-secondary" ng-if="types[node.type].editor.questions.childrens" aria-label="設定子題" ng-click="getNodes(question)">設定子題</md-button>
                     <md-button class="md-secondary md-icon-button" ng-click="move(question, -1)" aria-label="上移" ng-disabled="$first">
                         <md-tooltip md-direction="left">上移</md-tooltip>
-                        <md-icon md-svg-icon="arrow-drop-up"></md-icon>
+                        <md-icon>arrow_drop_up</md-icon>
                     </md-button>
                     <md-button class="md-secondary md-icon-button" ng-click="move(question, 1)" aria-label="下移" ng-disabled="$last">
                         <md-tooltip md-direction="left">下移</md-tooltip>
-                        <md-icon md-svg-icon="arrow-drop-down"></md-icon>
+                        <md-icon>arrow_drop_down</md-icon>
                     </md-button>
                     <md-button ng-if="false" md-colors="{backgroundColor: question.rule ? 'blue-300' : 'grey-A100'}" class="md-secondary md-icon-button" ng-click="toggleSidenavRight(question)" aria-label="設定限制" ng-if="(node.type == 'scale') || (node.type == 'checkbox')">
                         <md-tooltip>設定限制</md-tooltip>
                         <md-icon md-colors="{color: question.rule ? 'grey-A100' : 'grey-600'}">visibility_off</md-icon>
                     </md-button>
-                    <md-icon class="md-secondary" aria-label="刪除子題" md-svg-icon="delete" ng-click="removeQuestion(question)"></md-icon>
+                    <md-icon class="md-secondary" aria-label="刪除子題" ng-click="removeQuestion(question)">clear</md-icon>
                 </md-list-item>
                 <md-list-item ng-if="node.questions.length < types[node.type].editor.questions.amount" ng-click="createQuestion()">
                     <p md-colors="{color:'grey'}">新增{{types[node.type].editor.questions.text}}</p>
