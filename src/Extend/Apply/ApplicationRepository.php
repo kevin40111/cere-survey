@@ -9,7 +9,7 @@ class ApplicationRepository
 {
     private $steps = [
         ['view' => 'survey::extend.apply.editor', 'next_method' => 'checkBookHasQuestion', 'pre_method' => 'noCheck'],
-        ['view' => 'survey::extend.apply.book_finish', 'next_method' => 'setBookFinish', 'pre_method' => 'noCheck'],
+        ['view' => 'survey::extend.apply.book_finish', 'next_method' => 'setBookFinish', 'pre_method' => 'setBookEdit'],
         ['view' => 'survey::extend.apply.fields', 'next_method' => 'checkAppliedFields', 'pre_method' => 'setBookEdit'],
         ['view' => 'survey::extend.apply.audit', 'next_method' => 'noCheck', 'pre_method' => 'noCheck'],
     ];
@@ -144,7 +144,7 @@ class ApplicationRepository
 
     private function setBookEdit()
     {
-        $book = $this->application->hook->book;
+        $book = $this->application->book;
 
         $book->lock = false;
 
