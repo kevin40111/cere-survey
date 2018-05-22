@@ -104,7 +104,9 @@ class Editor
             $subNode->deleteNode();
         });
 
-        return $this->filed->remove_column($question->field->id);
+        $this->filed->remove_column($question->field->id);
+
+        return $question->delete();
     }
 
     public function removeAnswer($answer_id)
