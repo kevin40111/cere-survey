@@ -17,7 +17,7 @@ class Application extends Ruler
 
     public $timestamps = true;
 
-    protected $fillable = ['book_id', 'member_id', 'extension', 'status', 'fields', 'updated_at', 'step', 'created_at', 'deleted_at', 'deleted_by', 'individual_status'];
+    protected $fillable = ['book_id', 'member_id', 'extension', 'status', 'fields', 'updated_at', 'step', 'created_at', 'deleted_at', 'deleted_by', 'individual_status', 'used'];
 
     protected $attributes = ['extension' => false, 'status' => 0];
 

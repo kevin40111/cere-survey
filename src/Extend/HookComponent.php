@@ -5,6 +5,7 @@ namespace Cere\Survey\Extend;
 use User;
 use Files;
 use ShareFile;
+use Plat\Member;
 use Plat\Files\CommFile;
 use Cere\Survey\Extend\ApplySettingTrait;
 use Cere\Survey\Extend\CensornTrait;
@@ -67,6 +68,10 @@ class HookComponent extends CommFile
     {
         Input::replace(['fileInfo' => ['type' => 31, 'title' => $this->hook->title . ' 加掛題本']]);
 
+        $this->doc->requesteds()->where('created_by', $this->user->id)->delete();
+
+        $member = $this->user->members()->logined()->orderBy('logined_at', 'desc')->first();
+
         $folderComponent = new FolderComponent($this->doc->folder->isFile, $this->user);
 
         $folderComponent->setDoc($this->doc->folder);
@@ -77,17 +82,15 @@ class HookComponent extends CommFile
 
         $book = $component->isFile->book()->create(['title' => $component->isFile->title, 'lock' => false]);
 
-        $member = $this->user->members()->logined()->orderBy('logined_at', 'desc')->first();
+        $application = $this->hook->applications()->where('member_id', $member->id)->first();
 
-        ApplicationRepository::create($this->hook, $book, $member);
-
-        $this->doc->requesteds()->where('created_by', $this->user->id)->delete();
+        ApplicationRepository::instance($application)->update($book ,['book_id' => $book->id, 'used' => true], $member);
 
         RequestFile::updateOrCreate([
             'target' => 'user',
-            'target_id' => 1,
+            'target_id' => $member->user->id,
             'doc_id' => $component->id,
-            'created_by' => $this->user->id,
+            'created_by' => $member->user->id,
             'disabled' => false,
         ], [
             'description' => $component->isFile->title . ' 加掛申請'
@@ -98,10 +101,15 @@ class HookComponent extends CommFile
 
     public function invite()
     {
-        foreach (Input::get('users') as $user_id) {
+        foreach (Input::get('members') as $member_id) {
+
+            $member = Member::find($member_id);
+
+            $this->hook->applications()->create(['hook_id' => $this->hook->id, 'used' => false, 'member_id' => $member_id]);
+
             RequestFile::updateOrCreate([
                 'target' => 'user',
-                'target_id' => $user_id,
+                'target_id' => $member->user->id,
                 'doc_id' => $this->doc->id,
                 'created_by' => $this->user->id,
                 'disabled' => false,

@@ -22,6 +22,7 @@ class CreateSurveyExtendApplications extends Migration {
             $table->int('step')->default(0);
             $table->text('fields');
             $table->text('individual_status');
+            $table->boolean('used');
             $table->timestamps();
             $table->softDeletes();
         });

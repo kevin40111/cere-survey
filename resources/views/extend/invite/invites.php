@@ -15,6 +15,7 @@
                     <th>
                         <md-button ng-click="toggleAll()" class="md-raised md-primary">全選</md-button>
                     </th>
+                    <th>同意書狀態</th>
                     <th>邀請狀態</th>
                     <th>編號</th>
                     <th>學校</th>
@@ -31,8 +32,13 @@
                         </md-checkbox>
                     </td>
                     <td>
+                        <span ng-if="user.application.used" style="color:green">已同意</span>
+                        <span ng-if="!user.application.used" style="color:red">未同意</span>
+                    </td>
+                    <td>
                         <span ng-if="user.hasRequested" style="color:green">已邀請</span>
                         <span ng-if="!user.hasRequested" style="color:red">未邀請</span>
+                    </td>
                     <td>
                         {{user.id}}
                     </td>
@@ -76,11 +82,11 @@ app.controller('inviteCtrl', function($scope, $http, $filter, $mdDialog, $timeou
     }
 
     $scope.sendInvite = function() {
-        var users = $filter('filter')($scope.users, {selected: true}).map(function(user){
-            return user.id;
+        var members = $filter('filter')($scope.users, {selected: true}).map(function(user){
+            return user.members[0].id;
         });
 
-        $http({method: 'POST', url: 'invite', data:{'users' :  users}})
+        $http({method: 'POST', url: 'invite', data:{'members' :  members}})
             .success(function(data) {
                 $mdToast.show(
                   $mdToast.simple()
