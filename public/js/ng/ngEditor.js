@@ -553,6 +553,7 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
         template:  `
             <md-list>
                 <md-list-item ng-repeat="question in node.questions" ng-class="[{deleting: question.deleting}, question.move]">
+                    <span style="margin-right: 10px" ng-if="types[node.type].editor.questions.amount > 1">{{$index+1}}. </span>
                     <p class="ui transparent fluid input" ng-class="{loading: question.saving}">
                         <input type="text" placeholder="輸入{{types[node.type].editor.questions.text}}" ng-model="question.title" ng-model-options="saveTitleNgOptions" ng-change="saveQuestionTitle(question)"/>
                     </p>
