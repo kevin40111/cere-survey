@@ -120,7 +120,8 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                                 </md-menu>
                             </md-card-actions>
                         </md-card>
-                        <survey-node ng-class="[{deleting: node.deleting}, node.move]" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
+                        <survey-node ng-if="paths.length > 1" ng-class="[{deleting: node.deleting}, node.move]" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-node>
+                        <survey-page ng-if="paths.length === 1" ng-class="[{deleting: node.deleting}, node.move]" ng-repeat="node in nodes" node="node" index="$index" first="$first" last="$last"></survey-page>
                         <md-card ng-if="paths.length == 1">
                             <md-card-header md-colors="{background: 'blue'}">
                                 <div flex layout="row" layout-align="start center">
@@ -204,6 +205,55 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
     };
 })
 
+.directive('surveyPage', function(editorFactory) {
+    return {
+        restrict: 'E',
+        replace: true,
+        transclude: false,
+        scope: {
+            node: '=',
+            index: '=',
+            first: '=',
+            last: '='
+        },
+        require: '^surveyBook',
+        link: function(scope, iElement, iAttrs, surveyBookCtrl) {
+            scope.addNode = surveyBookCtrl.addNode;
+            scope.removeNode = surveyBookCtrl.removeNode;
+            scope.getNodes = surveyBookCtrl.getNodes;
+            scope.move = surveyBookCtrl.move;
+            scope.toggleSidenavRight = surveyBookCtrl.toggleSidenavRight;
+            scope.type = editorFactory.types['page'];
+        },
+        template:  `
+            <md-card>
+                <md-card-header md-colors="{background: 'indigo'}">
+                    <question-bar>第 {{index+1}} 頁</question-bar>
+                </md-card-header>
+                <md-card-content>
+                    <div ng-if="node.children_nodes.length === 0">尚未新增任何題目</div>
+                    <p md-truncate ng-repeat="children in node.children_nodes | limitTo:5">
+                        {{children.title | htmlToPlaintext}}
+                        <span ng-if="children.questions.length === 1">{{children.questions[0].title}}</span>
+                    </p>
+                    <div ng-if="node.children_nodes.length > 5">...</div>
+                </md-card-content>
+                <md-card-actions>
+                    <md-button aria-label="新增一頁" ng-click="addNode(type, index+1)">新增一頁</md-button>
+                    <md-button ng-click="getNodes(node)">編輯此頁</md-button>
+                    <md-button href="demo?page={{node.id}}" target="_blank">預覽</md-button>
+                </md-card-actions>
+            </md-card>
+        `
+    };
+})
+
+.filter('htmlToPlaintext', function() {
+    return function(text) {
+        return angular.element(text).text();
+    };
+})
+
 .directive('surveyNode', function(editorFactory) {
     return {
         restrict: 'E',
@@ -221,7 +271,7 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                     <banner-image node="node" image="image" index=$index></banner-image>
                 </div>
                 <md-card-header md-colors="{background: 'indigo'}">
-                    <question-bar></question-bar>
+                    <question-bar>{{type.title}}</question-bar>
                 </md-card-header>
                 <md-card-content>
                     <md-input-container class="md-block" ng-if="type.editor.title">
@@ -238,13 +288,11 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                     <md-menu>
                         <md-button aria-label="新增" ng-click="$mdOpenMenu($event)">新增</md-button>
                         <md-menu-content width="3">
-                        <md-menu-item ng-repeat="type in getTypesArray()">
+                        <md-menu-item ng-repeat="type in types">
                             <md-button ng-click="addNode(type, index+1)"><md-icon md-svg-icon="{{type.icon}}"></md-icon>{{type.title}}</md-button>
                         </md-menu-item>
                         </md-menu-content>
                     </md-menu>
-                    <md-button ng-if="type.editor.enter" ng-click="getNodes(node)">編輯此頁</md-button>
-                    <md-button ng-if="type.editor.enter" href="demo?page={{node.id}}" target="_blank">預覽</md-button>
                 </md-card-actions>
                 <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
             </md-card>
@@ -260,6 +308,7 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
         controller: function($scope, $timeout) {
 
             var pendingDebounce = null;
+            $scope.types = editorFactory.typesInPage;
 
             $scope.contentChanged = function (editor, node) {
                 $timeout.cancel(pendingDebounce);
@@ -268,10 +317,6 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                 }, 2000);
             }
             $scope.type = editorFactory.types[$scope.node.type];
-
-            $scope.getTypesArray = function() {
-                return $scope.node.type == 'page' ? [editorFactory.types['page']] : editorFactory.typesInPage;
-            };
 
             $scope.saveNodeTitle = function(node) {
                 editorFactory.ajax('saveNodeTitle', {node: node}, node).then(function(response) {
@@ -360,14 +405,13 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
     return {
         restrict: 'E',
         replace: true,
-        transclude: false,
+        transclude: true,
         template: `
             <div flex layout="row" layout-align="start center">
                 <div>
                     <md-icon md-colors="{color: 'grey-A100'}" md-svg-icon="{{type.icon}}"></md-icon>
                 </div>
-                <div style="margin: 0 0 0 16px"><span ng-if="type.editor.enter">第 {{index+1}}</span> {{type.title}}</div>
-
+                <div style="margin: 0 0 0 16px"><ng-transclude></ng-transclude></div>
                 <span flex></span>
 
                 <div>
