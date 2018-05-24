@@ -272,4 +272,40 @@ angular.module('surveyRule', [])
             }
         }
     }
+})
+
+.directive('ruleGuardTextLength', function() {
+    return {
+        restrict: 'E',
+        replace: true,
+        transclude: false,
+        scope: {
+            target: '='
+        },
+        template: `
+            <div layout-align="start start" layout="column" style="margin: 10px; padding: 10px">
+                <md-input-container ng-repeat="question in questions">
+                    <label>{{question.title}}</label>
+                    <md-progress-linear md-mode="indeterminate" ng-disabled="! question.saving"></md-progress-linear>
+                    <input type="number" min="1" max="255" ng-model="question.guardLengthFactor.value" ng-model-options="{updateOn: 'blur'}" ng-change="updateGuardTextLength(question)">
+                </md-input-container>
+
+            </div>
+        `,
+        controller: function($scope, $http, $filter) {
+
+            $http({method: 'POST', url: 'loadGuardTextLength', data:{questions: $scope.target.questions}})
+            .then(function(response) {
+                $scope.questions = response.data.questions;
+            });
+
+            $scope.updateGuardTextLength = function(question) {
+                question.saving = true;
+                $http({method: 'POST', url: 'updateFactor', data:{factor: question.guardLengthFactor}})
+                .then(function(response) {
+                    question.saving = ! response.data.updated;
+                });
+            }
+        }
+    };
 });

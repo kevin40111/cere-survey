@@ -805,6 +805,14 @@ angular.module('ngEditor.directives', ['ngQuill', 'surveyRule'])
                         <md-button ng-if="isEnable('lessThan')" md-colors="{background: 'green'}" ng-click="createGuarder('<=', 'lessThan', 2)" aria-label="最多勾選數量">最多勾選數量</md-button>
                         <md-button ng-if="isEnable('exclusion')" md-colors="{background: 'green'}" ng-click="createGuarder('==', 'exclusion', 1)" aria-label="以上皆非">以上皆非</md-button>
                     </div>
+                    <div ng-if="target.type === 'text'">
+                        <md-toolbar class="md-primary md-hue-1">
+                            <div class="md-toolbar-tools">
+                                <h3 md-truncate flex>填答字數上限</h3>
+                            </div>
+                        </md-toolbar>
+                        <rule-guard-text-length target="target"></rule-guard-text-length>
+                    </div>
                     <div layout="column" ng-repeat="skiper in target.skipers">
                         <md-toolbar class="md-primary md-hue-1">
                             <div class="md-toolbar-tools">

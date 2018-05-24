@@ -93,6 +93,10 @@ abstract class Filler
         $this->node->guarders->sortBy('priority')->each(function ($guarder) use ($question) {
             call_user_func([$this, $guarder->method], $guarder, $question);
         });
+
+        $question->guarders->sortBy('priority')->each(function ($guarder) use ($question) {
+            call_user_func([$this, $guarder->method], $guarder, $question);
+        });
     }
 
     public function clean($question)

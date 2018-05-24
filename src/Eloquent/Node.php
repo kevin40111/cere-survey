@@ -73,7 +73,7 @@ class Node extends Eloquent
 
     public function guarders()
     {
-        return $this->hasMany(Rule\Guarder::class);
+        return $this->morphMany(Rule\Guarder::class, 'survey_rule_guarder', 'target_type', 'target_id');
     }
 
     public function skiper()

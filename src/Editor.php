@@ -56,11 +56,19 @@ class Editor
 
         $question = new Question($attributes);
 
-        $question->node()->associate(SurveyORM\Node::find($node_id));
+        $node = SurveyORM\Node::find($node_id);
+
+        $question->node()->associate($node);
 
         $question->field()->associate($column);
 
         $question->save();
+
+        if ($node->type === 'text') {
+            $guarder = $this->createGuarder($question, ['method' => 'maxLength', 'priority' => 1]);
+            $operation = $this->createOperation($guarder, '<=');
+            $this->createFactor($operation, ['value' => 20], $question);
+        }
 
         return $question;
     }
@@ -196,5 +204,32 @@ class Editor
             'message' => $result['message'],
             'images' => SurveyORM\Node::find($node_id)->images()->get(),
         ];
+    }
+
+    public function createGuarder($target, $attributes)
+    {
+        $guarder = new SurveyORM\Rule\Guarder($attributes);
+
+        $guarder->target()->associate($target);
+
+        $guarder->save();
+
+        return $guarder;
+    }
+
+    public function createOperation($guarder, $operator)
+    {
+        return $guarder->operations()->create(['operator' => $operator]);
+    }
+
+    public function createFactor($operation, $attributes, $target)
+    {
+        $factor = new SurveyORM\Rule\Factor($attributes);
+
+        $factor->target()->associate($target);
+
+        $factor = $operation->factor()->save($factor);
+
+        return $factor;
     }
 }

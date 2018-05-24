@@ -213,15 +213,11 @@ trait SurveyEditor
 
     public function createGuarder()
     {
-        $node = SurveyORM\Node::find(Input::get('target.id'));
+        $class = Input::get('target.class');
+        $target = $class::find(Input::get('target.id'));
 
-        $guarder = new SurveyORM\Rule\Guarder(Input::get('guarder'));
-
-        $guarder->node()->associate($node);
-
-        $guarder->save();
-
-        $guarder->operations()->create(['operator' =>  Input::get('operator')]);
+        $guarder = $this->editor->createGuarder($target, Input::get('guarder'));
+        $this->editor->createOperation($guarder, Input::get('operator'));
 
         return ['guarder' => $guarder];
     }
@@ -297,11 +293,10 @@ trait SurveyEditor
     {
         $operation = SurveyORM\Rule\Operation::findOrFail(Input::get('operation.id'));
 
-        $factor = new SurveyORM\Rule\Factor(Input::get('factor', []));
-
         $class = Input::get('target.class');
-        $factor->target()->associate($class::find(Input::get('target.id')));
-        $factor = $operation->factor()->save($factor);
+        $target = $class::find(Input::get('target.id'));
+
+        $factor = $this->editor->createFactor($operation, Input::get('factor', []), $target);
 
         return ['factor' => $factor];
     }
@@ -324,6 +319,20 @@ trait SurveyEditor
         $updated = $factor->update(Input::get('factor'));
 
         return ['updated' => $updated];
+    }
+
+    public function loadGuardTextLength()
+    {
+        $questions = SurveyORM\Question::findOrFail(array_fetch(Input::get('questions'), 'id'));
+
+        $questions->load(['guarders' => function ($query) {
+            $query->where('method', 'maxLength');
+        }, 'guarders.operations'])->each(function ($question) {
+            $question->guarders->first()->operations->first()->factor->value *= 1;
+            $question->guardLengthFactor = $question->guarders->first()->operations->first()->factor;
+        });
+
+        return ['questions' => $questions];
     }
 
     public function lockBook()

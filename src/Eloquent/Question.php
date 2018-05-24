@@ -57,4 +57,9 @@ class Question extends Eloquent
     {
         return $this->node->questions();
     }
+
+    public function guarders()
+    {
+        return $this->morphMany(Rule\Guarder::class, 'survey_rule_guarder', 'target_type', 'target_id');
+    }
 }

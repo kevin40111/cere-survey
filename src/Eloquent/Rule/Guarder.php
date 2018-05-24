@@ -14,9 +14,9 @@ class Guarder extends Ruler
 
     protected $fillable = ['method', 'priority'];
 
-    public function node()
+    public function target()
     {
-        return $this->belongsTo(Node::class);
+        return $this->morphTo();
     }
 
     protected static function boot()
