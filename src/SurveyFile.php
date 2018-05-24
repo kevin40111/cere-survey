@@ -12,6 +12,7 @@ use Cere\Survey\Field\SheetRepository;
 use Cere\Survey\Field\FieldComponent;
 use Plat\Files\FolderComponent;
 use Cere\Survey\Extend\Setting\HookRepository;
+use Cere\Survey\Eloquent\Question;
 use ShareFile;
 use Struct_file;
 use Redirect;
@@ -119,7 +120,15 @@ class SurveyFile extends CommFile
 
     public function exportSheet()
     {
-        SheetRepository::target($this->book->sheet)->exportAllRows();
+        $columns = $this->book->sheet->tables->first()->columns->map(function ($column) { return $column->id;})->toArray();
+
+        $questions = Question::whereIn('field_id', $columns)->get()->sortBy('id')->fetch('title')->toArray();
+
+        $excel = SheetRepository::target($this->book->sheet)->exportAllRows();
+
+        $excel->getSheet()->prependRow($questions);
+
+        return $excel->download('xls');
     }
 
     public function createHook()
