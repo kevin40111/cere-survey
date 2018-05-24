@@ -1,4 +1,4 @@
 <md-input-container ng-repeat="question in node.questions" class="md-block">
     <label>{{question.title}}</label>
-    <input type="text" ng-model="answers[question.id]" ng-model-options="saveTextNgOptions" ng-disabled="node.saving || isSkip(question)" survey-input ng-change="saveAnswer(answers[question.id])" />
+    <input type="text" ng-model="contents[question.id]" ng-model-options="saveTextNgOptions" ng-disabled="isSkip(question)" ng-change="sync()" />
 </md-input-container>

@@ -20,7 +20,7 @@ abstract class Ruler extends Eloquent
     protected function simplify($operation)
     {
         if ($operation->factor) {
-            $var = $operation->factor->target instanceof Question ? $operation->factor->target->field->id : $operation->factor->target->id;
+            $var = $operation->factor->target->id;
             return [$operation->operator => [['var' => $var], $operation->factor->value]];
         }
 

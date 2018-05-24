@@ -3,128 +3,105 @@
 namespace Cere\Survey\Writer\Fillers;
 
 use Cere\Survey\Eloquent as SurveyORM;
-use Cere\Survey\Writer\Fill;
 use Cere\Survey\Writer\Rule;
+use Illuminate\Database\Eloquent\Collection;
 
 abstract class Filler
 {
     public $messages;
 
+    public $contents = [];
+
     protected $node;
-
-    protected $answers;
-
-    protected $contents = [];
 
     protected $original = [];
 
-    protected $fill;
+    protected $childrens = [];
 
-    public $skips = [];
+    protected $skipers = [];
 
-    function __construct($node, $answers)
+    protected $fillers = [];
+
+    function __construct($node)
     {
-        $this->node = $node->load('questions.field');
-        $this->answers = $answers;
-
-        $this->fillOriginal();
-
-        $this->fillContents();
-
-        $this->fill = new Fill($this->answers);
+        $this->node = $node;
     }
 
     /**
-     * Get effected questions from childrens.
+     * Set effected childrens.
      */
-    abstract protected function getEffects($question);
+    abstract protected function setChildrens();
 
     /**
      * Decrement a answer was selected.
      */
-    abstract protected function isChecked($question);
+    abstract protected function isChecked($target);
 
-    /**
-     * Get childrens.
-     */
-    abstract public function childrens($question);
-
-    public function effected()
+    public function set($contents)
     {
-        $this->node->skipers->each(function ($skiper) {
-            $this->skips[$skiper->id] = Rule::instance($skiper)->compare($this->answers);
-            $this->reset($this->skips[$skiper->id]);
+        $this->fill($contents);
+
+        $this->preset();
+
+        $this->guard();
+
+        $this->setChildrens();
+
+        $this->setSkipers();
+    }
+
+    protected function preset() {}
+
+    public function getChildrens()
+    {
+        return $this->childrens;
+    }
+
+    protected function resetChildrens($target)
+    {
+        $value = $this->isChecked($target) ? null : '-8';
+
+        $target->childrenNodes->each(function ($node) use ($value) {
+            $contents = array_fill_keys($node->questions->lists('id'), $value);
+            $this->add($node)->set($contents);
         });
     }
 
-    protected function setChildrens($question)
+    protected function setSkipers()
     {
-        $this->getEffects($question)->each(function ($effect) {
-            $effect['target']->childrenNodes->each(function ($node) use ($effect) {
-                $this->fill->node($node)->reset($effect['isSkip']);
+        $this->node->questions->load('effects.effect')->each(function ($question) {
+            $question->effects->each(function ($operation) {
+                $this->loadSkiper($operation);
             });
         });
-    }
 
-    protected function setRules($question)
-    {
-        $question->effects->each(function ($operation) {
-            $this->setEffected($operation);
+        Collection::make($this->skipers)->load('node.questions.guarders', 'node.questions','node.answers', 'node.guarders')->each(function ($skiper) {
+            $this->skipers[$skiper->id] = Rule::instance($skiper)->compare($this->contents + $this->original);
+            $value = $this->skipers[$skiper->id] ? '-8' : null;
+            $this->add($skiper->node)->set(array_fill_keys($skiper->node->questions->lists('id'), $value));
         });
     }
 
-    private function setEffected($effected)
+    private function loadSkiper($effected)
     {
         if ($effected instanceof SurveyORM\Rule\Skiper) {
-            if (array_key_exists($effected->id, $this->getSkips())) {
-                return;
-            }
-
-            $this->fill->sync($this->answers)->node($effected->node)->effected();
+            $this->skipers[$effected->id] = $effected;
         } else if ($effected instanceof SurveyORM\Rule\Operation) {
-            if ($effected->effect()->exists()) {
-                $this->setEffected($effected->effect);
-            }
+            $this->loadSkiper($effected->effect);
         }
     }
 
-    protected function guard($question)
+    protected function guard()
     {
-        $this->node->guarders->sortBy('priority')->each(function ($guarder) use ($question) {
-            call_user_func([$this, $guarder->method], $guarder, $question);
+        $this->node->guarders->sortBy('priority')->each(function ($guarder) {
+            call_user_func([$this, $guarder->method], $guarder);
         });
 
-        $question->guarders->sortBy('priority')->each(function ($guarder) use ($question) {
-            call_user_func([$this, $guarder->method], $guarder, $question);
+        $this->node->questions->load('guarders')->each(function ($question) {
+            $question->guarders->sortBy('priority')->each(function ($guarder) {
+                call_user_func([$this, $guarder->method], $guarder);
+            });
         });
-    }
-
-    public function clean($question)
-    {
-        if ($this->contents[$question->id] == '-8') {
-            $this->set($question, null);
-        }
-    }
-
-    public function skip($question)
-    {
-        $this->set($question, '-8');
-    }
-
-    public function reset($isSkip)
-    {
-        $this->node->questions->each(function ($question) use ($isSkip) {
-            $this->affected($question, $isSkip);
-        });
-    }
-
-    public function affected($question, $isSkip)
-    {
-        if ($isSkip) {
-            $this->skip($question);
-        } else {
-            $this->clean($question);
-        }
     }
 
     public function getDirty()
@@ -137,18 +114,22 @@ abstract class Filler
             }
         }
 
-        foreach ($this->fill->getDirty() as $id => $value) {
-            $dirty[$id] = $value;
+        foreach ($this->fillers as $filler) {
+            $dirty += $filler->getDirty();
         }
 
         return $dirty;
     }
 
-    public function getSkips()
+    public function getSkipers()
     {
-        $this->skips += $this->fill->getSkips();
+        $skipers = $this->skipers;
 
-        return $this->skips;
+        foreach ($this->fillers as $filler) {
+            $skipers += $filler->getSkipers();// 先後順序
+        }
+
+        return $skipers;
     }
 
     public function getOriginal()
@@ -156,27 +137,50 @@ abstract class Filler
         return $this->original;
     }
 
-    protected function syncAnswers()
+    public function syncOriginal($original)
 	{
-        $this->node->questions->each(function ($question) {
-            $this->answers[$question->field->id] = $this->contents[$question->id];
-        });
+        $contents = array_fill_keys($this->node->questions->lists('id'), null);
+
+        $this->original = $original + $contents;
     }
 
-    protected function fillOriginal()
+    protected function fill($contents)
 	{
-        $this->node->questions->each(function ($question) {
-            $this->original[$question->id] = isset($this->answers[$question->field->id]) ? $this->answers[$question->field->id] : null;
-        });
-    }
+        $keys = $this->node->questions->lists('id');
 
-    protected function fillContents()
-	{
-        $this->contents = $this->original;
+        $contents += array_fill_keys($keys, null);
+
+        $this->contents = array_intersect_key($contents, array_flip($keys));
     }
 
     private function isSkip($value)
     {
         return $value === '-8';
+    }
+
+    public static function instance($node, $original)
+    {
+        $types = ['Text', 'Checkbox', 'Radio', 'Gear'];
+
+        $node->type = strtolower($node->type);
+
+        $type = 'Cere\Survey\Writer\Fillers\\' . (in_array(ucfirst($node->type), $types) ? ucfirst($node->type) : 'Radio');
+
+        $filler = new $type($node);
+
+        $filler->syncOriginal($original);
+
+        return $filler;
+    }
+
+    public function add($node)
+    {
+        $original = $this->getDirty() + $this->original;
+
+        $filler = static::instance($node, $original);
+
+        array_push($this->fillers, $filler);
+
+        return $filler;
     }
 }

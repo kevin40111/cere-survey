@@ -31,6 +31,6 @@ class Rule
 
     public function maxLength($answer)
     {
-        return JsonLogic::apply($this->ruler->toJsonLogic(), [$this->ruler->target->field->id => mb_strlen($answer)]);
+        return JsonLogic::apply($this->ruler->toJsonLogic(), [$this->ruler->target->id => mb_strlen($answer)]);
     }
 }

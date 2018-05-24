@@ -4,39 +4,20 @@ namespace Cere\Survey\Writer\Fillers;
 
 class Radio extends Filler
 {
-    public function set($question, $value)
+    protected function setChildrens()
     {
-        $this->contents[$question->id] = $value;
+        $this->node->answers->load('childrenNodes')->map(function($answer) {
+            $this->resetChildrens($answer);
 
-        $this->syncAnswers();
-
-        $this->setRules($question);
-
-        $this->setChildrens($question);
-
-        return $this;
-    }
-
-    protected function getEffects($question)
-	{
-        return $this->node->answers->load(['childrenNodes.questions', 'childrenNodes.answers'])->map(function($answer) use ($question) {
-            $isSkip = is_null($this->contents[$question->id]) ? false : $this->contents[$question->id] !== $answer->value;
-            return ['target' => $answer, 'isSkip' => $isSkip];
+            if ($this->isChecked($answer)) {
+                $this->childrens[$answer->id] = $answer->childrenNodes->load(['questions.skiper', 'answers.skiper', 'skiper']);
+            }
         });
     }
 
-    protected function isChecked($question)
+    protected function isChecked($answer)
     {
-        return $this->contents[$question->id] !== null && $this->contents[$question->id] !== '-8';
-    }
-
-    public function childrens($question)
-    {
-        return $this->isChecked($question) ? $this->getAnswer($question)->childrenNodes->load(['questions.skiper', 'answers.skiper', 'skiper']) : [];
-    }
-
-    private function getAnswer($question)
-    {
-        return $this->node->answers()->where('value', $this->contents[$question->id])->first();
+        $question = $this->node->questions->first();
+        return is_null($this->contents[$question->id]) ? false : $this->contents[$question->id] === $answer->value;
     }
 }
