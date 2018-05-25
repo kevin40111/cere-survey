@@ -3,7 +3,7 @@
         <div flex></div>
         <div flex style="max-width:65px" ng-repeat="answer in node.answers">{{answer.title}}</div>
     </div>
-    <md-radio-group ng-model="answers[question.id]" ng-disabled="node.saving || isSkip(question)" survey-input ng-repeat="question in node.questions" ng-change="saveAnswer(answers[question.id])">
+    <md-radio-group ng-model="contents[question.id]" ng-disabled="isSkip(question)" ng-repeat="question in node.questions" ng-change="sync()">
         <div layout="row" layout-padding>
             <div flex>{{question.title}}</div>
             <div flex style="max-width:65px" ng-repeat="answer in node.answers" layout="column" layout-align="start center">

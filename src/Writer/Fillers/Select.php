@@ -2,7 +2,7 @@
 
 namespace Cere\Survey\Writer\Fillers;
 
-class Radio extends Filler
+class Select extends Filler
 {
     protected function setChildrens()
     {
@@ -10,7 +10,7 @@ class Radio extends Filler
             $this->resetChildrens($answer);
 
             if ($this->isChecked($answer)) {
-                $this->childrens[$answer->id] = $answer->childrenNodes->load(['questions.skiper', 'answers.skiper', 'skiper']);
+                $this->childrens[$this->node->questions->first()->id] = $answer->childrenNodes->load(['questions.skiper', 'answers.skiper', 'skiper']);
             }
         });
     }

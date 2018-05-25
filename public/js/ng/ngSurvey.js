@@ -4,11 +4,9 @@ angular.module('ngSurvey', ['ngSurvey.directives', 'ngSurvey.factories']);
 
 angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http, $q) {
     var answers = {};
-    var skips = {};
+    var skipers = {};
 
     return {
-        answers: answers,
-        skips: skips,
         get: function(url, data, node = {}) {
             var deferred = $q.defer();
 
@@ -27,8 +25,28 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
 
             return deferred.promise;
         },
+        next: function(page) {
+            return $http({method: 'POST', url: 'nextPage', data: {page: page, answers: answers}});
+        },
+        sync: function(node, contents) {
+            var deferred = $q.defer();
+
+            node.saving = true;
+            $http({method: 'POST', url: 'sync', data: {node: node, contents: contents, answers: answers}})
+            .then(function(response) {
+                node.saving = false;
+                angular.extend(answers, response.data.dirty);
+                angular.extend(skipers, response.data.skipers);
+                if (response.data.childrens) {
+                    node.childrens = response.data.childrens;
+                }
+                deferred.resolve({contents: response.data.contents, messages: response.data.messages});
+            });
+
+            return deferred.promise;
+        },
         isSkip: function(target) {
-            return target.skiper && skips[target.skiper.id];
+            return target.skiper && skipers[target.skiper.id];
         }
     };
 });
@@ -80,12 +98,12 @@ angular.module('ngSurvey.directives', [])
             });
 
             $scope.nextPage = function() {
-                surveyFactory.get('nextPage', {page: $scope.page}, $scope.book).then(function(response) {
-                    if (response.missings && response.missings.length > 0) {
+                surveyFactory.next($scope.page).then(function(response) {
+                    if (response.data.missings && response.data.missings.length > 0) {
                         alert('有尚未填答題目');
                     } else {
-                        $scope.page = response.page;
-                        $scope.urls = response.urls;
+                        $scope.page = response.data.page;
+                        $scope.urls = response.data.urls;
                         $scope.book.saving = false;
                     }
                 });
@@ -114,8 +132,6 @@ angular.module('ngSurvey.directives', [])
             $scope.$watch('page', function() {
                 surveyFactory.get('getNodes', {page: $scope.page}, $scope.page).then(function(response) {
                     $scope.nodes = response.nodes;
-                    angular.extend(surveyFactory.answers, response.answers);
-                    angular.extend(surveyFactory.skips, response.skips);
                 });
             });
         }
@@ -145,61 +161,12 @@ angular.module('ngSurvey.directives', [])
                     </md-card-content>
                     <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
                 </md-card>
-                <survey-node ng-if="childrens" ng-repeat="children in childrens" node="children"></survey-node>
             </div>
         `,
         controller: function($scope, $sce) {
             $scope.trustAsHtml = function(string) {
                 return $sce.trustAsHtml(string);
             };
-            //$scope.node.saving = true;
-            //$scope.node = {saving: true};
-
-            this.addChildren = function(childrens) {
-                $scope.childrens = childrens;
-            };
-        }
-    };
-})
-
-.directive('surveyInput', function($compile, surveyFactory) {
-    return {
-        priority: 1,
-        restrict: 'A',
-        require: 'ngModel',
-        controller: function($scope, $attrs, $mdToast) {
-            $scope.saveTextNgOptions = {updateOn: 'default blur', debounce:{default: 1000, blur: 0}};
-            $scope.answers = surveyFactory.answers;
-
-            $scope.saveAnswer = function(value) {
-                $scope.question.childrens = {};
-                surveyFactory.get('saveAnswer', {question: $scope.question, value: value}, $scope.node).then(function(response) {
-                    angular.extend(surveyFactory.answers, response.dirty);
-                    if (response.messages) {
-                        var txt = "";
-                        response.messages.forEach(function(message) {
-                            txt += message+'\n';
-                        });
-                        $mdToast.show(
-                            $mdToast.simple().textContent(txt).hideDelay(3000)
-                        );
-                    } else {
-                        angular.extend(surveyFactory.skips, response.skips);
-                        getChildrens();
-                    }
-                });
-            };
-
-            if ($scope.answers[$scope.question.id]) {
-                getChildrens();
-            }
-
-            function getChildrens() {
-                surveyFactory.get('getChildrens', {question: $scope.question}, $scope.node).then(function(response) {
-                    $scope.question.childrens = response.nodes;
-                });
-            }
-
         }
     };
 })
@@ -218,8 +185,6 @@ angular.module('ngSurvey.directives', [])
             var compiledContents = {};
 
             return function(scope, iElement, iAttr, ctrl) {
-                scope.isSkip = surveyFactory.isSkip;
-                scope.addChildren = ctrl.addChildren;
                 //var contents = iElement.contents().remove();
                 var type = scope.node.type;
                 compiledContents[type] = $compile($templateCache.get(type));
@@ -228,7 +193,25 @@ angular.module('ngSurvey.directives', [])
                 });
             };
         },
-        controller: function($scope) {
+        controller: function($scope, $mdToast) {
+            $scope.saveTextNgOptions = {updateOn: 'default blur', debounce:{default: 1000, blur: 0}};
+            $scope.isSkip = surveyFactory.isSkip;
+            $scope.contents = {};
+
+            $scope.sync = function() {
+                surveyFactory.sync($scope.node, $scope.contents).then(function(data) {
+                    angular.extend($scope.contents, data.contents);
+                    if (data.messages) {
+                        var txt = "";
+                        data.messages.forEach(function(message) {
+                            txt += message+'\n';
+                        });
+                        $mdToast.show(
+                            $mdToast.simple().textContent(txt).hideDelay(3000)
+                        );
+                    }
+                });
+            };
         }
     };
 })

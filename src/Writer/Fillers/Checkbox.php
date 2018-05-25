@@ -6,45 +6,31 @@ use Cere\Survey\Writer\Rule;
 
 class Checkbox extends Filler
 {
-    public function set($question, $value)
+    protected function preset()
     {
-        $this->contents[$question->id] = $value;
-
         if (in_array('1', $this->contents)) {
             $this->resetEmpty();
         } else {
             $this->cleanUnChecked();
         }
-
-        $this->syncAnswers();
-
-        $this->guard($question);
-
-        $this->setRules($question);
-
-        $this->setChildrens($question);
-
-        return $this;
     }
 
-    protected function getEffects($question)
+    protected function setChildrens()
 	{
-        return $this->node->questions->filter(function ($question) {
-            return $this->contents[$question->id] !== $this->original[$question->id];
-        })->load(['childrenNodes.questions', 'childrenNodes.answers'])->map(function ($question) {
-            $isSkip = is_null($this->contents[$question->id]) ? true : $this->contents[$question->id] !== '1';
-            return ['target' => $question, 'isSkip' => $isSkip];
+        $this->node->questions->load('childrenNodes')->each(function ($question) {
+            if ($this->contents[$question->id] !== $this->original[$question->id]) {
+                $this->resetChildrens($question);
+            }
+
+            if ($this->isChecked($question)) {
+                $this->childrens[$question->id] = $question->childrenNodes->load(['questions.skiper', 'answers.skiper', 'skiper']);
+            }
         });
     }
 
     protected function isChecked($question)
     {
-        return $this->contents[$question->id] === '1';
-    }
-
-    public function childrens($question)
-    {
-        return $this->isChecked($question) ? $question->childrenNodes->load(['questions.skiper', 'answers.skiper', 'skiper']) : [];
+        return is_null($this->contents[$question->id]) ? false : $this->contents[$question->id] === '1';
     }
 
     private function resetChecked($excepts)
@@ -86,18 +72,21 @@ class Checkbox extends Filler
         }, 0);
 
         if (! Rule::instance($guarder)->lessThan($amount)) {
+            foreach ($this->contents as $id => &$content) {
+                $content = $this->original[$id];
+            }
             $this->messages = ['已達選擇數量上限'];
         }
     }
 
-    protected function exclusion($guarder, $question)
+    protected function exclusion($guarder)
     {
-        $this->syncAnswers();
-        if (Rule::instance($guarder)->compare($this->answers)) {
-            if ($guarder->operations->first()->factor->target->id === $question->id) {
-                $this->resetChecked([$question->id]);
+        if (Rule::instance($guarder)->compare($this->contents)) {
+            $essential = $guarder->operations->first()->factor->target;
+            if ($this->contents[$essential->id] !== $this->original[$essential->id]) {
+                $this->resetChecked([$essential->id]);
             } else {
-                $this->contents[$guarder->operations->first()->factor->target->id] = '0';
+                $this->contents[$essential->id] = '0';
             }
         }
     }

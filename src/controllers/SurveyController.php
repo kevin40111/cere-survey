@@ -2,7 +2,7 @@
 
 use Cere\Survey\Eloquent as SurveyORM;
 use Cere\Survey\Writer\WriterInterface;
-use Cere\Survey\Writer\Fill;
+use Cere\Survey\Writer\Fillers\Filler;
 use Cere\Survey\Writer\Rule;
 use Cere\Survey\Eloquent\Field\Field;
 use Plat\Files\Uploader;
@@ -102,18 +102,20 @@ class SurveyController extends \BaseController {
      */
     public function nextPage($book_id)
     {
-        $answers = $this->writer->all();
+        $answers = Input::get('answers');
         $page = SurveyORM\Node::find(Input::get('page.id'));
 
         if (count($missings = $this->checkPage($page, $answers)) > 0) {
             return ['missings' => $missings];
         }
 
+        $this->writer->update($answers);
+
         $nextPage = $page->next() ? $this->checkAndJump($page->next(), $answers) : NULL;
 
         $this->writer->setPage(isset($nextPage->id) ? $nextPage->id : NULL);
 
-        $urls = is_null($nextPage) ? $this->getNextUrl($book_id) : [];
+        $urls = is_null($nextPage) && SurveyORM\Book::find($book_id)->extendHook()->exists() ? $this->getNextUrl($book_id) : [];
 
         return ['page' => $nextPage, 'urls' => $urls];
     }
@@ -133,7 +135,7 @@ class SurveyController extends \BaseController {
     private function checkPage($page, $answers)
     {
         $missings = $page->getQuestions()->filter(function ($question) use ($answers) {
-            return ! isset($answers[$question->field->id]);
+            return ! isset($answers[$question->id]);
         })->values();
 
         return $missings;
@@ -145,7 +147,7 @@ class SurveyController extends \BaseController {
 
         $skips = 0;
         foreach ($questions as $question) {
-            if (isset($answers[$question->field->id]) && $answers[$question->field->id] == -8) {
+            if (isset($answers[$question->id]) && $answers[$question->id] == -8) {
                 $skips++;
             }
         }
@@ -164,74 +166,31 @@ class SurveyController extends \BaseController {
     {
         $page = SurveyORM\Node::find(Input::get('page.id'));;
 
-        $nodes = $page->childrenNodes->load(['skiper', 'questions.skiper', 'answers.skiper', 'images']);
-
         $fields = $this->writer->all();
+        $nodes = $page->childrenNodes->load(['skiper', 'questions.skiper', 'answers.skiper', 'images'])->filter(function ($node) use ($fields) {
+            return ! $node->skiper || ! Rule::instance($node->skiper)->compare($fields);
+        });
 
-        $skips = $this->getSkips($nodes, $fields, ['questions' => [], 'answers' => []]);
-
-        $answers = $this->getAnswers($page, $fields);
-
-        return ['nodes' => $nodes, 'answers' => $answers, 'skips' => $skips, 'logs' => DB::connection('survey')->getQueryLog()];
+        return ['nodes' => $nodes, 'logs' => DB::connection('survey')->getQueryLog()];
     }
 
-    /**
-     * Save answer.
-     *
-     * @return Response
-     */
-    public function saveAnswer($book_id)
+    public function sync()
     {
-        $question = SurveyORM\Question::find(Input::get('question.id'));
-        $answers = $this->writer->all();
-        $filler = Fill::answers($answers)->node($question->node);
-        $filler->set($question, Input::get('value'));
+        $node = SurveyORM\Node::find(Input::get('node.id'));
+
+        $filler = Filler::instance($node, Input::get('answers'));
+
+        $filler->set(Input::get('contents'));
 
         if (count($filler->messages) > 0) {
-            return ['dirty' => $filler->getOriginal(), 'messages' => $filler->messages];
+            return ['contents' => $filler->contents, 'messages' => $filler->messages, 'childrens' => $filler->getChildrens()];
         }
 
         $dirty = $filler->getDirty();
 
-        $this->writer->update($dirty);
+        $skipers = $filler->getSkipers();
 
-        $skips = $filler->getSkips();
-
-        return ['dirty' => $dirty, 'logs' => DB::connection('survey')->getQueryLog(), 'skips' => $skips];
-    }
-
-    private function getSkips($items, $fields, $relations)
-    {
-        return $items->reduce(function ($skips, $item) use ($fields, $relations) {
-            if ($item->skiper) {
-                $skips = array_add($skips, $item->skiper->id, Rule::instance($item->skiper)->compare($fields));
-            }
-            foreach ($relations as $relation => $nests) {
-                $skips += $this->getSkips($item->$relation, $fields, $nests);
-            }
-            return $skips;
-        }, []);
-    }
-
-    public function getChildrens()
-    {
-        $question = SurveyORM\Question::find(Input::get('question.id'));
-
-        $answers = $this->writer->all();
-
-        $filler = Fill::answers($answers)->node($question->node);
-
-        return ['nodes' => $filler->childrens($question)];
-    }
-
-    private function getAnswers($page, $fields)
-    {
-        $answers = $page->getQuestions()->load('field')->reduce(function($answers, $question) use ($fields) {
-            $answers[$question->id] = $fields[$question->field->id];
-            return $answers;
-        }, []);
-
-        return $answers;
+        return ['contents' => $filler->contents, 'dirty' => $dirty, 'skipers' => $skipers, 'childrens' => $filler->getChildrens(), 'logs' => DB::connection('survey')->getQueryLog()];
     }
 
     public function getUpload($book_id, $serial)

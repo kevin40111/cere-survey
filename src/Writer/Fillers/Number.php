@@ -4,14 +4,9 @@ namespace Cere\Survey\Writer\Fillers;
 
 use Cere\Survey\Writer\Rule;
 
-class Text extends Filler
+class Number extends Filler
 {
-    protected function setChildrens()
-    {
-        $this->node->questions->load('childrenNodes')->each(function ($question) {
-            $this->resetChildrens($question);
-        });
-    }
+    protected function setChildrens() {}
 
     protected function isChecked($question)
     {

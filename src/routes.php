@@ -6,8 +6,7 @@ Route::group(array('prefix' => 'survey'), function() {
     Route::post('{book_id}/getPage', 'SurveyController@getPage');
     Route::post('{book_id}/nextPage', 'SurveyController@nextPage');
     Route::post('{book_id}/getNodes', 'SurveyController@getNodes');
-    Route::post('{book_id}/saveAnswer', 'SurveyController@saveAnswer');
-    Route::post('{book_id}/getChildrens', 'SurveyController@getChildrens');
+    Route::post('{book_id}/sync', 'SurveyController@sync');
     Route::post('{book_id}/getRule', 'SurveyController@getRule');
     Route::post('{book_id}/login', 'SurveyController@login');
     Route::get('{book_id}/surveyLogin', 'SurveyController@surveyLogin');
