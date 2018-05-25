@@ -160,11 +160,7 @@ abstract class Filler
 
     public static function instance($node, $original)
     {
-        $types = ['Text', 'Checkbox', 'Radio', 'Gear'];
-
-        $node->type = strtolower($node->type);
-
-        $type = 'Cere\Survey\Writer\Fillers\\' . (in_array(ucfirst($node->type), $types) ? ucfirst($node->type) : 'Radio');
+        $type = __NAMESPACE__ . '\\' . ucfirst(strtolower($node->type));
 
         $filler = new $type($node);
 
