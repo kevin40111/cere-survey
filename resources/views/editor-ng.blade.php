@@ -1,19 +1,9 @@
 
 <div ng-controller="editorController" layout="row" style="height:100%">
-
-    <md-sidenav class="md-sidenav-left" md-component-id="survey-book" layout="column">
-        <md-content>
-            <md-list>
-                <md-subheader class="md-no-sticky">選擇題本</md-subheader>
-                <md-list-item ng-repeat="sbook in sbooks">
-                    <md-icon md-svg-icon="history"></md-icon>
-                    <md-checkbox class="md-secondary" ng-model="sbook.checked"></md-checkbox>
-                    <p>@{{sbook.title}}</p>
-                </md-list-item>
-            </md-list>
-        </md-content>
-    </md-sidenav>
-    <survey-book ng-if="book && !book.lock" book="book"></survey-book>
+    <survey-book ng-if="book && !book.lock" book="book">
+        <md-button class="md-icon-button md-primary" href="loginCondition"><md-tooltip md-direction="bottom">登入設定</md-tooltip><md-icon>people</md-icon></md-button>
+        <md-button class="md-icon-button md-primary" href="exportSheet" target="_blank"><md-tooltip md-direction="bottom">下載填答值</md-tooltip><md-icon>file_download</md-icon></md-button>
+    </survey-book>
     <node-browser ng-if="book.lock" book="book.id"></node-browser>
 
 </div>
