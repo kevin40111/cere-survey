@@ -319,7 +319,7 @@ class FieldComponent extends CommFile
         if (!$this->isCreater())
             throw new FileFailedException(new MessageBag(array('noAuth' => '沒有權限')));
 
-        SheetRepository::target($this->file->sheets->first())->exportAllRows();
+        SheetRepository::target($this->file->sheets->first())->exportAllRows()->download('xls');
     }
 
     //uncomplete only first sheet, only first table

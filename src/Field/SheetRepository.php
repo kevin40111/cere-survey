@@ -127,7 +127,7 @@ class SheetRepository
 
     public function exportAllRows()
     {
-        \Excel::create('sample', function ($excel) {
+        return \Excel::create('sample', function ($excel) {
 
             $excel->sheet('sample', function ($sheet) {
 
@@ -141,7 +141,7 @@ class SheetRepository
 
             });
 
-        })->download('xlsx');
+        });
     }
 
     //uncomplete
