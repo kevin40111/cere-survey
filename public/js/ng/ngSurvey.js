@@ -53,12 +53,6 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
 
 angular.module('ngSurvey.directives', [])
 
-.factory('templates', function() {
-    return {
-        compact:   '<ng-include src="\'radio\'"></ng-include>'
-    };
-})
-
 .directive('surveyBook', function(surveyFactory) {
     return {
         restrict: 'E',
@@ -68,13 +62,12 @@ angular.module('ngSurvey.directives', [])
             book: '=',
         },
         template:  `
-            <div>
+            <md-content flex>
                 <div layout="row" layout-align="space-around" ng-if="book.saving">
                     <md-progress-linear md-mode="indeterminate"></md-progress-linear>
                 </div>
-                <div ng-if="page">
-                    <survey-page page="page"></survey-page>
-                    <md-button class="md-raised md-primary" ng-click="nextPage()" ng-disabled="book.saving" aria-label="繼續">繼續</md-button>
+                <div flex layout="row" layout-align="center start" ng-if="page">
+                    <survey-page page="page" flex-xs="100" flex-gt-sm="80" flex-gt-md="50" flex-gt-lg="40"></survey-page>
                 </div>
                 <md-card ng-if="!page && !book.saving" style="width:800px;margin:0 auto; text-align:center">
                     <md-card-title>
@@ -85,9 +78,9 @@ angular.module('ngSurvey.directives', [])
                     </md-button>
                 </md-card>
                 <div class="ql-editor" ng-bind-html="trustAsHtml(book.footer)"></div>
-            </div>
+            </md-content>
         `,
-        controller: function($scope, $sce) {
+        controller: function($scope, $http, $sce) {
             $scope.trustAsHtml = function(string) {
                 return $sce.trustAsHtml(string);
             };
@@ -95,6 +88,41 @@ angular.module('ngSurvey.directives', [])
                 $scope.page = response.page;
                 $scope.urls = response.urls;
                 $scope.book.saving = false;
+            });
+
+            $http({method: 'POST', url: 'getBook', data: {}}).then(function(response) {
+                $scope.book = response.data.book
+            });
+        }
+    };
+})
+
+.directive('surveyPage', function(surveyFactory) {
+    return {
+        restrict: 'E',
+        replace: false,
+        transclude: false,
+        scope: {
+            page: '=',
+        },
+        template:  `
+            <md-card>
+                <md-card-header ng-repeat-start="node in nodes" ng-if="false"></md-card-header>
+                <img ng-repeat="image in node.images" ng-src="upload/{{image.serial}}" alt="標頭圖片" />
+                <survey-node ng-repeat-end node="node" ng-if="!isSkip(node)"></survey-node>
+                <md-card-actions layout="column" layout-align="start">
+                    <md-button class="md-raised md-primary" ng-click="nextPage()" ng-disabled="page.loading" aria-label="繼續">繼續</md-button>
+                </md-card-actions>
+            </md-card>
+        `,
+        controller: function($scope, $http) {
+
+            $scope.isSkip = surveyFactory.isSkip;
+
+            $scope.$watch('page', function() {
+                surveyFactory.get('getNodes', {page: $scope.page}, $scope.page).then(function(response) {
+                    $scope.nodes = response.nodes;
+                });
             });
 
             $scope.nextPage = function() {
@@ -112,91 +140,42 @@ angular.module('ngSurvey.directives', [])
     };
 })
 
-.directive('surveyPage', function(surveyFactory) {
+.directive('surveyNode', function($compile, surveyFactory, $templateCache) {
     return {
         restrict: 'E',
-        replace: true,
-        transclude: false,
-        scope: {
-            page: '=',
-        },
-        template:  `
-            <div>
-                <survey-node ng-repeat="node in nodes" node="node" ng-if="!isSkip(node)"></survey-node>
-            </div>
-        `,
-        controller: function($scope, $http) {
-
-            $scope.isSkip = surveyFactory.isSkip;
-
-            $scope.$watch('page', function() {
-                surveyFactory.get('getNodes', {page: $scope.page}, $scope.page).then(function(response) {
-                    $scope.nodes = response.nodes;
-                });
-            });
-        }
-    };
-})
-
-.directive('surveyNode', function(surveyFactory) {
-    return {
-        restrict: 'E',
-        replace: true,
-        transclude: false,
-        scope: {
-            node: '='
-        },
-        //require: '^surveyPage',
-        template:  `
-            <div>
-                <md-card>
-                    <img ng-repeat="image in node.images" ng-src="upload/{{image.serial}}" alt="標頭圖片" />
-                    <md-card-title>
-                        <md-card-title-text>
-                        <span class="md-headline ql-editor" ng-bind-html="trustAsHtml(node.title.split('\n').join('<br/>'))"></span>
-                        </md-card-title-text>
-                    </md-card-title>
-                    <md-card-content>
-                        <survey-question node="node"></survey-question>
-                    </md-card-content>
-                    <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
-                </md-card>
-            </div>
-        `,
-        controller: function($scope, $sce) {
-            $scope.trustAsHtml = function(string) {
-                return $sce.trustAsHtml(string);
-            };
-        }
-    };
-})
-
-.directive('surveyQuestion', function($compile, surveyFactory, $templateCache) {
-    return {
-        restrict: 'E',
-        replace: true,
+        replace: false,
         transclude: false,
         scope: {
             node: '='
         },
         require: '^surveyNode',
+        template:  `
+            <md-card-title>
+                <md-card-title-text>
+                    <span class="md-title ql-editor" ng-bind-html="trustAsHtml(node.title.split('\n').join('<br/>'))"></span>
+                </md-card-title-text>
+            </md-card-title>
+        `,
         compile: function(tElement, tAttr) {
-            tElement.contents().remove();
             var compiledContents = {};
-
             return function(scope, iElement, iAttr, ctrl) {
-                //var contents = iElement.contents().remove();
                 var type = scope.node.type;
-                compiledContents[type] = $compile($templateCache.get(type));
+                if (!compiledContents[type]) {
+                    compiledContents[type] = $compile($templateCache.get(type));
+                }
                 compiledContents[type](scope, function(clone, scope) {
                     iElement.append(clone);
                 });
             };
         },
-        controller: function($scope, $mdToast) {
+        controller: function($scope, $sce, $mdToast) {
             $scope.saveTextNgOptions = {updateOn: 'default blur', debounce:{default: 1000, blur: 0}};
             $scope.isSkip = surveyFactory.isSkip;
             $scope.contents = {};
+
+            $scope.trustAsHtml = function(string) {
+                return $sce.trustAsHtml(string);
+            };
 
             $scope.sync = function() {
                 surveyFactory.sync($scope.node, $scope.contents).then(function(data) {

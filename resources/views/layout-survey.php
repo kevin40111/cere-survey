@@ -33,8 +33,6 @@ app.config(function ($compileProvider, $mdIconProvider, $mdThemingProvider) {
 </head>
 
 <body ng-cloak ng-controller="mainController" layout="column">
-    <md-content flex ng-show="!main.loading">
-        <?=$context?>
-    </md-content>
+    <?=$context?>
 </body>
 </html>
