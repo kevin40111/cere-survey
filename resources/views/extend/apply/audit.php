@@ -145,7 +145,7 @@
                         <md-dialog-content>
                             <md-progress-linear md-mode="indeterminate" ng-disabled="sheetLoad"></md-progress-linear>
                             <div class="md-dialog-content">
-                                <md-card ng-repeat="message in messages" ng-if="$first">
+                                <md-card ng-repeat="message in messages">
                                     <md-card-title>
                                         <md-card-title-text>
                                             <span class="md-title">{{message.title}}</span>
