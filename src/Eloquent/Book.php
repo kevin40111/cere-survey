@@ -41,8 +41,8 @@ class Book extends Eloquent
 
     protected $types = [
         'explain'  => ['name' => 'explain',  'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 0, 'text' =>''], 'answers' => 0], 'title' =>'說明文字',   'icon' =>'info_outline'],
-        'select'   => ['name' => 'select',   'editor' => ['enter' => false, 'title' => false, 'questions' => ['amount' => 1, 'text' =>'問題'], 'answers' => 100, 'answerChilderns' => true], 'title' =>'下拉式選單', 'icon' =>'arrow_drop_down_circle'],
-        'radio'    => ['name' => 'radio',    'editor' => ['enter' => false, 'title' => false, 'questions' => ['amount' => 1, 'text' =>'問題'], 'answers' => 20, 'answerChilderns' => true], 'title' =>'單選題',     'icon' =>'radio_button_checked'],
+        'select'   => ['name' => 'select',   'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 1, 'text' =>'問題'], 'answers' => 100, 'answerChilderns' => true], 'title' =>'下拉式選單', 'icon' =>'arrow_drop_down_circle'],
+        'radio'    => ['name' => 'radio',    'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 1, 'text' =>'問題'], 'answers' => 20, 'answerChilderns' => true], 'title' =>'單選題',     'icon' =>'radio_button_checked'],
         'checkbox' => ['name' => 'checkbox', 'editor' => ['enter' => false, 'title' => '填答說明', 'questions' => ['amount' => 20, 'childrens' => true, 'text' =>'選項'], 'answers' => 0], 'title' =>'複選題',     'icon' =>'check_box'],
         'scale'    => ['name' => 'scale',    'editor' => ['enter' => false, 'title' => '請輸入問題描述', 'questions' => ['amount' => 20, 'text' =>'問題'], 'answers' => 10], 'title' =>'量表題',     'icon' =>'scale'],
         'text'     => ['name' => 'text',     'editor' => ['enter' => false, 'title' => '請輸入問題描述', 'questions' => ['amount' => 20, 'text' =>'問題'], 'answers' => 0], 'title' =>'文字填答',   'icon' =>'mode_edit'],
