@@ -125,14 +125,14 @@ angular.module('surveyRule', [])
                     <md-option ng-repeat="(operator, title) in operators" ng-value="operator">{{title}}</md-option>
                 </md-select>
             </md-input-container>
-            <md-input-container ng-if="target.node.answers" style="width: 100px">
+            <md-input-container ng-if="target.node.answers.length > 0" style="width: 100px">
                 <label>選項</label>
                 <md-select ng-model="operation.factor.value" ng-disabled="! target" ng-change="updateFactor()">
                     <md-option ng-repeat="answer in target.node.answers" ng-value="answer.value">{{answer.title}}</md-option>
                 </md-select>
             </md-input-container>
-            <md-input-container ng-if="! target.node.answers" style="width: 100px">
-                <label>選項</label>
+            <md-input-container ng-if="! target.node.answers.length > 0" style="width: 250px">
+                <label> 值... (複選題型 => 勾選: 1, 不勾選: 0) </label>
                 <input ng-model="operation.factor.value" ng-model-options="{updateOn: 'default blur', debounce: {default: 1000, blur: 0}}" ng-change="updateFactor()" />
             </md-input-container>
             </span>
