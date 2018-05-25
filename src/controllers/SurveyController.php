@@ -59,6 +59,10 @@ class SurveyController extends \BaseController {
      */
     public function login($book_id)
     {
+        $book = SurveyORM\Book::find($book_id);
+
+        if(!$book->auth || !$book->auth['fieldFile_id']) return Redirect::to('survey/'.$book_id.'/surveyLogin')->withErrors(['fail' => '!問卷尚未設定登入條件']);;
+
         $this->writer->user()->login(Input::all());
 
         if ($this->writer->user()->logined()) {
