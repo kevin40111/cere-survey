@@ -65,10 +65,8 @@ angular.module('ngSurvey.directives', [])
                     <md-button ng-repeat="url in urls" class="md-raised md-primary" href="{{url}}" target="_blank" aria-label="填寫加掛題本" >
                         填寫加掛題本
                     </md-button>
-                    <md-card-title>
-                        <md-card-title-text class="ql-editor" ng-bind-html="trustAsHtml(book.footer)"></md-card-title-text>
-                    </md-card-title>
                 </md-card>
+                <div class="ql-editor" ng-bind-html="trustAsHtml(book.footer)"></div>
             </div>
         `,
         controller: function($scope, $sce) {
@@ -135,8 +133,8 @@ angular.module('ngSurvey.directives', [])
         //require: '^surveyPage',
         template:  `
             <div>
-                <img ng-repeat="image in node.images" ng-src="upload/{{image.serial}}" alt="Description" style="width:940px" />
                 <md-card>
+                    <img ng-repeat="image in node.images" ng-src="upload/{{image.serial}}" alt="標頭圖片" />
                     <md-card-title>
                         <md-card-title-text>
                         <span class="md-headline ql-editor" ng-bind-html="trustAsHtml(node.title.split('\n').join('<br/>'))"></span>
@@ -145,9 +143,6 @@ angular.module('ngSurvey.directives', [])
                     <md-card-content>
                         <survey-question node="node"></survey-question>
                     </md-card-content>
-                    <md-card-actions layout="row" layout-align="end center">
-
-                    </md-card-actions>
                     <md-progress-linear md-mode="indeterminate" ng-disabled="!node.saving"></md-progress-linear>
                 </md-card>
                 <survey-node ng-if="childrens" ng-repeat="children in childrens" node="children"></survey-node>
