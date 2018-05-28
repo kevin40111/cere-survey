@@ -89,9 +89,7 @@ class SurveyController extends \BaseController {
 
         $page = SurveyORM\Node::find($fields['page_id']);
 
-        $urls = is_null($page) ? $this->getNextUrl($book_id) : [];
-
-        return ['page' => $page, 'urls' => $urls];
+        return ['page' => $page];
     }
 
     /**
@@ -115,21 +113,25 @@ class SurveyController extends \BaseController {
 
         $this->writer->setPage(isset($nextPage->id) ? $nextPage->id : NULL);
 
-        $urls = is_null($nextPage) && SurveyORM\Book::find($book_id)->extendHook()->exists() ? $this->getNextUrl($book_id) : [];
-
-        return ['page' => $nextPage, 'urls' => $urls];
+        return ['page' => $nextPage];
     }
 
-    private function getNextUrl($book_id)
+    private function getUrls($book_id)
     {
+        if (! SurveyORM\Book::find($book_id)->extendHook()->exists()) {
+            return ['urls' => []];
+        }
+
         $information = $this->writer->user()->information();
 
-        return SurveyORM\Book::find($book_id)->extendHook->applications->filter(function ($application) use ($information) {
+        $urls = SurveyORM\Book::find($book_id)->extendHook->applications->filter(function ($application) use ($information) {
             return $application->status == 1 && Rule::instance($application)->compare($information);
         })->map(function ($application) {
             $this->writer->user()->sign($application->book);
             return '/survey'.'/'. $application->book->id .'/page';
         });
+
+        return ['urls' => $urls];
     }
 
     private function checkPage($page, $answers)

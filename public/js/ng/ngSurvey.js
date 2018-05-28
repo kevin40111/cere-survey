@@ -2,37 +2,25 @@
 
 angular.module('ngSurvey', ['ngSurvey.directives', 'ngSurvey.factories']);
 
-angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http, $q) {
+angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http) {
     var answers = {};
     var skipers = {};
 
     return {
         get: function(url, data, node = {}) {
-            var deferred = $q.defer();
-
             node.saving = true;
-            $http({method: 'POST', url: url, data: data, timeout: deferred.promise})
-            .success(function(data) {
-                deferred.resolve(data);
-            }).error(function(e) {
-                console.log(e);
-                deferred.reject();
-            });
-
-            deferred.promise.finally(function() {
+            return $http({method: 'POST', url: url, data: data, timeout: deferred.promise})
+            .then(function(response) {
                 node.saving = false;
+                return response.data;
             });
-
-            return deferred.promise;
         },
         next: function(page) {
             return $http({method: 'POST', url: 'nextPage', data: {page: page, answers: answers}});
         },
         sync: function(node, contents) {
-            var deferred = $q.defer();
-
             node.saving = true;
-            $http({method: 'POST', url: 'sync', data: {node: node, contents: contents, answers: answers}})
+            return $http({method: 'POST', url: 'sync', data: {node: node, contents: contents, answers: answers}})
             .then(function(response) {
                 node.saving = false;
                 angular.extend(answers, response.data.dirty);
@@ -40,10 +28,8 @@ angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http
                 if (response.data.childrens) {
                     node.childrens = response.data.childrens;
                 }
-                deferred.resolve({contents: response.data.contents, messages: response.data.messages});
+                return {contents: response.data.contents, messages: response.data.messages};
             });
-
-            return deferred.promise;
         },
         isSkip: function(target) {
             return target.skiper && skipers[target.skiper.id];
@@ -56,8 +42,6 @@ angular.module('ngSurvey.directives', [])
 .directive('surveyBook', function(surveyFactory) {
     return {
         restrict: 'E',
-        replace: true,
-        transclude: false,
         scope: {
             book: '=',
         },
@@ -67,7 +51,8 @@ angular.module('ngSurvey.directives', [])
                     <md-progress-linear md-mode="indeterminate"></md-progress-linear>
                 </div>
                 <div flex layout="row" layout-align="center start" ng-if="page">
-                    <survey-page page="page" flex-xs="100" flex-gt-sm="80" flex-gt-md="50" flex-gt-lg="40"></survey-page>
+                    <survey-page page="!page.closed" flex-xs="100" flex-gt-sm="80" flex-gt-md="50" flex-gt-lg="40"></survey-page>
+                    <survey-extend ng-if="page.closed" flex-xs="100" flex-gt-sm="80" flex-gt-md="50" flex-gt-lg="40"></survey-extend>
                 </div>
                 <md-card ng-if="!page && !book.saving" style="width:800px;margin:0 auto; text-align:center">
                     <md-card-title>
@@ -86,7 +71,6 @@ angular.module('ngSurvey.directives', [])
             };
             surveyFactory.get('getPage', {book: $scope.book}, $scope.book).then(function(response) {
                 $scope.page = response.page;
-                $scope.urls = response.urls;
                 $scope.book.saving = false;
             });
 
@@ -100,8 +84,6 @@ angular.module('ngSurvey.directives', [])
 .directive('surveyPage', function(surveyFactory) {
     return {
         restrict: 'E',
-        replace: false,
-        transclude: false,
         scope: {
             page: '=',
         },
@@ -122,6 +104,7 @@ angular.module('ngSurvey.directives', [])
             $scope.$watch('page', function() {
                 surveyFactory.get('getNodes', {page: $scope.page}, $scope.page).then(function(response) {
                     $scope.nodes = response.nodes;
+                    $scope.page.closed = response.nodes.length === 0;
                 });
             });
 
@@ -131,7 +114,6 @@ angular.module('ngSurvey.directives', [])
                         alert('有尚未填答題目');
                     } else {
                         $scope.page = response.data.page;
-                        $scope.urls = response.data.urls;
                         $scope.book.saving = false;
                     }
                 });
@@ -143,8 +125,6 @@ angular.module('ngSurvey.directives', [])
 .directive('surveyNode', function($compile, surveyFactory, $templateCache) {
     return {
         restrict: 'E',
-        replace: false,
-        transclude: false,
         scope: {
             node: '='
         },
@@ -191,6 +171,28 @@ angular.module('ngSurvey.directives', [])
                     }
                 });
             };
+        }
+    };
+})
+
+.directive('surveyExtend', function() {
+    return {
+        restrict: 'E',
+        scope: true,
+        template:  `
+            <md-card>
+                <md-card-title>
+                    <md-card-title-text><span class="md-headline">本問卷填答完畢</span></md-card-title-text>
+                </md-card-title>
+                <md-button ng-repeat="url in urls" class="md-raised md-primary" href="{{url}}" target="_blank" aria-label="填寫加掛題本" >
+                    填寫加掛題本
+                </md-button>
+            </md-card>
+        `,
+        controller: function($scope, $http) {
+            $http({method: 'GET', url: 'getUrls', data: {}}).then(function(response) {
+                $scope.urls = response.data.urls
+            });
         }
     };
 })
