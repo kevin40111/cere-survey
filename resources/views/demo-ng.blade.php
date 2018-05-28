@@ -1,19 +1,4 @@
 
-<md-content ng-cloak layout="column" ng-controller="quesController">
-    <div layout="row" layout-sm="column" layout-align="space-around" ng-if="opening">
-        <md-progress-circular md-mode="indeterminate"></md-progress-circular>
-    </div>
-    <md-content layout="column" layout-padding layout-align="start center">
-        <div style="width:960px">
-            <survey-book ng-if="book" book="book"></survey-book>
-        </div>
-    </md-content>
-</md-content>
-<link rel="stylesheet" href="/packages/cere/survey/js/quill.snow.min.css">
-<link rel="stylesheet" href="/packages/cere/survey/js/quill.bubble.min.css">
-<style>
-
-</style>
 <script type="text/ng-template" id="list">
     @include('survey::template_question_list')
 </script>
@@ -43,20 +28,13 @@
 
 <script>
 app.requires.push('ngSurvey');
-app.controller('quesController', function quesController($scope, $http, $filter, surveyFactory){
-
-    $scope.getBook = function() {
-        $scope.$parent.main.loading = true;
-        $http({method: 'POST', url: 'getBook', data:{}})
-        .success(function(data, status, headers, config) {
-            $scope.book = data.book;
-            $scope.$parent.main.loading = false;
-        }).error(function(e) {
-            console.log(e);
-        });
-    };
-
-    $scope.getBook();
-
-});
+app.controller('quesController', function() {});
 </script>
+
+<link rel="stylesheet" href="/packages/cere/survey/js/quill.snow.min.css">
+<link rel="stylesheet" href="/packages/cere/survey/js/quill.bubble.min.css">
+<style></style>
+
+<div ng-cloak flex layout="column" ng-controller="quesController">
+    <survey-book flex layout="column"></survey-book>
+</div>

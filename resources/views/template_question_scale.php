@@ -1,4 +1,4 @@
-<div layout="column">
+<md-card-content layout="column">
     <div layout="row" layout-padding>
         <div flex></div>
         <div flex style="max-width:65px" ng-repeat="answer in node.answers">{{answer.title}}</div>
@@ -11,4 +11,4 @@
             </div>
         </div>
     </md-radio-group>
-</div>
+</md-card-content>
