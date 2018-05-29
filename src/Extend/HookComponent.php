@@ -5,6 +5,7 @@ namespace Cere\Survey\Extend;
 use User;
 use Files;
 use ShareFile;
+use Plat\Member;
 use Plat\Files\CommFile;
 use Cere\Survey\Extend\ApplySettingTrait;
 use Cere\Survey\Extend\CensornTrait;
@@ -16,6 +17,7 @@ use Input;
 use Redirect;
 use RequestFile;
 use Cere\Survey\Eloquent\Book;
+use Cere\Survey\Eloquent\Extend\Application;
 
 class HookComponent extends CommFile
 {
@@ -41,7 +43,7 @@ class HookComponent extends CommFile
 
     public function get_views()
     {
-        return ['open', 'contract', 'extendHook', 'confirm', 'invites'];
+        return ['open', 'extendHook', 'confirm', 'invites'];
     }
 
     public static function tools()
@@ -58,57 +60,35 @@ class HookComponent extends CommFile
         return $this->extendHook();
     }
 
-    public function contract()
-    {
-        return 'survey::extend.apply.contract';
-    }
-
-    public function agreeContract()
-    {
-        Input::replace(['fileInfo' => ['type' => 31, 'title' => $this->hook->title . ' 加掛題本']]);
-
-        $folderComponent = new FolderComponent($this->doc->folder->isFile, $this->user);
-
-        $folderComponent->setDoc($this->doc->folder);
-
-        $doc = $folderComponent->createComponent()['doc'];
-
-        $component = ShareFile::find($doc['id']);
-
-        $book = $component->isFile->book()->create(['title' => $component->isFile->title, 'lock' => false]);
-
-        $member = $this->user->members()->logined()->orderBy('logined_at', 'desc')->first();
-
-        ApplicationRepository::create($this->hook, $book, $member);
-
-        $this->doc->requesteds()->where('created_by', $this->user->id)->delete();
-
-        RequestFile::updateOrCreate([
-            'target' => 'user',
-            'target_id' => 1,
-            'doc_id' => $component->id,
-            'created_by' => $this->user->id,
-            'disabled' => false,
-        ], [
-            'description' => $component->isFile->title . ' 加掛申請'
-        ]);
-
-        return Redirect::to($doc['link']);
-    }
-
     public function invite()
     {
-        foreach (Input::get('users') as $user_id) {
+        Input::merge(['fileInfo' => ['type' => 31, 'title' => $this->hook->title . ' 加掛題本']]);
+
+        $applications = Member::find(Input::get('members'))->map(function ($member) {
+            $folderComponent = new FolderComponent($this->doc->folder->isFile, $member->user);
+            $folderComponent->setDoc($this->doc->folder);
+            $doc = $folderComponent->createComponent()['doc'];
+            $component = ShareFile::find($doc['id']);
+            $component->update(['created_by', $member->user->id]);
+
+            $application = new Application;
+            $application->member()->associate($member);
+            $application->book()->associate($component->isFile->book);
+
             RequestFile::updateOrCreate([
                 'target' => 'user',
-                'target_id' => $user_id,
-                'doc_id' => $this->doc->id,
+                'target_id' => $member->user->id,
+                'doc_id' => $doc['id'],
                 'created_by' => $this->user->id,
-                'disabled' => false,
             ], [
+                'disabled' => false,
                 'description' => $this->hook->book->title . ' 加掛邀請'
             ]);
-        }
+
+            return $application;
+        })->all();
+
+        $this->hook->applications()->saveMany($applications);
 
         return ['result' => true];
     }
