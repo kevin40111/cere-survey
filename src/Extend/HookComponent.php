@@ -15,6 +15,7 @@ use Cere\Survey\Extend\Apply\ApplicationRepository;
 use Input;
 use Redirect;
 use RequestFile;
+use Cere\Survey\Eloquent\Book;
 
 class HookComponent extends CommFile
 {
@@ -110,5 +111,12 @@ class HookComponent extends CommFile
         }
 
         return ['result' => true];
+    }
+
+    public function getBrowserQuestions()
+    {
+        $book = Book::find(Input::get('book_id'));
+
+        return ['pages' => Browser::getQuestions($book)];
     }
 }

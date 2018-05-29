@@ -149,17 +149,10 @@ trait CensornTrait
         return ['updated' => $updated];
     }
 
-    public function getBrowserQuestions()
+    public function loadSkiper()
     {
-        $book = SurveyORM\Book::find(Input::get('book_id'));
+        $skiper = SurveyORM\Rule\Skiper::findOrFail(Input::get('skiper.id'))->load('operations');
 
-        $questions = $book->getQuestions()->load(['node.answers.rule', 'rule', 'node.rule']);
-
-        return ['questions' => $questions];
-    }
-
-    public function questionBrowser()
-    {
-        return  View::make('survey::template_question_browser');
+        return ['skiper' => $skiper];
     }
 }

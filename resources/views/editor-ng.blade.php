@@ -4,14 +4,11 @@
         <md-button class="md-icon-button md-primary" href="loginCondition"><md-tooltip md-direction="bottom">登入設定</md-tooltip><md-icon>people</md-icon></md-button>
         <md-button class="md-icon-button md-primary" href="exportSheet" target="_blank"><md-tooltip md-direction="bottom">下載填答值</md-tooltip><md-icon>file_download</md-icon></md-button>
     </survey-book>
-    <node-browser ng-if="book.lock" book="book.id"></node-browser>
-
 </div>
 
 <script src="/js/angular-file-upload.min.js"></script>
 <script src="/packages/cere/survey/js/ng/ngEditor.js"></script>
 <script src="/packages/cere/survey/js/ng/surveyRule.js"></script>
-<script src="/packages/cere/survey/js/ng/ngBrowser.js"></script>
 <script src="/packages/cere/survey/js/quill.min.js"></script>
 <script src="/packages/cere/survey/js/ng-quill.min.js"></script>
 
@@ -74,7 +71,6 @@
 <script>
 app.requires.push('angularFileUpload');
 app.requires.push('ngEditor');
-app.requires.push('ngBrowser');
 app.controller('editorController', function($http, $scope, $sce, $interval, $filter, $mdSidenav) {
 
     $scope.getBook = function() {

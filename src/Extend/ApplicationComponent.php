@@ -105,4 +105,9 @@ class ApplicationComponent extends CommFile
     {
         return ['messages' => $this->book->application->messages()->orderBy('updated_at', 'desc')->get()];
     }
+
+    public function getBrowserQuestions()
+    {
+        return ['pages' => Browser::getQuestions($this->book)];
+    }
 }

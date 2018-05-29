@@ -309,32 +309,26 @@
                     parent: angular.element(document.body),
                     controller: ['$scope', dialogController],
                     template: `
-                        <md-dialog aria-label="檢視加掛問卷" class="demo-dialog-example">
+                        <md-dialog aria-label="檢視加掛問卷" style="width: 800px;overflow-x: hidden">
                             <md-toolbar>
                                 <div class="md-toolbar-tools">
                                     <h2>檢視加掛問卷</h2>
                                 </div>
                             </md-toolbar>
-                            <md-dialog-content ng-cloak class="demo-dialog-content">
-                                <div layout="column" style="font-size:1em; color:grey; margin:15px;" layout-align="center start">
-                                    <div layout="row">
-                                        <md-icon>adjust</md-icon>
-                                        <div>加掛學校: <span ng-repeat-start="organization in member.organizations">{{ organization.now.name }}</span><span ng-repeat-end ng-if="!$last">、</span></div>
-                                    </div>
-                                    <div layout="row" style="margin-top:8px;">
-                                        <md-icon>account_circle</md-icon>
-                                        <div>承辦人: {{member.user.username}} </div>
-                                        <div>&emsp;Email: {{member.user.email}} </div>
-                                        <div>&emsp;電話: {{member.contact.tel}}</div>
-                                    </div>
-                                </div>
-                                <div layout="column" layout-align="start center">
-                                    <node-browser ng-if="book" re-open="reOpen()" book="book"></node-browser>
-                                </div>
+                            <md-dialog-content ng-cloak layout-padding>
+                                <survey-browser ng-if="book" book="book"></survey-browser>
                             </md-dialog-content>
-                            <md-dialog-actions style="color:grey" layout="row">
-                                <span flex="5"></span>
-                                <md-input-container class="md-block" style="width:150px;">
+                            <md-dialog-actions layout="row" layout-align="start center" layout-padding style="height: 100px">
+                                <div>
+                                    <div>
+                                        <md-icon>adjust</md-icon> 加掛學校: <span ng-repeat-start="organization in member.organizations">{{ organization.now.name }}</span><span ng-repeat-end ng-if="!$last">、</span>
+                                    </div>
+                                    <md-icon>account_circle</md-icon><span>{{member.user.username}}</span>
+                                    <md-icon>email</md-icon><span>{{member.user.email}}</span>
+                                    <md-icon>phone</md-icon><span>{{member.contact.tel}}</span>
+                                </div>
+                                <span flex></span>
+                                <md-input-container class="md-block" style="width:200px">
                                     <label>加掛卷審核</label>
                                     <md-select ng-model="individual_status.book" ng-change="updateIndividualStatus()">
                                         <md-option ng-repeat="(key,status) in selectStatus" ng-value="key">{{status.title}}</md-option>
@@ -365,10 +359,6 @@
                         console.log(e);
                     });
                 }
-            }
-
-            function reOpen() {
-                openDialog();
             }
         };
 
@@ -512,18 +502,6 @@
 </script>
 
 <style>
-.demo-dialog-example {
-    background: white;
-    border-radius: 4px;
-    box-shadow: 0 7px 8px -4px rgba(0, 0, 0, 0.2),
-      0 13px 19px 2px rgba(0, 0, 0, 0.14),
-      0 5px 24px 4px rgba(0, 0, 0, 0.12);
-    width: 800px;
-}
-.demo-dialog-content {
-    height: 600px;
-    overflow: scroll;
-}
 .auditStatus md-select-menu{
     max-height:100%;
     margin-top:30px;

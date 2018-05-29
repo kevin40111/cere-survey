@@ -43,14 +43,13 @@ class SurveyFile extends CommFile
 
     public function get_views()
     {
-        return ['open', 'application','confirm', 'extendHook', 'browser', 'surveyTime', 'loginCondition', 'contract'];
+        return ['open', 'application','confirm', 'extendHook', 'surveyTime', 'loginCondition', 'contract'];
     }
 
     public static function tools()
     {
         return [
             ['name' => 'loginCondition', 'title' => '登入設定', 'method' => 'loginCondition', 'icon' => 'list'],
-            ['name' => 'browser', 'title' => '題目瀏覽', 'method' => 'browser', 'icon' => 'list'],
             ['name' => 'createHook', 'title' => '啟用加掛', 'method' => 'createHook', 'icon' => 'link'],
         ];
     }
