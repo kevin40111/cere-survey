@@ -5,18 +5,25 @@ angular.module('ngSurvey', ['ngSurvey.directives', 'ngSurvey.factories']);
 angular.module('ngSurvey.factories', []).factory('surveyFactory', function($http) {
     var answers = {};
     var skipers = {};
+    var page = {};
 
     return {
-        get: function(url, data, node = {}) {
-            node.saving = true;
-            return $http({method: 'POST', url: url, data: data, timeout: deferred.promise})
-            .then(function(response) {
-                node.saving = false;
+        page: page,
+        get: function() {
+            page.loading = true;
+            return $http({method: 'POST', url: 'getPage', data: {}}).then(function(response) {
+                page.closed = response.data.nodes.length === 0;
+                page.loading = false;
                 return response.data;
             });
         },
-        next: function(page) {
-            return $http({method: 'POST', url: 'nextPage', data: {page: page, answers: answers}});
+        next: function() {
+            page.loading = true;
+            return $http({method: 'POST', url: 'nextPage', data: {answers: answers}}).then(function(response) {
+                page.closed = response.data.closed;
+                page.loading = false;
+                return response.data;
+            });
         },
         sync: function(node, contents) {
             node.saving = true;
@@ -42,37 +49,26 @@ angular.module('ngSurvey.directives', [])
 .directive('surveyBook', function(surveyFactory) {
     return {
         restrict: 'E',
-        scope: {
-            book: '=',
-        },
+        scope: true,
         template:  `
-            <md-content flex>
-                <div layout="row" layout-align="space-around" ng-if="book.saving">
-                    <md-progress-linear md-mode="indeterminate"></md-progress-linear>
-                </div>
-                <div flex layout="row" layout-align="center start" ng-if="page">
-                    <survey-page page="!page.closed" flex-xs="100" flex-gt-sm="80" flex-gt-md="50" flex-gt-lg="40"></survey-page>
+            <div flex layout="row" layout-align="center center" ng-if="page.loading">
+                <md-progress-circular md-mode="indeterminate"></md-progress-circular >
+            </div>
+            <md-content flex ng-hide="page.loading">
+                <div flex layout="row" layout-align="center start">
+                    <survey-page ng-if="!page.closed" flex-xs="100" flex-gt-sm="80" flex-gt-md="50" flex-gt-lg="40"></survey-page>
                     <survey-extend ng-if="page.closed" flex-xs="100" flex-gt-sm="80" flex-gt-md="50" flex-gt-lg="40"></survey-extend>
                 </div>
-                <md-card ng-if="!page && !book.saving" style="width:800px;margin:0 auto; text-align:center">
-                    <md-card-title>
-                        <md-card-title-text><span class="md-headline">本問卷填答完畢</span></md-card-title-text>
-                    </md-card-title>
-                    <md-button ng-repeat="url in urls" class="md-raised md-primary" href="{{url}}" target="_blank" aria-label="填寫加掛題本" >
-                        填寫加掛題本
-                    </md-button>
-                </md-card>
-                <div class="ql-editor" ng-bind-html="trustAsHtml(book.footer)"></div>
+                <div>
+                    <div class="ql-editor" ng-bind-html="trustAsHtml(book.footer)"></div>
+                </div>
             </md-content>
         `,
         controller: function($scope, $http, $sce) {
+            $scope.page = surveyFactory.page;
             $scope.trustAsHtml = function(string) {
                 return $sce.trustAsHtml(string);
             };
-            surveyFactory.get('getPage', {book: $scope.book}, $scope.book).then(function(response) {
-                $scope.page = response.page;
-                $scope.book.saving = false;
-            });
 
             $http({method: 'POST', url: 'getBook', data: {}}).then(function(response) {
                 $scope.book = response.data.book
@@ -84,37 +80,33 @@ angular.module('ngSurvey.directives', [])
 .directive('surveyPage', function(surveyFactory) {
     return {
         restrict: 'E',
-        scope: {
-            page: '=',
-        },
+        scope: true,
         template:  `
             <md-card>
                 <md-card-header ng-repeat-start="node in nodes" ng-if="false"></md-card-header>
                 <img ng-repeat="image in node.images" ng-src="upload/{{image.serial}}" alt="標頭圖片" />
                 <survey-node ng-repeat-end node="node" ng-if="!isSkip(node)"></survey-node>
                 <md-card-actions layout="column" layout-align="start">
-                    <md-button class="md-raised md-primary" ng-click="nextPage()" ng-disabled="page.loading" aria-label="繼續">繼續</md-button>
+                    <md-button class="md-raised md-primary" ng-click="nextPage($event)" ng-disabled="page.loading" aria-label="繼續">繼續</md-button>
                 </md-card-actions>
             </md-card>
         `,
-        controller: function($scope, $http) {
-
+        controller: function($scope, $element, $mdDialog) {
             $scope.isSkip = surveyFactory.isSkip;
+            $scope.page = surveyFactory.page;
 
-            $scope.$watch('page', function() {
-                surveyFactory.get('getNodes', {page: $scope.page}, $scope.page).then(function(response) {
-                    $scope.nodes = response.nodes;
-                    $scope.page.closed = response.nodes.length === 0;
-                });
+            surveyFactory.get().then(function(data) {
+                $scope.nodes = data.nodes;
             });
 
-            $scope.nextPage = function() {
-                surveyFactory.next($scope.page).then(function(response) {
-                    if (response.data.missings && response.data.missings.length > 0) {
-                        alert('有尚未填答題目');
+            $scope.nextPage = function(event) {
+                surveyFactory.next().then(function(data) {
+                    if (data.missings && data.missings.length > 0) {
+                        $mdDialog.show(
+                            $mdDialog.alert().textContent('有題目尚未填答').openFrom(event).targetEvent(event).ok('返回')
+                        );
                     } else {
-                        $scope.page = response.data.page;
-                        $scope.book.saving = false;
+                        $scope.nodes = data.nodes;
                     }
                 });
             };
@@ -122,13 +114,12 @@ angular.module('ngSurvey.directives', [])
     };
 })
 
-.directive('surveyNode', function($compile, surveyFactory, $templateCache) {
+.directive('surveyNode', function($compile, $templateCache, surveyFactory) {
     return {
         restrict: 'E',
         scope: {
             node: '='
         },
-        require: '^surveyNode',
         template:  `
             <md-card-title>
                 <md-card-title-text>
@@ -148,7 +139,7 @@ angular.module('ngSurvey.directives', [])
                 });
             };
         },
-        controller: function($scope, $sce, $mdToast) {
+        controller: function($scope, $element, $sce, $mdToast) {
             $scope.saveTextNgOptions = {updateOn: 'default blur', debounce:{default: 1000, blur: 0}};
             $scope.isSkip = surveyFactory.isSkip;
             $scope.contents = {};
@@ -166,7 +157,7 @@ angular.module('ngSurvey.directives', [])
                             txt += message+'\n';
                         });
                         $mdToast.show(
-                            $mdToast.simple().textContent(txt).hideDelay(3000)
+                            $mdToast.simple({parent: $element}).textContent(txt).position('left top').hideDelay(1000)
                         );
                     }
                 });

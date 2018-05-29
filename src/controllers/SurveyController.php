@@ -83,13 +83,20 @@ class SurveyController extends \BaseController {
         return ['book' => SurveyORM\Book::find($book_id)];
     }
 
+    /**
+     * Show nodes in a page.
+     *
+     * @return Response
+     */
     public function getPage($book_id)
     {
         $fields = $this->writer->all();
 
         $page = SurveyORM\Node::find($fields['page_id']);
 
-        return ['page' => $page];
+        $nodes = is_null($page) ? [] : $this->getNodes($page, $fields);
+
+        return ['nodes' => $nodes, 'logs' => DB::connection('survey')->getQueryLog()];
     }
 
     /**
@@ -101,7 +108,10 @@ class SurveyController extends \BaseController {
     public function nextPage($book_id)
     {
         $answers = Input::get('answers');
-        $page = SurveyORM\Node::find(Input::get('page.id'));
+
+        $fields = $this->writer->all();
+
+        $page = SurveyORM\Node::find($fields['page_id']);
 
         if (count($missings = $this->checkPage($page, $answers)) > 0) {
             return ['missings' => $missings];
@@ -113,10 +123,12 @@ class SurveyController extends \BaseController {
 
         $this->writer->setPage(isset($nextPage->id) ? $nextPage->id : NULL);
 
-        return ['page' => $nextPage];
+        $nodes = is_null($nextPage) ? [] : $this->getNodes($nextPage, $fields);
+
+        return ['closed' => is_null($nextPage), 'nodes' => $nodes];
     }
 
-    private function getUrls($book_id)
+    public function getUrls($book_id)
     {
         if (! SurveyORM\Book::find($book_id)->extendHook()->exists()) {
             return ['urls' => []];
@@ -160,20 +172,15 @@ class SurveyController extends \BaseController {
     }
 
     /**
-     * Show nodes in a page node.
+     * Hide skip nodes.
      *
      * @return Response
      */
-    public function getNodes()
+    private function getNodes($page, $fields)
     {
-        $page = SurveyORM\Node::find(Input::get('page.id'));;
-
-        $fields = $this->writer->all();
-        $nodes = $page->childrenNodes->load(['skiper', 'questions.skiper', 'answers.skiper', 'images'])->filter(function ($node) use ($fields) {
+        return $page->childrenNodes->load(['skiper', 'questions.skiper', 'answers.skiper', 'images'])->filter(function ($node) use ($fields) {
             return ! $node->skiper || ! Rule::instance($node->skiper)->compare($fields);
         });
-
-        return ['nodes' => $nodes, 'logs' => DB::connection('survey')->getQueryLog()];
     }
 
     public function sync()
