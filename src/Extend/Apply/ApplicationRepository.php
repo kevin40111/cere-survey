@@ -37,17 +37,6 @@ class ApplicationRepository
         return new self($application);
     }
 
-    public function update($book, $data, $member)
-    {
-        $fieldComponent = FieldComponent::createComponent(['title' => $book->title], $member->user);
-
-        $book->sheet()->associate($fieldComponent->file->sheets()->first());
-
-        $book->save();
-
-        return $this->application->update($data);
-    }
-
     public function getConsent()
     {
         $hook = $this->application->hook;

@@ -43,9 +43,38 @@ class ApplicationComponent extends CommFile
         return ['open'];
     }
 
+    /**
+     * @todo to static
+     **/
+    public function create()
+    {
+        parent::create();
+
+        $this->book = $this->file->book()->create(['title' => $this->file->title, 'lock' => false]);
+
+        $fieldComponent = FieldComponent::createComponent(['title' => $this->file->title], $this->user);
+
+        $this->book->sheet()->associate($fieldComponent->file->sheets()->first());
+
+        $this->book->save();
+
+        return $this;
+    }
+
     public function open()
     {
-        return ApplicationRepository::instance($this->book->application)->getStep()['view'];
+        if ($this->book->application->agree) {
+            return ApplicationRepository::instance($this->book->application)->getStep()['view'];
+        } else {
+            return 'survey::extend.apply.contract';
+        }
+    }
+
+    public function agreeContract()
+    {
+        $this->book->application->update(['agree' => true]);
+
+        return Redirect::back();
     }
 
     public function stepsTemplate()

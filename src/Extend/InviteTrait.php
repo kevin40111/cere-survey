@@ -4,6 +4,7 @@ namespace Cere\Survey\Extend;
 
 use Input;
 use View;
+use Plat\Group;
 
 trait InviteTrait
 {
@@ -17,26 +18,19 @@ trait InviteTrait
         return ['groups' => $this->user->groups];
     }
 
-    public function getUsers()
+    public function getMembers()
     {
-        $project_id = $this->user->members()->orderBy('logined_at', 'desc')->first()->project_id;
+        $project = $this->user->members()->orderBy('logined_at', 'desc')->first()->project;
 
-        $applications = $this->hook->applications->map(function($application){
-            return $application->member_id;
-        })->toArray();
+        $applications = $this->hook->applications->keyBy('member_id');
 
-        $users = \Plat\Group::find(Input::get('group_id'))->users->load(['members' => function($query) use ($project_id) {
-            $query->where('project_id', $project_id);
-        }, 'members.contact', 'members.organizations.now'])->filter(function($user) {
-            return $user->actived == true && sizeof($user->members) > 0;
-        })->map(function($user) use ($applications) {
-            $user->application = $this->hook->applications()->where('member_id', $user->members[0]->id)->first();
-            $user->hasRequested = in_array($user->members[0]->id, $applications);
-            return $user;
-        });
+        $groupUsers = Group::find(Input::get('group_id'))->users->lists('id');
+        $members = $project->members->load('user')->filter(function ($member) use ($groupUsers) {
+            return in_array($member->user->id, $groupUsers) && $member->user->actived;
+        })->load('contact', 'organizations.now')->each(function ($member) use ($applications) {
+            $member->application = isset($applications[$member->id]) ? $applications[$member->id] : null;
+        })->values();
 
-        return [
-            'users' => $users,
-        ];
+        return ['members' => $members];
     }
 }

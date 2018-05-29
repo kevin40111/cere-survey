@@ -17,9 +17,9 @@ class Application extends Ruler
 
     public $timestamps = true;
 
-    protected $fillable = ['book_id', 'member_id', 'extension', 'status', 'fields', 'updated_at', 'step', 'created_at', 'deleted_at', 'deleted_by', 'individual_status', 'used'];
+    protected $fillable = ['book_id', 'member_id', 'agree', 'status', 'fields', 'updated_at', 'step', 'created_at', 'deleted_at', 'deleted_by', 'individual_status'];
 
-    protected $attributes = ['extension' => false, 'status' => 0];
+    protected $attributes = ['agree' => false, 'status' => 0];
 
     public function book()
     {
@@ -41,7 +41,7 @@ class Application extends Ruler
         return $this->morphMany(SurveyORM\Message::class, 'target');
     }
 
-    public function getExtensionAttribute($value)
+    public function getAgreeAttribute($value)
     {
         return (boolean)$value;
     }
