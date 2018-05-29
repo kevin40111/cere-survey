@@ -736,4 +736,36 @@ class FieldRepository
     {
         return $this->field;
     }
+
+    /**
+     * Compare two tables difference rows
+     * @param array $mainTable, $compareTable
+     * @return Array
+     */
+    public function getDifferenceRows($mainTable, $compareTable)
+    {
+        $compareTableFullName = $compareTable['table']->database . '.dbo.' . $compareTable['table']->name;
+
+        $compareQuery = DB::table($compareTableFullName)->select('C' . $compareTable['id_column']->id);
+
+        foreach ($compareTable['conditions'] as $condition) {
+            $compareQuery = $compareQuery->where('C' . $condition['column']->id, $condition['value']);
+        }
+
+        $compareQuery->whereNull('deleted_at')->groupBy('C' . $compareTable['id_column']->id);
+
+        $compareRows = array_map(function($item) use ($compareTable) {
+            return $item->{'C' . $compareTable['id_column']->id};
+        }, $compareQuery->get());
+
+        $mainQuery = DB::table($this->getFullDataTable());
+
+        foreach ($mainTable['conditions'] as $condition) {
+            $mainQuery = $mainQuery->where('C' . $condition['column']->id, $condition['value']);
+        }
+
+        $mainQuery->whereNull('deleted_at');
+
+        return $mainQuery->whereNotIn('C'.$mainTable['id_column']->id, $compareRows)->get();
+    }
 }
