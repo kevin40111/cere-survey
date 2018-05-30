@@ -3,6 +3,7 @@
 namespace Cere\Survey\Eloquent;
 
 use Eloquent;
+use User;
 
 class Message extends Eloquent
 {
@@ -13,4 +14,9 @@ class Message extends Eloquent
     public $timestamps = true;
 
     protected $fillable = ['user_id', 'content', 'title'];
+
+    public function from()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
